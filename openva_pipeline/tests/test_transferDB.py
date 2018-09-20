@@ -74,12 +74,14 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
 
     def test_2_pipelineConf_algorithmMetadataCode(self):
         """Test Pipeline_Conf table has valid algorithmMetadataCode."""
+
         validMetadataCode = self.settingsPipeline.algorithmMetadataCode in \
             [j for i in self.metadataQuery for j in i]
         self.assertTrue(validMetadataCode)
 
     def test_2_pipelineConf_algorithmMetadataCode_Exception(self):
         """configPipeline should fail with invalid algorithmMetadataCode."""
+
         c = self.copy_conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithmMetadataCode = ?"
         par = ("wrong",)
@@ -90,12 +92,14 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
 
     def test_2_pipelineConf_codSource(self):
         """Test Pipeline_Conf table has valid codSource"""
+
         validcodSource = self.settingsPipeline.codSource in \
             ("ICD10", "WHO", "Tariff")
         self.assertTrue(validcodSource)
 
     def test_2_pipelineConf_codSource_Exception(self):
         """configPipeline should fail with invalid codSource."""
+
         c = self.copy_conn.cursor()
         sql = "UPDATE Pipeline_Conf SET codSource = ?"
         par = ("wrong",)
@@ -114,6 +118,7 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
 
     def test_2_pipelineConf_algorithm_Exception(self):
         """configPipeline should fail with invalid algorithm."""
+
         c = self.copy_conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?"
         par = ("wrong",)
@@ -129,10 +134,20 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
 
         self.assertTrue(validWD)
 
+    def test_2_pipelineConf_workingDirectory_Exception(self):
+        """configPipeline should fail with invalid workingDirectory."""
+
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Pipeline_Conf SET workingDirectory = ?"
+        par = ("/wrong/path",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.PipelineConfigurationError,
+                          self.copy_xferDB.configPipeline, self.copy_conn)
+        self.copy_conn.rollback()
+
 # Check Configuration methods
 class Check_3_ODK_Conf(unittest.TestCase):
     """Test methods that grab ODK configuration."""
-
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
     dbDirectory = os.path.abspath(os.path.dirname(__file__))
@@ -141,17 +156,31 @@ class Check_3_ODK_Conf(unittest.TestCase):
                         dbDirectory = dbDirectory,
                         dbKey = dbKey)
     conn = xferDB.connectDB()
-
     settingsODK = xferDB.configODK(conn)
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey)
+    copy_conn = copy_xferDB.connectDB()
 
     def test_3_odkConf_odkURL(self):
         """Test ODK_Conf table has valid odkURL"""
-
         startHTML = self.settingsODK.odkURL[0:7]
         startHTMLS = self.settingsODK.odkURL[0:8]
         validURL = startHTML == "http://" or startHTMLS == "https://"
         self.assertTrue(validURL)
 
+    def test_3_odkConf_odkURL_Exception(self):
+        """configODK should fail with invalid url."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Pipeline_Conf SET workingDirectory = ?"
+        par = ("/wrong/path",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.ODKConfigurationError,
+                          self.copy_xferDB.configODK, self.copy_conn)
+        self.copy_conn.rollback()
+
+    ## HERE: what if you don't need a username or password?
     def test_3_odkConf_odkUser(self):
         """Test ODK_Conf table has valid odkUser"""
         self.assertEqual(self.settingsODK.odkUser, "odk_openva")
