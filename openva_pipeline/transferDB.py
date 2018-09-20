@@ -40,15 +40,12 @@ class TransferDB:
     -------
     connectDB(self)
         Returns SQLite Connection object to Transfer database.
-    
     configPipeline(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for the Pipeline.
-    
     configODK(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for connecting to ODK Aggregate server.
-
     configOpenVA(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for R package openVA.
@@ -113,7 +110,7 @@ class TransferDB:
             alogrithmMetadataCode - attribute describing VA data
             codSource - attribute detailing the source of the Cause of Death list
             algorithm - attribute indicating which VA algorithm to use
-            workingDirectory - attributing indicating the working directory
+            workingDirectory - attribute indicating the working directory
 
         Raises
         ------
@@ -129,25 +126,25 @@ class TransferDB:
         algorithmMetadataCode = c.fetchone()[0]
         if algorithmMetadataCode not in [j for i in metadataQuery for j in i]:
             raise PipelineConfigurationError \
-                ("Problem with Pipeline_Conf.algorithmMetadataCode")
+                ("Problem in database: Pipeline_Conf.algorithmMetadataCode")
 
         c.execute("SELECT codSource FROM Pipeline_Conf;")
         codSource = c.fetchone()[0]
         if codSource not in ("ICD10", "WHO", "Tariff"):
             raise PipelineConfigurationError \
-                ("Problem with Pipeline_Conf.codSource")
+                ("Problem in database: Pipeline_Conf.codSource")
 
         c.execute("SELECT algorithm FROM Pipeline_Conf;")
         algorithm = c.fetchone()[0]
         if algorithm not in ("InterVA", "Insilico", "SmartVA", "InterVA5"):
             raise PipelineConfigurationError \
-                ("Problem with Pipeline_Conf.algorithm")
+                ("Problem in database: Pipeline_Conf.algorithm")
 
         c.execute("SELECT workingDirectory FROM Pipeline_Conf;")
         workingDirectory = c.fetchone()[0]
         if not os.path.isdir(workingDirectory):
             raise PipelineConfigurationError \
-                ("Problem with Pipeline_Conf.workingDirectory")
+                ("Problem in database: Pipeline_Conf.workingDirectory")
 
         ntPipeline = collections.namedtuple("ntPipeline",
                                             ["algorithmMetadataCode",
@@ -190,7 +187,14 @@ class TransferDB:
           odkLastRun, odkLastRunResult FROM ODK_Conf;"
         queryODK = c.execute(sqlODK).fetchall()
         odkID = queryODK[0][0]
+
         odkURL = queryODK[0][1]
+        startHTML = odkURL[0:7]
+        startHTMLS = odkURL[0:8]
+        if not (startHTML == "http://" or startHTMLS == "https://"):
+            raise ODKConfigurationError \
+                ("Problem in database: ODK_Conf.odkURL")
+
         odkUser = queryODK[0][2]
         odkPassword = queryODK[0][3]
         odkFormID = queryODK[0][4]
@@ -226,7 +230,7 @@ class TransferDB:
 
         return(settingsODK)
 
-    def configOpenVA(self):
+    def configOpenVA(self, conn, algorithm, pipelineDir):
         """Query OpenVA configuration settings from database.
 
         This method is intended to receive its input (a Connection object) 
@@ -239,6 +243,8 @@ class TransferDB:
         Parameters
         ----------
         conn : sqlite3 Connection object
+        algorithm : VA algorithm used by R package openVA
+        pipelineDir : Working directory for the Pipeline
 
         Returns
         -------
@@ -249,10 +255,108 @@ class TransferDB:
         ------
         OpenVAConfigurationError
         """
-        pass
+
+        c = conn.cursor()
+
+        if(algorithm in ("InterVA4", "InterVA5")):
+            # InterVA_Conf
+            sqlInterVA = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
+            queryInterVA = c.execute(sqlInterVA).fetchall()
+
+            intervaVersion = queryInterVA[0][0]
+            if not intervaVersion in ("4", "5"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InterVA_Conf.version \
+                    (valid options: '4' or '5').")
+            intervaHIV = queryInterVA[0][1]
+            if not intervaHIV in ("v", "l", "h"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InterVA_Conf.HIV \
+                    (valid options: 'v', 'l', or 'h').")
+            intervaMalaria = queryInterVA[0][2]
+            if not intervaMalaria in ("v", "l", "h"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InterVA_Conf.Malaria \
+                    (valid options: 'v', 'l', or 'h').")
+
+            # Advanced_InterVA_Conf
+            sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
+              groupcode, replicate, replicate_bug1, replicate_bug2, write \
+              FROM Advanced_InterVA_Conf;"
+            queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
+
+            intervaDirectory = queryAdvancedInterVA[0][0]
+            intervaPath = os.path.join(pipelineDir, intervaDirectory)
+            if not os.path.isdir(intervaPath):
+                raise OpenVAConfigurationError \
+                   ("Problem in database: Advanced_InterVA_Conf.directory.")
+            intervaFilename = queryAdvancedInterVA[0][1]
+            if intervaFilename == None or intervaFilename == "":
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.filename.")
+            intervaOutput = queryAdvancedInterVA[0][2]
+            if not intervaOutput in ("classic", "extended"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.output.")
+            intervaAppend = queryAdvancedInterVA[0][3]
+            if not intervaAppend in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.append.")
+            intervaGroupcode = queryAdvancedInterVA[0][4]
+            if not intervaGroupcode in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.groupcode.")
+            intervaReplicate = queryAdvancedInterVA[0][5]
+            if not intervaReplicate in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.replicate.")
+            intervaReplicateBug1 = queryAdvancedInterVA[0][6]
+            if not intervaReplicateBug1 in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.replicate_bug1.")
+            intervaReplicateBug2 = queryAdvancedInterVA[0][7]
+            if not intervaReplicateBug2 in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.replicate_bug2.")
+            intervaWrite = queryAdvancedInterVA[0][8]
+            if not intervaWrite in ("TRUE", "FALSE"):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: Advanced_InterVA_Conf.write.")
+
+            ntInterVA = collections.namedtuple("ntInterVA",
+                                               ["InterVA_Version",
+                                                "InterVA_HIV",
+                                                "InterVA_Malaria",
+                                                "InterVA_directory",
+                                                "InterVA_filename",
+                                                "InterVA_output",
+                                                "InterVA_append",
+                                                "InterVA_groupcode",
+                                                "InterVA_replicate",
+                                                "InterVA_replicate_bug1",
+                                                "InterVA_replicate_bug2",
+                                                "InterVA_write"]
+            )
+            settingsInterVA = ntInterVA(intervaVersion,
+                                        intervaHIV,
+                                        intervaMalaria,
+                                        intervaDirectory,
+                                        intervaFilename,
+                                        intervaOutput,
+                                        intervaAppend,
+                                        intervaGroupcode,
+                                        intervaReplicate,
+                                        intervaReplicateBug1,
+                                        intervaReplicateBug2,
+                                        intervaWrite)
+            return(settingsInterVA)
+
+        # elif(algorithm == "InSilico"):
+        # elif(algorithm == "InSilico"):
+        # else(algorithm == "SmartVA"):
 
     def configDHIS(self):
-        """Query ODK configuration settings from database.
+        """Query DHIS configuration settings from database.
 
         This method is intended to be used in conjunction with
         (1) TransferDB.connectDB(), which establishes a connection to a

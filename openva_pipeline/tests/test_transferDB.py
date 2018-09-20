@@ -78,7 +78,6 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
         validMetadataCode = self.settingsPipeline.algorithmMetadataCode in \
             [j for i in self.metadataQuery for j in i]
         self.assertTrue(validMetadataCode)
-
     def test_2_pipelineConf_algorithmMetadataCode_Exception(self):
         """configPipeline should fail with invalid algorithmMetadataCode."""
 
@@ -96,7 +95,6 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
         validcodSource = self.settingsPipeline.codSource in \
             ("ICD10", "WHO", "Tariff")
         self.assertTrue(validcodSource)
-
     def test_2_pipelineConf_codSource_Exception(self):
         """configPipeline should fail with invalid codSource."""
 
@@ -115,7 +113,6 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
             ("InSilico", "InSilico2016", "InterVA4", "InterVA5", "SmartVA")
 
         self.assertTrue(validAlgorithm)
-
     def test_2_pipelineConf_algorithm_Exception(self):
         """configPipeline should fail with invalid algorithm."""
 
@@ -133,7 +130,6 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
         validWD = os.path.isdir(self.settingsPipeline.workingDirectory)
 
         self.assertTrue(validWD)
-
     def test_2_pipelineConf_workingDirectory_Exception(self):
         """configPipeline should fail with invalid workingDirectory."""
 
@@ -169,12 +165,11 @@ class Check_3_ODK_Conf(unittest.TestCase):
         startHTMLS = self.settingsODK.odkURL[0:8]
         validURL = startHTML == "http://" or startHTMLS == "https://"
         self.assertTrue(validURL)
-
     def test_3_odkConf_odkURL_Exception(self):
         """configODK should fail with invalid url."""
         c = self.copy_conn.cursor()
-        sql = "UPDATE Pipeline_Conf SET workingDirectory = ?"
-        par = ("/wrong/path",)
+        sql = "UPDATE ODK_Conf SET odkURL = ?"
+        par = ("wrong.url",)
         c.execute(sql, par)
         self.assertRaises(transferDB.ODKConfigurationError,
                           self.copy_xferDB.configODK, self.copy_conn)
@@ -208,6 +203,220 @@ class Check_3_ODK_Conf(unittest.TestCase):
     def test_3_odkConf_odkLastRunResult(self):
         """Test ODK_Conf table has valid odkLastRunResult"""
         self.assertIn(self.settingsODK.odkLastRunResult, (0,1))
+
+class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
+    """Test methods that grab InterVA configuration."""
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    settingsPipeline = xferDB.configPipeline(conn)
+    settingsOpenVA = xferDB.configOpenVA(conn,
+                                         "InterVA4",
+                                         settingsPipeline.workingDirectory)
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey)
+    copy_conn = copy_xferDB.connectDB()
+
+    def test_4_openvaConf_InterVA_Version(self):
+        """Test InterVA_Conf table has valid version"""
+        self.assertIn(self.settingsOpenVA.InterVA_Version, ("4", "5"))
+    def test_4_openvaConf_InterVA_Version_Exception(self):
+        """configOpenVA should fail with invalid InterVA_Conf.Version value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE InterVA_Conf SET version = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_HIV(self):
+        """Test InterVA_Conf table has valid HIV"""
+        self.assertIn(self.settingsOpenVA.InterVA_HIV, ("v", "l", "h"))
+    def test_4_openvaConf_InterVA_HIV_Exception(self):
+        """configOpenVA should fail with invalid InterVA_Conf.HIV value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE InterVA_Conf SET HIV = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_Malaria(self):
+        """Test InterVA_Conf table has valid Malaria"""
+        self.assertIn(self.settingsOpenVA.InterVA_Malaria, ("v", "l", "h"))
+    def test_4_openvaConf_InterVA_Malaria_Exception(self):
+        """configOpenVA should fail with invalid InterVA_Conf.Malaria value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE InterVA_Conf SET Malaria = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_directory(self):
+        """Test Advanced_InterVA_Conf table has valid directory"""
+        self.assertTrue(os.path.isdir(self.settingsOpenVA.InterVA_directory))
+    def test_4_openvaConf_InterVA_directory_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.directory value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET directory = ?"
+        par = ("/wrong/path",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_filename(self):
+        """Test Advanced_InterVA_Conf table has valid filename."""
+        self.assertNotIn(self.settingsOpenVA.InterVA_filename, (None, ""))
+    def test_4_openvaConf_InterVA_filename_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.filename value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET filename = ?"
+        par = ("",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_output(self):
+        """Test Advanced_InterVA_Conf table has valid output."""
+        self.assertIn(self.settingsOpenVA.InterVA_output,
+                      ("classic", "extended")
+        )
+    def test_4_openvaConf_InterVA_output_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.output value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET output = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_append(self):
+        """Test Advanced_InterVA_Conf table has valid append."""
+        self.assertIn(self.settingsOpenVA.InterVA_append,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_append_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.append value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET append = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_groupcode(self):
+        """Test Advanced_InterVA_Conf table has valid groupcode."""
+        self.assertIn(self.settingsOpenVA.InterVA_groupcode,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_groupcode_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.groupcode value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET groupcode = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_replicate(self):
+        """Test Advanced_InterVA_Conf table has valid replicate."""
+        self.assertIn(self.settingsOpenVA.InterVA_replicate,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_replicate_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET replicate = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_replicate_bug1(self):
+        """Test Advanced_InterVA_Conf table has valid replicate_bug1."""
+        self.assertIn(self.settingsOpenVA.InterVA_replicate_bug1,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_replicate_bug1_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate_bug1 value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET replicate_bug1 = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_replicate_bug2(self):
+        """Test Advanced_InterVA_Conf table has valid replicate_bug2."""
+        self.assertIn(self.settingsOpenVA.InterVA_replicate_bug2,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_replicate_bug2_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate_bug2 value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET replicate_bug2 = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_4_openvaConf_InterVA_write(self):
+        """Test Advanced_InterVA_Conf table has valid write."""
+        self.assertIn(self.settingsOpenVA.InterVA_write,
+                      ("TRUE", "FALSE")
+        )
+    def test_4_openvaConf_InterVA_write_Exception(self):
+        """configOpenVA should fail with invalid Advanced_InterVA_Conf.write value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InterVA_Conf SET write = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
 
 # Test invalid calls to DB
 

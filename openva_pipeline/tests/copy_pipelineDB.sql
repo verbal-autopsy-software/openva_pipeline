@@ -47,16 +47,17 @@ INSERT INTO ODK_Conf
   VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "PHMRC_Shortened_Instrument_8_20_2015", "1900-01-01_00:00:01", "0");
 
 -- openVA Configuration: algorithm-specific tables
----- InterVA4
-CREATE TABLE InterVA4_Conf
+---- InterVA
+CREATE TABLE InterVA_Conf
 (
+  version char(1),
   HIV     char(1),
   Malaria char(1)
 );
 
-INSERT INTO InterVA4_Conf (HIV, Malaria) VALUES("v", "v");
+INSERT INTO InterVA_Conf (version, HIV, Malaria) VALUES("4", "v", "v");
 
-CREATE TABLE Advanced_InterVA4_Conf
+CREATE TABLE Advanced_InterVA_Conf
 (
   directory      char(50),
   filename       char(50),
@@ -69,7 +70,7 @@ CREATE TABLE Advanced_InterVA4_Conf
   write          char( 5)
 );
 
-INSERT INTO Advanced_InterVA4_Conf
+INSERT INTO Advanced_InterVA_Conf
   (directory, filename, output, append, groupcode, replicate, replicate_bug1, replicate_bug2, write)
   VALUES("OpenVAFiles", "interVA4_results", "classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
 

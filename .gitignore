@@ -1,3 +1,4 @@
 Pipfile
 Pipfile.lock
 __pycache__/*
+openva_pipeline/tests/.Rhistory
