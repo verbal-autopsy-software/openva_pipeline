@@ -49,7 +49,7 @@ class Check_1_Connection(unittest.TestCase):
         conn.close()
         self.assertTrue(len(tableNames) > 0)
 
-# Check Pipeline Configuration
+# Test Pipeline Configuration
 class Check_2_Pipeline_Conf(unittest.TestCase):
     """Test methods that grab configuration settings for pipline."""
 
@@ -141,7 +141,7 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
                           self.copy_xferDB.configPipeline, self.copy_conn)
         self.copy_conn.rollback()
 
-# Check Configuration methods
+# Test ODK Configuration
 class Check_3_ODK_Conf(unittest.TestCase):
     """Test methods that grab ODK configuration."""
     dbFileName = "Pipeline.db"
@@ -204,6 +204,7 @@ class Check_3_ODK_Conf(unittest.TestCase):
         """Test ODK_Conf table has valid odkLastRunResult"""
         self.assertIn(self.settingsODK.odkLastRunResult, (0,1))
 
+# Test InterVA Configuration
 class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
     """Test methods that grab InterVA configuration."""
     dbFileName = "Pipeline.db"
@@ -415,6 +416,78 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
                           self.copy_conn, "InterVA4",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+# Test InSilicoVA Configuration
+class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
+    """Test methods that grab InSilicoVA configuration."""
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    settingsPipeline = xferDB.configPipeline(conn)
+    settingsOpenVA = xferDB.configOpenVA(conn,
+                                         "InSilicoVA",
+                                         settingsPipeline.workingDirectory)
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey)
+    copy_conn = copy_xferDB.connectDB()
+
+    def test_5_openvaConf_InSilicoVA_data_type(self):
+        """Test InSilicoVA_Conf table has valid data_type"""
+        self.assertIn(self.settingsOpenVA.InSilicoVA_data_type,
+                      ("WHO2012", "WHO2016")
+        )
+    def test_5_openvaConf_InSilicoVA_data_type_Exception(self):
+        """configOpenVA should fail with invalid InSilicoVA_Conf.data_type value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE InSilicoVA_Conf SET data_type = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InSilicoVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_openvaConf_InSilicoVA_Nsim(self):
+        """Test InSilicoVA_Conf table has valid Nsim"""
+        self.assertNotIn(self.settingsOpenVA.InSilicoVA_Nsim,
+                      ("", None)
+        )
+    def test_5_openvaConf_InSilicoVA_Nsim_Exception(self):
+        """configOpenVA should fail with invalid InSilicoVA_Conf.Nsim value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE InSilicoVA_Conf SET Nsim = ?"
+        par = ("",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InSilicoVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_openvaConf_InSilicoVA_isNumeric(self):
+        """Test InSilicoVA_Conf table has valid isNumeric"""
+        self.assertIn(self.settingsOpenVA.InSilicoVA_isNumeric,
+                      ("TRUE", "FALSE")
+        )
+    def test_5_openvaConf_InSilicoVA_isNumeric_Exception(self):
+        """configOpenVA should fail with invalid InSilicoVA_Conf.isNumeric value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE Advanced_InSilicoVA_Conf SET isNumeric = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "InSilicoVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 

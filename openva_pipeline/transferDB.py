@@ -238,7 +238,10 @@ class TransferDB:
         database with the Pipeline configuration settings.  It sets up the
         configuration for all of the VA algorithms included in the R package
         openVA.  The output from configOpenVA() serves as an input to the
-        method OpenVA.setAlgorithmParameters()
+        method OpenVA.setAlgorithmParameters().  This is a wrapper function
+        that calls __configInterVA__, __configInSilicoVA__, and
+        __configSmartVA__ to actually pull configuration settings from the
+        database.
 
         Parameters
         ----------
@@ -256,104 +259,276 @@ class TransferDB:
         OpenVAConfigurationError
         """
 
+        if(algorithm in ("InterVA4", "InterVA5")):
+            settingsInterVA = self.__configInterVA__(conn, pipelineDir)
+            return(settingsInterVA)
+        elif(algorithm == "InSilicoVA"):
+            settingsInSilicoVA = self.__configInSilicoVA__(conn, pipelineDir)
+            return(settingsInSilicoVA)
+        else:
+            settingsSmartVA = self.__configSmartVA__(conn, pipelineDir)
+            return(settingsSmartVA)
+
+    def __configInterVA__(self, conn, pipelineDir):
+        """Query OpenVA configuration settings from database.
+
+        This method is called by configOpenVA when the VA algorithm is either
+        InterVA4 or InterVA5.
+
+        Parameters
+        ----------
+        conn : sqlite3 Connection object
+        pipelineDir : Working directory for the Pipeline
+
+        Returns
+        -------
+        tuple
+            Contains all parameters needed for OpenVA.setAlgorithmParameters().
+
+        Raises
+        ------
+        OpenVAConfigurationError
+        """
+
         c = conn.cursor()
 
-        if(algorithm in ("InterVA4", "InterVA5")):
-            # InterVA_Conf
-            sqlInterVA = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
-            queryInterVA = c.execute(sqlInterVA).fetchall()
+        sqlInterVA = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
+        queryInterVA = c.execute(sqlInterVA).fetchall()
 
-            intervaVersion = queryInterVA[0][0]
-            if not intervaVersion in ("4", "5"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: InterVA_Conf.version \
-                    (valid options: '4' or '5').")
-            intervaHIV = queryInterVA[0][1]
-            if not intervaHIV in ("v", "l", "h"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: InterVA_Conf.HIV \
-                    (valid options: 'v', 'l', or 'h').")
-            intervaMalaria = queryInterVA[0][2]
-            if not intervaMalaria in ("v", "l", "h"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: InterVA_Conf.Malaria \
-                    (valid options: 'v', 'l', or 'h').")
+        # Database Table: InterVA_Conf
+        intervaVersion = queryInterVA[0][0]
+        if not intervaVersion in ("4", "5"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InterVA_Conf.version \
+                (valid options: '4' or '5').")
+        intervaHIV = queryInterVA[0][1]
+        if not intervaHIV in ("v", "l", "h"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InterVA_Conf.HIV \
+                (valid options: 'v', 'l', or 'h').")
+        intervaMalaria = queryInterVA[0][2]
+        if not intervaMalaria in ("v", "l", "h"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InterVA_Conf.Malaria \
+                (valid options: 'v', 'l', or 'h').")
+        
+        # Database Table: Advanced_InterVA_Conf
+        sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
+        groupcode, replicate, replicate_bug1, replicate_bug2, write \
+        FROM Advanced_InterVA_Conf;"
+        queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
 
-            # Advanced_InterVA_Conf
-            sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
-              groupcode, replicate, replicate_bug1, replicate_bug2, write \
-              FROM Advanced_InterVA_Conf;"
-            queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
+        intervaDirectory = queryAdvancedInterVA[0][0]
+        intervaPath = os.path.join(pipelineDir, intervaDirectory)
+        if not os.path.isdir(intervaPath):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.directory.")
+        intervaFilename = queryAdvancedInterVA[0][1]
+        if intervaFilename == None or intervaFilename == "":
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.filename.")
+        intervaOutput = queryAdvancedInterVA[0][2]
+        if not intervaOutput in ("classic", "extended"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.output.")
+        intervaAppend = queryAdvancedInterVA[0][3]
+        if not intervaAppend in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.append.")
+        intervaGroupcode = queryAdvancedInterVA[0][4]
+        if not intervaGroupcode in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.groupcode.")
+        intervaReplicate = queryAdvancedInterVA[0][5]
+        if not intervaReplicate in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.replicate.")
+        intervaReplicateBug1 = queryAdvancedInterVA[0][6]
+        if not intervaReplicateBug1 in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.replicate_bug1.")
+        intervaReplicateBug2 = queryAdvancedInterVA[0][7]
+        if not intervaReplicateBug2 in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.replicate_bug2.")
+        intervaWrite = queryAdvancedInterVA[0][8]
+        if not intervaWrite in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: Advanced_InterVA_Conf.write.")
+        
+        ntInterVA = collections.namedtuple("ntInterVA",
+                                           ["InterVA_Version",
+                                            "InterVA_HIV",
+                                            "InterVA_Malaria",
+                                            "InterVA_directory",
+                                            "InterVA_filename",
+                                            "InterVA_output",
+                                            "InterVA_append",
+                                            "InterVA_groupcode",
+                                            "InterVA_replicate",
+                                            "InterVA_replicate_bug1",
+                                            "InterVA_replicate_bug2",
+                                            "InterVA_write"]
+        )
+        settingsInterVA = ntInterVA(intervaVersion,
+                                    intervaHIV,
+                                    intervaMalaria,
+                                    intervaDirectory,
+                                    intervaFilename,
+                                    intervaOutput,
+                                    intervaAppend,
+                                    intervaGroupcode,
+                                    intervaReplicate,
+                                    intervaReplicateBug1,
+                                    intervaReplicateBug2,
+                                    intervaWrite)
+        return(settingsInterVA)
 
-            intervaDirectory = queryAdvancedInterVA[0][0]
-            intervaPath = os.path.join(pipelineDir, intervaDirectory)
-            if not os.path.isdir(intervaPath):
-                raise OpenVAConfigurationError \
-                   ("Problem in database: Advanced_InterVA_Conf.directory.")
-            intervaFilename = queryAdvancedInterVA[0][1]
-            if intervaFilename == None or intervaFilename == "":
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.filename.")
-            intervaOutput = queryAdvancedInterVA[0][2]
-            if not intervaOutput in ("classic", "extended"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.output.")
-            intervaAppend = queryAdvancedInterVA[0][3]
-            if not intervaAppend in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.append.")
-            intervaGroupcode = queryAdvancedInterVA[0][4]
-            if not intervaGroupcode in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.groupcode.")
-            intervaReplicate = queryAdvancedInterVA[0][5]
-            if not intervaReplicate in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.replicate.")
-            intervaReplicateBug1 = queryAdvancedInterVA[0][6]
-            if not intervaReplicateBug1 in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.replicate_bug1.")
-            intervaReplicateBug2 = queryAdvancedInterVA[0][7]
-            if not intervaReplicateBug2 in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.replicate_bug2.")
-            intervaWrite = queryAdvancedInterVA[0][8]
-            if not intervaWrite in ("TRUE", "FALSE"):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: Advanced_InterVA_Conf.write.")
+    def __configInSilicoVA__(self, conn, pipelineDir):
+        """Query OpenVA configuration settings from database.
 
-            ntInterVA = collections.namedtuple("ntInterVA",
-                                               ["InterVA_Version",
-                                                "InterVA_HIV",
-                                                "InterVA_Malaria",
-                                                "InterVA_directory",
-                                                "InterVA_filename",
-                                                "InterVA_output",
-                                                "InterVA_append",
-                                                "InterVA_groupcode",
-                                                "InterVA_replicate",
-                                                "InterVA_replicate_bug1",
-                                                "InterVA_replicate_bug2",
-                                                "InterVA_write"]
-            )
-            settingsInterVA = ntInterVA(intervaVersion,
-                                        intervaHIV,
-                                        intervaMalaria,
-                                        intervaDirectory,
-                                        intervaFilename,
-                                        intervaOutput,
-                                        intervaAppend,
-                                        intervaGroupcode,
-                                        intervaReplicate,
-                                        intervaReplicateBug1,
-                                        intervaReplicateBug2,
-                                        intervaWrite)
-            return(settingsInterVA)
+        This method is called by configOpenVA when the VA algorithm is
+        InSilicoVA.
 
-        # elif(algorithm == "InSilico"):
-        # elif(algorithm == "InSilico"):
-        # else(algorithm == "SmartVA"):
+        Parameters
+        ----------
+        conn : sqlite3 Connection object
+        pipelineDir : Working directory for the Pipeline
+
+        Returns
+        -------
+        tuple
+            Contains all parameters needed for OpenVA.setAlgorithmParameters().
+
+        Raises
+        ------
+        OpenVAConfigurationError
+        """
+
+        c = conn.cursor()
+
+        # Database Table: InSilicoVA_Conf
+        sqlInSilicoVA = "SELECT data_type, Nsim FROM InSilicoVA_Conf;"
+        queryInSilicoVA = c.execute(sqlInSilicoVA).fetchall()
+
+        insilicovaDataType = queryInSilicoVA[0][0]
+        if not insilicovaDataType in ("WHO2012", "WHO2016"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.data_type \
+                (valid options: 'WHO2012' or 'WHO2016').")
+        insilicovaNsim = queryInSilicoVA[0][1]
+        if insilicovaNsim in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.Nsim")
+
+        # Database Table: Advanced_InSilicoVA_Conf
+        sqlAdvancedInSilicoVA = "SELECT isNumeric, updateCondProb, \
+          keepProbbase_level, CondProb, CondProbNum, datacheck, \
+          datacheck_missing, warning_write, directory, external_sep, thin, \
+          burnin, auto_length, conv_csmf, jump_scale, levels_prior, \
+          levels_strength, trunc_min, trunc_max, subpop, java_option, seed, \
+          phy_code, phy_cat, phy_unknown, phy_external, phy_debias, \
+          exclude_impossible_cause, no_is_missing, indiv_CI, groupcode \
+          FROM Advanced_InSilicoVA_Conf;"
+        queryAdvancedInSilicoVA = c.execute(sqlAdvancedInSilicoVA).fetchall()
+        insilicovaIsNumeric = queryAdvancedInSilicoVA[0][0]
+        if not insilicovaIsNumeric in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.isNumeric \
+                (valid options: 'TRUE' or 'FALSE').")
+
+        ntInSilicoVA = collections.namedtuple("ntInSilicoVA",
+                                              ["InSilicoVA_data_type",
+                                               "InSilicoVA_Nsim",
+                                               "InSilicoVA_isNumeric"])
+                                               # "InSilicoVA_updateCondProb",
+                                               # "InSilicoVA_keepProbbase_level",
+                                               # "InSilicoVA_CondProb",
+                                               # "InSilicoVA_CondProbNum",
+                                               # "InSilicoVA_datacheck",
+                                               # "InSilicoVA_datacheck_missing",
+                                               # "InSilicoVA_warning_write",
+                                               # "InSilicoVA_directory",
+                                               # "InSilicoVA_external_sep",
+                                               # "InSilicoVA_thin",
+                                               # "InSilicoVA_burnin",
+                                               # "InSilicoVA_auto_length",
+                                               # "InSilicoVA_conv_csmf",
+                                               # "InSilicoVA_jump_scale",
+                                               # "InSilicoVA_levels_prior",
+                                               # "InSilicoVA_levels_strength",
+                                               # "InSilicoVA_trunc_min",
+                                               # "InSilicoVA_trunc_max",
+                                               # "InSilicoVA_subpop",
+                                               # "InSilicoVA_java_option",
+                                               # "InSilicoVA_seed",
+                                               # "InSilicoVA_phy_code",
+                                               # "InSilicoVA_phy_cat",
+                                               # "InSilicoVA_phy_unknown",
+                                               # "InSilicoVA_phy_external",
+                                               # "InSilicoVA_phy_debias",
+                                               # "InSilicoVA_exclude_impossible_cause",
+                                               # "InSilicoVA_no_is_missing",
+                                               # "InSilicoVA_indiv_CI",
+                                               # "InSilicoVA_groupcode"]
+        #)
+        settingsInSilicoVA = ntInSilicoVA(insilicovaDataType,
+                                          insilicovaNsim,
+                                          insilicovaIsNumeric)
+                                          # insilicovaUpdateCondProb,
+                                          # insilicovaKeepProbbaseLevel,
+                                          # insilicovaCondProb,
+                                          # insilicovaCondProbNum,
+                                          # insilicovaDatacheck,
+                                          # insilicovaDatacheckMissing,
+                                          # insilicovaWarningWrite,
+                                          # insilicovaDirectory,
+                                          # insilicovaExternalSep,
+                                          # insilicovaThin,
+                                          # insilicovaBurnin,
+                                          # insilicovaAutoLength,
+                                          # insilicovaConvCsmf,
+                                          # insilicovaJumpScale,
+                                          # insilicovaLevelsPrior,
+                                          # insilicovaLevelsStrength,
+                                          # insilicovaTruncMin,
+                                          # insilicovaTruncMax,
+                                          # insilicovaSubpop,
+                                          # insilicovaJavaOption,
+                                          # insilicovaSeed,
+                                          # insilicovaPhyCode,
+                                          # insilicovaPhyCat,
+                                          # insilicovaPhyUnknown,
+                                          # insilicovaPhyExternal,
+                                          # insilicovaPhyDebias,
+                                          # insilicovaExcludeImpossibleCause,
+                                          # insilicovaNoIsMissing,
+                                          # insilicovaIndivCI,
+                                          # insilicovaGroupcode)
+        return(settingsInSilicoVA)
+
+    def __configSmartVA__(self, conn, pipelineDir):
+        """Query OpenVA configuration settings from database.
+
+        This method is called by configOpenVA when the VA algorithm is
+        SmartVA.
+
+        Parameters
+        ----------
+        conn : sqlite3 Connection object
+        pipelineDir : Working directory for the Pipeline
+
+        Returns
+        -------
+        tuple
+            Contains all parameters needed for OpenVA.setAlgorithmParameters().
+
+        Raises
+        ------
+        OpenVAConfigurationError
+        """
+
+        pass
 
     def configDHIS(self):
         """Query DHIS configuration settings from database.

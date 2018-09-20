@@ -77,10 +77,11 @@ INSERT INTO Advanced_InterVA_Conf
 ---- InSilicoVA
 CREATE TABLE InSilicoVA_Conf
 (
+  data_type char(7),
   Nsim char(9)
 );
 
-INSERT INTO InSilicoVA_Conf (Nsim) VALUES("4000");
+INSERT INTO InSilicoVA_Conf (data_type, Nsim) VALUES("WHO2012", "4000");
 
 CREATE TABLE Advanced_InSilicoVA_Conf
 (
@@ -92,6 +93,7 @@ CREATE TABLE Advanced_InSilicoVA_Conf
   datacheck                  char( 5),
   datacheck_missing          char( 5),
   warning_write              char( 5),
+  directory                  char(50),
   external_sep               char( 5),
   thin                       char( 9),
   burnin                     char( 9),
@@ -111,19 +113,23 @@ CREATE TABLE Advanced_InSilicoVA_Conf
   phy_external               char(50),
   phy_debias                 char(50),
   exclude_impossible_cause   char( 5),
-  indiv_CI                   char(10)
+  no_is_missing              char( 5),
+  indiv_CI                   char(10),
+  groupcode                  char( 5)
 );
 
 INSERT INTO Advanced_InSilicoVA_Conf
   (isNumeric, updateCondProb, keepProbbase_level, CondProb, CondProbNum, datacheck, datacheck_missing,
-   warning_write, external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
+   warning_write, directory, external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
    levels_prior, levels_strength, trunc_min, trunc_max, subpop, java_option, seed,
-   phy_code, phy_cat, phy_unknown, phy_external, phy_debias, exclude_impossible_cause, indiv_CI)
+   phy_code, phy_cat, phy_unknown, phy_external, phy_debias, exclude_impossible_cause, no_is_missing,
+   indiv_CI, groupcode)
   VALUES
     ("FALSE", "TRUE", "TRUE", "NULL", "NULL", "TRUE", "TRUE",
-     "FALSE", "TRUE", "10", "2000", "FALSE", "0.02", "0.1",
+     "FALSE", "usePipelineVar", "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
      "NULL", "1", "0.0001", "0.9999", "NULL", "-Xmx1g", "1",
-     "NULL", "NULL", "NULL", "NULL", "NULL", "TRUE", "NULL");
+     "NULL", "NULL", "NULL", "NULL", "NULL", "subset",
+     "FALSE", "NULL", "FALSE");
 
 --  SmartVA Configuration
 CREATE TABLE SmartVA_Conf
