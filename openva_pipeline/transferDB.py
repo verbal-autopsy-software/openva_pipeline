@@ -431,80 +431,334 @@ class TransferDB:
           exclude_impossible_cause, no_is_missing, indiv_CI, groupcode \
           FROM Advanced_InSilicoVA_Conf;"
         queryAdvancedInSilicoVA = c.execute(sqlAdvancedInSilicoVA).fetchall()
+
         insilicovaIsNumeric = queryAdvancedInSilicoVA[0][0]
         if not insilicovaIsNumeric in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.isNumeric \
                 (valid options: 'TRUE' or 'FALSE').")
+        insilicovaUpdateCondProb = queryAdvancedInSilicoVA[0][1]
+        if not insilicovaUpdateCondProb in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.updateCondProb \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaKeepProbbaseLevel = queryAdvancedInSilicoVA[0][2]
+        if not insilicovaKeepProbbaseLevel in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.keepProbbase_level \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaCondProb = queryAdvancedInSilicoVA[0][3]
+        if insilicovaCondProb in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.CondProb \
+                (valid options: name of R object).")
+        insilicovaCondProbNum = queryAdvancedInSilicoVA[0][4]
+        if not insilicovaCondProbNum == "NULL":
+            try:
+                floatCondProbNum = float(insilicovaCondProbNum)
+                validCondProbNum = (0 <= floatCondProbNum <= 1)
+            except:
+                validCondProbNum = False
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InSilicoVA_Conf.CondProbNum \
+                    (must be between '0' and '1').")
+            if not validCondProbNum:
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InSilicoVA_Conf.CondProbNum \
+                    (must be between '0' and '1').")
+        insilicovaDatacheck = queryAdvancedInSilicoVA[0][5]
+        if not insilicovaDatacheck in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.datacheck \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaDatacheckMissing = queryAdvancedInSilicoVA[0][6]
+        if not insilicovaDatacheckMissing in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.datacheck_missing \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaWarningWrite = queryAdvancedInSilicoVA[0][7]
+        if not insilicovaWarningWrite in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.warning_write \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaDirectory = queryAdvancedInSilicoVA[0][8]
+        if not insilicovaDirectory == "usePipelineVar":
+            insilicovaWD = os.path.join(pipelineDir, insilicovaDirectory)
+            if not os.path.isdir(insilicovaWD):
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InSilicoVA_Conf.directory \
+                    (must be valid directory).")
+        insilicovaExternalSep = queryAdvancedInSilicoVA[0][9]
+        if not insilicovaExternalSep in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.external_sep \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaThin = queryAdvancedInSilicoVA[0][10]
+        try:
+            thinFloat = float(insilicovaThin)
+            validThin = (0 < thinFloat)
+        except:
+            validThin = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.thin \
+                (must be 'thin' > 0.")
+        if not validThin:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.thin \
+                (must be 'thin' > 0.")
+        insilicovaBurnin = queryAdvancedInSilicoVA[0][11]
+        try:
+            burninFloat = float(insilicovaBurnin)
+            validBurnin = (0 < burninFloat)
+        except:
+            validBurnin = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.burnin \
+                (must be 'burnin' > 0.")
+        if not validBurnin:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.burnin \
+                (must be 'burnin' > 0.")
+        insilicovaAutoLength = queryAdvancedInSilicoVA[0][12]
+        if not insilicovaAutoLength in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.auto_length \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaConvCSMF = queryAdvancedInSilicoVA[0][13]
+        try:
+            floatConvCSMF = float(insilicovaConvCSMF)
+            validConvCSMF = (0 <= floatConvCSMF <= 1)
+        except:
+            validConvCSMF = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.conv_csmf \
+                (must be between '0' and '1').")
+        if not validConvCSMF:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.conv_csmf \
+                (must be between '0' and '1').")
+        insilicovaJumpScale = queryAdvancedInSilicoVA[0][14]
+        try:
+            floatJumpScale = float(insilicovaJumpScale)
+            validJumpScale = (0 < floatJumpScale)
+        except:
+            validJumpScale = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.jump_scale \
+                (must be greater than '0').")
+        if not validJumpScale:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.jump_scale \
+                (must be greater than '0').")
+        insilicovaLevelsPrior = queryAdvancedInSilicoVA[0][15]
+        if insilicovaLevelsPrior in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.levels_prior \
+                (valid options: name of R object).")
+        insilicovaLevelsStrength = queryAdvancedInSilicoVA[0][16]
+        try:
+            floatLevelsStrength = float(insilicovaLevelsStrength)
+            validLevelsStrength = (0 < floatLevelsStrength)
+        except:
+            validLevelsStrength = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.levels_strength \
+                (must be greater than '0').")
+        if not validLevelsStrength:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.levels_strength \
+                (must be greater than '0').")
+        insilicovaTruncMin = queryAdvancedInSilicoVA[0][17]
+        try:
+            floatTruncMin = float(insilicovaTruncMin)
+            validTruncMin = (0 <= floatTruncMin <= 1)
+        except:
+            validTruncMin = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.trunc_min \
+                (must be between '0' and '1').")
+        if not validTruncMin:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.trunc_min \
+                (must be between '0' and '1').")
+        insilicovaTruncMax = queryAdvancedInSilicoVA[0][18]
+        try:
+            floatTruncMax = float(insilicovaTruncMax)
+            validTruncMax = (0 <= floatTruncMax <= 1)
+        except:
+            validTruncMax = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.trunc_max \
+                (must be between '0' and '1').")
+        if not validTruncMax:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.trunc_max \
+                (must be between '0' and '1').")
+        insilicovaSubpop = queryAdvancedInSilicoVA[0][19]
+        if insilicovaSubpop in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.subpop \
+                (valid options: name of R object).")
+        insilicovaJavaOption = queryAdvancedInSilicoVA[0][20]
+        if insilicovaJavaOption == "" or len(insilicovaJavaOption) < 6:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.java_option \
+                (should look like '-Xmx1g').")
+        joLength = len(insilicovaJavaOption)
+        joLastChar = insilicovaJavaOption[(joLength - 1)]
+        joFirst4Char = insilicovaJavaOption[0:4]
+        joMemSize = insilicovaJavaOption[4:(joLength - 1)]
+        if not joFirst4Char == "-Xmx":
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.java_option \
+                (should start with '-Xmx').")
+        if not joLastChar in ("m", "g"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.java_option \
+                (should end with 'g' for gigabyts or 'm' for megabytes).")
+        try:
+            float_joMemSize = float(joMemSize)
+            valid_joMemSize = (0 < float_joMemSize)
+        except:
+            valid_joMemSize = False
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.java_option \
+                (should look like '-Xmx1g').")
+        if not valid_joMemSize:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.java_option \
+                (should look like '-Xmx1g').")
+        insilicovaSeed = queryAdvancedInSilicoVA[0][21]
+        try:
+            floatSeed = float(insilicovaSeed)
+        except:
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.seed \
+                (must be between a number; preferably an integer).")
+        insilicovaPhyCode = queryAdvancedInSilicoVA[0][22]
+        if insilicovaPhyCode in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.phy_code \
+                (valid options: name of R object).")
+        insilicovaPhyCat = queryAdvancedInSilicoVA[0][23]
+        if insilicovaPhyCat in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.phy_cat \
+                (valid options: name of R object).")
+        insilicovaPhyUnknown = queryAdvancedInSilicoVA[0][24]
+        if insilicovaPhyUnknown in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.phy_unknown \
+                (valid options: name of R object).")
+        insilicovaPhyExternal = queryAdvancedInSilicoVA[0][25]
+        if insilicovaPhyExternal in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.phy_external \
+                (valid options: name of R object).")
+        insilicovaPhyDebias = queryAdvancedInSilicoVA[0][26]
+        if insilicovaPhyDebias in ("", None):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.phy_debias \
+                (valid options: name of R object).")
+        insilicovaExcludeImpossibleCause = queryAdvancedInSilicoVA[0][27]
+        if not insilicovaExcludeImpossibleCause in \
+          ("subset", "all", "InterVA", "none"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.exclude_impossible_cause \
+                (valid options: 'subset', 'all', 'InterVA', and 'none').")
+        insilicovaNoIsMissing = queryAdvancedInSilicoVA[0][28]
+        if not insilicovaNoIsMissing in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.no_is_missing \
+                (valid options: 'TRUE' or 'FALSE').")
+        insilicovaIndivCI = queryAdvancedInSilicoVA[0][29]
+        if not insilicovaIndivCI == "NULL":
+            try:
+                floatIndivCI = float(insilicovaIndivCI)
+                validIndivCI = (0 < floatIndivCI < 1)
+            except:
+                validIndivCI = False
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InSilicoVA_Conf.indiv_CI \
+                    (must be between '0' and '1').")
+            if not validIndivCI:
+                raise OpenVAConfigurationError \
+                    ("Problem in database: InSilicoVA_Conf.indiv_CI \
+                    (must be between '0' and '1').")
+        insilicovaGroupcode = queryAdvancedInSilicoVA[0][30]
+        if not insilicovaGroupcode in ("TRUE", "FALSE"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: InSilicoVA_Conf.groupcode \
+                (valid options: 'TRUE' or 'FALSE').")
 
         ntInSilicoVA = collections.namedtuple("ntInSilicoVA",
                                               ["InSilicoVA_data_type",
                                                "InSilicoVA_Nsim",
-                                               "InSilicoVA_isNumeric"])
-                                               # "InSilicoVA_updateCondProb",
-                                               # "InSilicoVA_keepProbbase_level",
-                                               # "InSilicoVA_CondProb",
-                                               # "InSilicoVA_CondProbNum",
-                                               # "InSilicoVA_datacheck",
-                                               # "InSilicoVA_datacheck_missing",
-                                               # "InSilicoVA_warning_write",
-                                               # "InSilicoVA_directory",
-                                               # "InSilicoVA_external_sep",
-                                               # "InSilicoVA_thin",
-                                               # "InSilicoVA_burnin",
-                                               # "InSilicoVA_auto_length",
-                                               # "InSilicoVA_conv_csmf",
-                                               # "InSilicoVA_jump_scale",
-                                               # "InSilicoVA_levels_prior",
-                                               # "InSilicoVA_levels_strength",
-                                               # "InSilicoVA_trunc_min",
-                                               # "InSilicoVA_trunc_max",
-                                               # "InSilicoVA_subpop",
-                                               # "InSilicoVA_java_option",
-                                               # "InSilicoVA_seed",
-                                               # "InSilicoVA_phy_code",
-                                               # "InSilicoVA_phy_cat",
-                                               # "InSilicoVA_phy_unknown",
-                                               # "InSilicoVA_phy_external",
-                                               # "InSilicoVA_phy_debias",
-                                               # "InSilicoVA_exclude_impossible_cause",
-                                               # "InSilicoVA_no_is_missing",
-                                               # "InSilicoVA_indiv_CI",
-                                               # "InSilicoVA_groupcode"]
-        #)
+                                               "InSilicoVA_isNumeric",
+                                               "InSilicoVA_updateCondProb",
+                                               "InSilicoVA_keepProbbase_level",
+                                               "InSilicoVA_CondProb",
+                                               "InSilicoVA_CondProbNum",
+                                               "InSilicoVA_datacheck",
+                                               "InSilicoVA_datacheck_missing",
+                                               "InSilicoVA_warning_write",
+                                               "InSilicoVA_directory",
+                                               "InSilicoVA_external_sep",
+                                               "InSilicoVA_thin",
+                                               "InSilicoVA_burnin",
+                                               "InSilicoVA_auto_length",
+                                               "InSilicoVA_conv_csmf",
+                                               "InSilicoVA_jump_scale",
+                                               "InSilicoVA_levels_prior",
+                                               "InSilicoVA_levels_strength",
+                                               "InSilicoVA_trunc_min",
+                                               "InSilicoVA_trunc_max",
+                                               "InSilicoVA_subpop",
+                                               "InSilicoVA_java_option",
+                                               "InSilicoVA_seed",
+                                               "InSilicoVA_phy_code",
+                                               "InSilicoVA_phy_cat",
+                                               "InSilicoVA_phy_unknown",
+                                               "InSilicoVA_phy_external",
+                                               "InSilicoVA_phy_debias",
+                                               "InSilicoVA_exclude_impossible_cause",
+                                               "InSilicoVA_no_is_missing",
+                                               "InSilicoVA_indiv_CI",
+                                               "InSilicoVA_groupcode"]
+        )
         settingsInSilicoVA = ntInSilicoVA(insilicovaDataType,
                                           insilicovaNsim,
-                                          insilicovaIsNumeric)
-                                          # insilicovaUpdateCondProb,
-                                          # insilicovaKeepProbbaseLevel,
-                                          # insilicovaCondProb,
-                                          # insilicovaCondProbNum,
-                                          # insilicovaDatacheck,
-                                          # insilicovaDatacheckMissing,
-                                          # insilicovaWarningWrite,
-                                          # insilicovaDirectory,
-                                          # insilicovaExternalSep,
-                                          # insilicovaThin,
-                                          # insilicovaBurnin,
-                                          # insilicovaAutoLength,
-                                          # insilicovaConvCsmf,
-                                          # insilicovaJumpScale,
-                                          # insilicovaLevelsPrior,
-                                          # insilicovaLevelsStrength,
-                                          # insilicovaTruncMin,
-                                          # insilicovaTruncMax,
-                                          # insilicovaSubpop,
-                                          # insilicovaJavaOption,
-                                          # insilicovaSeed,
-                                          # insilicovaPhyCode,
-                                          # insilicovaPhyCat,
-                                          # insilicovaPhyUnknown,
-                                          # insilicovaPhyExternal,
-                                          # insilicovaPhyDebias,
-                                          # insilicovaExcludeImpossibleCause,
-                                          # insilicovaNoIsMissing,
-                                          # insilicovaIndivCI,
-                                          # insilicovaGroupcode)
+                                          insilicovaIsNumeric,
+                                          insilicovaUpdateCondProb,
+                                          insilicovaKeepProbbaseLevel,
+                                          insilicovaCondProb,
+                                          insilicovaCondProbNum,
+                                          insilicovaDatacheck,
+                                          insilicovaDatacheckMissing,
+                                          insilicovaWarningWrite,
+                                          insilicovaDirectory,
+                                          insilicovaExternalSep,
+                                          insilicovaThin,
+                                          insilicovaBurnin,
+                                          insilicovaAutoLength,
+                                          insilicovaConvCSMF,
+                                          insilicovaJumpScale,
+                                          insilicovaLevelsPrior,
+                                          insilicovaLevelsStrength,
+                                          insilicovaTruncMin,
+                                          insilicovaTruncMax,
+                                          insilicovaSubpop,
+                                          insilicovaJavaOption,
+                                          insilicovaSeed,
+                                          insilicovaPhyCode,
+                                          insilicovaPhyCat,
+                                          insilicovaPhyUnknown,
+                                          insilicovaPhyExternal,
+                                          insilicovaPhyDebias,
+                                          insilicovaExcludeImpossibleCause,
+                                          insilicovaNoIsMissing,
+                                          insilicovaIndivCI,
+                                          insilicovaGroupcode)              
         return(settingsInSilicoVA)
 
     def __configSmartVA__(self, conn, pipelineDir):
