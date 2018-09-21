@@ -781,8 +781,61 @@ class TransferDB:
         ------
         OpenVAConfigurationError
         """
+        c = conn.cursor()
 
-        pass
+        sqlSmartVA = "SELECT country, hiv, malaria, hce, freetext, figures, \
+          language FROM SmartVA_Conf;"
+        querySmartVA = c.execute(sqlSmartVA).fetchall()
+
+        sqlCountryList = "SELECT abbrev FROM SmartVA_Country;"
+        queryCountryList = c.execute(sqlCountryList).fetchall()
+
+        smartvaCountry = querySmartVA[0][0]
+        if smartvaCountry not in [j for i in queryCountryList for j in i]:
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.country")
+        smartvaHIV = querySmartVA[0][1]
+        if not smartvaHIV in ("True", "False"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.hiv")
+        smartvaMalaria = querySmartVA[0][2]
+        if not smartvaMalaria in ("True", "False"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.malaria")
+        smartvaHCE = querySmartVA[0][3]
+        if not smartvaHCE in ("True", "False"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.hce")
+        smartvaFreetext = querySmartVA[0][4]
+        if not smartvaFreetext in ("True", "False"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.freetext")
+        smartvaFigures = querySmartVA[0][5]
+        if not smartvaFigures in ("True", "False"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.figures")
+        smartvaLanguage = querySmartVA[0][6]
+        if not smartvaLanguage in ("english", "chinese", "spanish"):
+            raise OpenVAConfigurationError \
+                ("Problem in database: SmartVA_Conf.language")
+
+        ntSmartVA = collections.namedtuple("ntSmartVA",
+                                           ["SmartVA_country",
+                                            "SmartVA_hiv",
+                                            "SmartVA_malaria",
+                                            "SmartVA_hce",
+                                            "SmartVA_freetext",
+                                            "SmartVA_figures",
+                                            "SmartVA_language"]
+        )
+        settingsSmartVA = ntSmartVA(smartvaCountry,
+                                    smartvaHIV,
+                                    smartvaMalaria,
+                                    smartvaHCE,
+                                    smartvaFreetext,
+                                    smartvaFigures,
+                                    smartvaLanguage)
+        return(settingsSmartVA)
 
     def configDHIS(self):
         """Query DHIS configuration settings from database.

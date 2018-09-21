@@ -951,6 +951,132 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
+# Test SmartVA Configuration
+class Check_5_SmartVA_Conf(unittest.TestCase):
+    """Test methods that grab InSilicoVA configuration."""
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    settingsPipeline = xferDB.configPipeline(conn)
+    settingsSmartva = xferDB.configOpenVA(conn,
+                                          "SmartVA",
+                                          settingsPipeline.workingDirectory)
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey)
+    copy_conn = copy_xferDB.connectDB()
+
+    def test_5_smartvaConf_country(self):
+        """Test SmartVA_Conf table has valid country"""
+        self.assertEqual(self.settingsSmartva.SmartVA_country, "Unknown")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.country value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET country = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_hiv(self):
+        """Test SmartVA_Conf table has valid hiv"""
+        self.assertEqual(self.settingsSmartva.SmartVA_hiv, "False")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.hiv value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET hiv = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_malaria(self):
+        """Test SmartVA_Conf table has valid malaria"""
+        self.assertEqual(self.settingsSmartva.SmartVA_malaria, "False")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.malaria value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET malaria = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_hce(self):
+        """Test SmartVA_Conf table has valid hce"""
+        self.assertEqual(self.settingsSmartva.SmartVA_hce, "False")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.hce value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET hce = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_freetext(self):
+        """Test SmartVA_Conf table has valid freetext"""
+        self.assertEqual(self.settingsSmartva.SmartVA_freetext, "False")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.freetext value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET freetext = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_figures(self):
+        """Test SmartVA_Conf table has valid figures"""
+        self.assertEqual(self.settingsSmartva.SmartVA_figures, "False")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.figures value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET figures = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
+    def test_5_smartvaConf_language(self):
+        """Test SmartVA_Conf table has valid language"""
+        self.assertEqual(self.settingsSmartva.SmartVA_language, "english")
+    def test_5_smartvaConf_data_type_Exception(self):
+        """configOpenVA should fail with invalid SmartVA_Conf.language value."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE SmartVA_Conf SET language = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.OpenVAConfigurationError,
+                          self.copy_xferDB.configOpenVA,
+                          self.copy_conn, "SmartVA",
+                          self.settingsPipeline.workingDirectory)
+        self.copy_conn.rollback()
+
 # Test invalid calls to DB
 
 # Test when Transfer DB has invalid info / setup
