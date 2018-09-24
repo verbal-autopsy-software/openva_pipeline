@@ -349,16 +349,15 @@ INSERT INTO SmartVA_Country
 --  DHIS2 Configuration
 CREATE TABLE DHIS_Conf
 (
-  dhisAlgorithmUsed char(20),
   dhisURL           char(50),
   dhisUser          char(50),
-  dhisPass          char(50),
+  dhisPassword      char(50),
   dhisOrgUnit       char(20)
 );
 
 INSERT INTO DHIS_Conf
-  (dhisAlgorithmUsed, dhisURL, dhisUser, dhisPass, dhisOrgUnit)
-  VALUES ("interva4", "https://va25.swisstph-mis.ch", "va-demo", "VerbalAutopsy99", "SCVeBskgiK6");
+  (dhisURL, dhisUser, dhisPassword, dhisOrgUnit)
+  VALUES ("https://va30se.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6");
 
 ---- DHIS metadata: Cause of Death (COD)
 CREATE TABLE COD_Codes_DHIS

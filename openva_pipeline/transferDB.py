@@ -88,6 +88,12 @@ class TransferDB:
         conn = sqlcipher.connect(self.dbPath)
         parSetKey = "\"" + self.dbKey + "\""
         conn.execute("PRAGMA key = " + parSetKey)
+        try:
+            sqlTestConnection = "SELECT name FROM SQLITE_MASTER \
+              where type = 'table';"
+            conn.execute(sqlTestConnection)
+        except (sqlcipher.DatabaseError) as e:
+            raise DatabaseConnectionError("Database password error," + str(e))
 
         return(conn)
 
@@ -120,28 +126,36 @@ class TransferDB:
 
         c = conn.cursor()
 
-        c.execute("SELECT dhisCode from Algorithm_Metadata_Options;")
-        metadataQuery = c.fetchall()
-        c.execute("SELECT algorithmMetadataCode FROM Pipeline_Conf;")
-        algorithmMetadataCode = c.fetchone()[0]
+        try:
+            c.execute("SELECT dhisCode from Algorithm_Metadata_Options;")
+            metadataQuery = c.fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table Algorithm_Metadata_Options, " +
+                 str(e)
+                )
+
+        try:
+            sqlPipeline = "SELECT algorithmMetadataCode, codSource, algorithm, \
+              workingDirectory FROM Pipeline_Conf;"
+            queryPipeline = c.execute(sqlPipeline).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table Pipeline_Conf, " + str(e))
+
+        algorithmMetadataCode = queryPipeline[0][0]
         if algorithmMetadataCode not in [j for i in metadataQuery for j in i]:
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.algorithmMetadataCode")
-
-        c.execute("SELECT codSource FROM Pipeline_Conf;")
-        codSource = c.fetchone()[0]
+        codSource = queryPipeline[0][1]
         if codSource not in ("ICD10", "WHO", "Tariff"):
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.codSource")
-
-        c.execute("SELECT algorithm FROM Pipeline_Conf;")
-        algorithm = c.fetchone()[0]
+        algorithm = queryPipeline[0][2]
         if algorithm not in ("InterVA", "Insilico", "SmartVA", "InterVA5"):
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.algorithm")
-
-        c.execute("SELECT workingDirectory FROM Pipeline_Conf;")
-        workingDirectory = c.fetchone()[0]
+        workingDirectory = queryPipeline[0][3]
         if not os.path.isdir(workingDirectory):
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.workingDirectory")
@@ -161,12 +175,12 @@ class TransferDB:
     def configODK(self, conn):
         """Query ODK configuration settings from database.
 
-        This method is intended to be used in conjunction with
-        (1) TransferDB.connectDB(), which establishes a connection to a
-        database with the Pipeline configuration settings; and (2)
-        ODK.connect(), which establishes a connection to an ODK Aggregate
-        server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
-        and the output from ODK.config() is a valid argument for ODK.config().
+        This method is intended to be used in conjunction with (1)
+        TransferDB.connectDB(), which establishes a connection to a database
+        with the Pipeline configuration settings; and (2) ODK.connect(), which
+        establishes a connection to an ODK Aggregate server.  Thus,
+        TransferDB.configODK() gets its input from TransferDB.connectDB() and
+        the output from TransferDB.configODK() is a valid argument for ODK.config().
 
         Parameters
         ----------
@@ -185,16 +199,18 @@ class TransferDB:
         c = conn.cursor()
         sqlODK = "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, \
           odkLastRun, odkLastRunResult FROM ODK_Conf;"
-        queryODK = c.execute(sqlODK).fetchall()
+        try:
+            queryODK = c.execute(sqlODK).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table ODK_Conf, " + str(e))
         odkID = queryODK[0][0]
-
         odkURL = queryODK[0][1]
         startHTML = odkURL[0:7]
         startHTMLS = odkURL[0:8]
         if not (startHTML == "http://" or startHTMLS == "https://"):
             raise ODKConfigurationError \
                 ("Problem in database: ODK_Conf.odkURL")
-
         odkUser = queryODK[0][2]
         odkPassword = queryODK[0][3]
         odkFormID = queryODK[0][4]
@@ -218,14 +234,14 @@ class TransferDB:
                                         "odkLastRunDate",
                                         "odkLastRunDatePrev"]
         )
-        settingsODK = ntODK(odkID,            
-                            odkURL,           
-                            odkUser,          
-                            odkPassword,      
-                            odkFormID,        
-                            odkLastRun,       
-                            odkLastRunResult, 
-                            odkLastRunDate,   
+        settingsODK = ntODK(odkID,
+                            odkURL,
+                            odkUser,
+                            odkPassword,
+                            odkFormID,
+                            odkLastRun,
+                            odkLastRunResult,
+                            odkLastRunDate,
                             odkLastRunDatePrev)
 
         return(settingsODK)
@@ -292,8 +308,12 @@ class TransferDB:
 
         c = conn.cursor()
 
-        sqlInterVA = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
-        queryInterVA = c.execute(sqlInterVA).fetchall()
+        try:
+            sqlInterVA = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
+            queryInterVA = c.execute(sqlInterVA).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table InterVA_Conf, " + str(e))
 
         # Database Table: InterVA_Conf
         intervaVersion = queryInterVA[0][0]
@@ -313,10 +333,14 @@ class TransferDB:
                 (valid options: 'v', 'l', or 'h').")
         
         # Database Table: Advanced_InterVA_Conf
-        sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
-        groupcode, replicate, replicate_bug1, replicate_bug2, write \
-        FROM Advanced_InterVA_Conf;"
-        queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
+        try:
+            sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
+            groupcode, replicate, replicate_bug1, replicate_bug2, write \
+            FROM Advanced_InterVA_Conf;"
+            queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table Advanced_InterVA_Conf, " + str(e))
 
         intervaDirectory = queryAdvancedInterVA[0][0]
         intervaPath = os.path.join(pipelineDir, intervaDirectory)
@@ -408,8 +432,12 @@ class TransferDB:
         c = conn.cursor()
 
         # Database Table: InSilicoVA_Conf
-        sqlInSilicoVA = "SELECT data_type, Nsim FROM InSilicoVA_Conf;"
-        queryInSilicoVA = c.execute(sqlInSilicoVA).fetchall()
+        try:
+            sqlInSilicoVA = "SELECT data_type, Nsim FROM InSilicoVA_Conf;"
+            queryInSilicoVA = c.execute(sqlInSilicoVA).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table InSilicoVA_Conf, " + str(e))
 
         insilicovaDataType = queryInSilicoVA[0][0]
         if not insilicovaDataType in ("WHO2012", "WHO2016"):
@@ -422,15 +450,19 @@ class TransferDB:
                 ("Problem in database: InSilicoVA_Conf.Nsim")
 
         # Database Table: Advanced_InSilicoVA_Conf
-        sqlAdvancedInSilicoVA = "SELECT isNumeric, updateCondProb, \
-          keepProbbase_level, CondProb, CondProbNum, datacheck, \
-          datacheck_missing, warning_write, directory, external_sep, thin, \
-          burnin, auto_length, conv_csmf, jump_scale, levels_prior, \
-          levels_strength, trunc_min, trunc_max, subpop, java_option, seed, \
-          phy_code, phy_cat, phy_unknown, phy_external, phy_debias, \
-          exclude_impossible_cause, no_is_missing, indiv_CI, groupcode \
-          FROM Advanced_InSilicoVA_Conf;"
-        queryAdvancedInSilicoVA = c.execute(sqlAdvancedInSilicoVA).fetchall()
+        try:
+            sqlAdvancedInSilicoVA = "SELECT isNumeric, updateCondProb, \
+              keepProbbase_level, CondProb, CondProbNum, datacheck, \
+              datacheck_missing, warning_write, directory, external_sep, thin, \
+              burnin, auto_length, conv_csmf, jump_scale, levels_prior, \
+              levels_strength, trunc_min, trunc_max, subpop, java_option, seed, \
+              phy_code, phy_cat, phy_unknown, phy_external, phy_debias, \
+              exclude_impossible_cause, no_is_missing, indiv_CI, groupcode \
+              FROM Advanced_InSilicoVA_Conf;"
+            queryAdvancedInSilicoVA = c.execute(sqlAdvancedInSilicoVA).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table Advanced_InSilicoVA_Conf, " + str(e))
 
         insilicovaIsNumeric = queryAdvancedInSilicoVA[0][0]
         if not insilicovaIsNumeric in ("TRUE", "FALSE"):
@@ -783,12 +815,20 @@ class TransferDB:
         """
         c = conn.cursor()
 
-        sqlSmartVA = "SELECT country, hiv, malaria, hce, freetext, figures, \
-          language FROM SmartVA_Conf;"
-        querySmartVA = c.execute(sqlSmartVA).fetchall()
+        try:
+            sqlSmartVA = "SELECT country, hiv, malaria, hce, freetext, figures, \
+            language FROM SmartVA_Conf;"
+            querySmartVA = c.execute(sqlSmartVA).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table SmartVA_Conf, " + str(e))
 
-        sqlCountryList = "SELECT abbrev FROM SmartVA_Country;"
-        queryCountryList = c.execute(sqlCountryList).fetchall()
+        try:
+            sqlCountryList = "SELECT abbrev FROM SmartVA_Country;"
+            queryCountryList = c.execute(sqlCountryList).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table SmartVA_Country, " + str(e))
 
         smartvaCountry = querySmartVA[0][0]
         if smartvaCountry not in [j for i in queryCountryList for j in i]:
@@ -837,31 +877,71 @@ class TransferDB:
                                     smartvaLanguage)
         return(settingsSmartVA)
 
-    def configDHIS(self):
+    def configDHIS(self, conn):
         """Query DHIS configuration settings from database.
 
-        This method is intended to be used in conjunction with
-        (1) TransferDB.connectDB(), which establishes a connection to a
-        database with the Pipeline configuration settings; and (2)
-        ODK.connect(), which establishes a connection to an ODK Aggregate
-        server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
-        and the output from ODK.config() is a valid argument for ODK.config().
+        This method is intended to be used in conjunction with (1)
+        TransferDB.connectDB(), which establishes a connection to a database
+        with the Pipeline configuration settings; and (2) DHIS.connect(), which
+        establishes a connection to a DHIS server.  Thus,
+        TransferDB.configDHIS() gets its input from TransferDB.connectDB() and
+        the output from TransferDB.config() is a valid argument for
+        DHIS.config().
 
         Parameters
         ----------
-        conn : sqlite3 Connection object
+        conn : sqlite3 Connection object (e.g., the object returned from
+        TransferDB.connectDB())
 
         Returns
         -------
         tuple
-            Contains all parameters for ODK.connect().
+            Contains all parameters for DHIS.connect().
 
         Raises
         ------
         DHISConfigurationError
 
         """
-        pass
+        c = conn.cursor()
+        try:
+            sqlDHIS = "SELECT dhisURL, dhisUser, dhisPassword, dhisOrgUnit \
+              FROM DHIS_Conf;"
+            queryDHIS = c.execute(sqlDHIS).fetchall()
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table DHIS_Conf, " + str(e))
+        dhisURL = queryDHIS[0][0]
+        startHTML = dhisURL[0:7]
+        startHTMLS = dhisURL[0:8]
+        if not (startHTML == "http://" or startHTMLS == "https://"):
+            raise DHISConfigurationError \
+                ("Problem in database: DHIS_Conf.dhisURL")
+        dhisUser = queryDHIS[0][1]
+        if dhisUser == "" or dhisUser == None:
+            raise DHISConfigurationError \
+                ("Problem in database: DHIS_Conf.dhisUser (is empty)")
+        dhisPassword = queryDHIS[0][2]
+        if dhisPassword == "" or dhisPassword == None:
+            raise DHISConfigurationError \
+                ("Problem in database: DHIS_Conf.dhisPassword (is empty)")
+        dhisOrgUnit = queryDHIS[0][3]
+        if dhisOrgUnit == "" or dhisOrgUnit == None:
+            raise DHISConfigurationError \
+                ("Problem in database: DHIS_Conf.dhisOrgUnit (is empty)")
+
+        ntDHIS = collections.namedtuple("ntDHIS",
+                                       ["dhisURL",
+                                        "dhisUser",
+                                        "dhisPassword",
+                                        "dhisOrgUnit"]
+        )
+        settingsDHIS = ntDHIS(dhisURL,
+                              dhisUser,
+                              dhisPassword,
+                              dhisOrgUnit)
+
+        return(settingsDHIS)
 
     def storeVA(self):
         """Query ODK configuration settings from database.

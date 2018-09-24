@@ -16,38 +16,94 @@ from pysqlcipher3 import dbapi2 as sqlcipher
 
 
 # Test valid DB connection & structure (i.e. all tables are there)
-# (note: tests are executed in order of test names sorted as strings)
 class Check_1_Connection(unittest.TestCase):
 
     # parameters for connecting to DB (assuming DB is in tests folder)
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
+    wrong_dbKey = "wrongKey"
     dbDirectory = os.path.abspath(os.path.dirname(__file__))
+
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    c = conn.cursor()
+    sqlTestConnection = "SELECT name FROM SQLITE_MASTER where type = 'table';"
+    c.execute(sqlTestConnection)
+    tableNames = c.fetchall()
+    listTableNames = [j for i in tableNames for j in i]
 
     def test_1_connection_1_dbFilePresent(self):
         """Check that DB file is located in path."""
-
         badPath = "/invalid/path/to/pipelineDB"
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = badPath,
                             dbKey = self.dbKey)
+        self.assertRaises(transferDB.DatabaseConnectionError, xferDB.connectDB)
 
+    def test_1_connection_1_wrongKey(self):
+        """Pipeline should raise an error when the wrong key is used."""
+        xferDB = TransferDB(dbFileName = self.dbFileName,
+                            dbDirectory = self.dbDirectory,
+                            dbKey = self.wrong_dbKey)
         self.assertRaises(transferDB.DatabaseConnectionError, xferDB.connectDB)
 
     def test_1_connection_2_connection(self):
         """Test that the pipeline can connect to the DB."""
+        self.assertTrue(len(self.tableNames) > 0)
 
-        xferDB = TransferDB(dbFileName = self.dbFileName,
-                            dbDirectory = self.dbDirectory,
-                            dbKey = self.dbKey)
+    def test_1_table_Pipeline_Conf(self):
+        """Test that the Pipeline.db has Pipeline_Conf table."""
+        self.assertIn("Pipeline_Conf", self.listTableNames)
 
-        conn = xferDB.connectDB()
-        c = conn.cursor()
-        sqlTestConnection = "SELECT name FROM SQLITE_MASTER where type = 'table';"
-        c.execute(sqlTestConnection)
-        tableNames = c.fetchall()
-        conn.close()
-        self.assertTrue(len(tableNames) > 0)
+    def test_1_table_VA_Storage(self):
+        """Test that the Pipeline.db has VA_Storage table."""
+        self.assertIn("VA_Storage", self.listTableNames)
+
+    def test_1_table_EventLog(self):
+        """Test that the Pipeline.db has EventLog table."""
+        self.assertIn("EventLog", self.listTableNames)
+
+    def test_1_table_ODK_Conf(self):
+        """Test that the Pipeline.db has ODK_Conf table."""
+        self.assertIn("ODK_Conf", self.listTableNames)
+
+    def test_1_table_InterVA_Conf(self):
+        """Test that the Pipeline.db has InterVA_Conf table."""
+        self.assertIn("InterVA_Conf", self.listTableNames)
+
+    def test_1_table_Advanced_InterVA_Conf(self):
+        """Test that the Pipeline.db has Advanced_InterVA_Conf table."""
+        self.assertIn("Advanced_InterVA_Conf", self.listTableNames)
+
+    def test_1_table_InSilicoVA_Conf(self):
+        """Test that the Pipeline.db has InSilicoVA_Conf table."""
+        self.assertIn("InSilicoVA_Conf", self.listTableNames)
+
+    def test_1_table_Advanced_InSilicoVA_Conf(self):
+        """Test that the Pipeline.db has Advanced_InSilicoVA_Conf table."""
+        self.assertIn("Advanced_InSilicoVA_Conf", self.listTableNames)
+
+    def test_1_table_SmartVA_Conf(self):
+        """Test that the Pipeline.db has SmartVA_Conf table."""
+        self.assertIn("SmartVA_Conf", self.listTableNames)
+
+    def test_1_table_SmartVA_Country(self):
+        """Test that the Pipeline.db has SmartVA_Country table."""
+        self.assertIn("SmartVA_Country", self.listTableNames)
+
+    def test_1_table_DHIS_Conf(self):
+        """Test that the Pipeline.db has DHIS_Conf table."""
+        self.assertIn("DHIS_Conf", self.listTableNames)
+
+    def test_1_table_COD_Codes_DHIS(self):
+        """Test that the Pipeline.db has COD_Codes_DHIS table."""
+        self.assertIn("COD_Codes_DHIS", self.listTableNames)
+
+    def test_1_table_Algorithm_Metadata_Options(self):
+        """Test that the Pipeline.db has Algorithm_Metadata_Options table."""
+        self.assertIn("Algorithm_Metadata_Options", self.listTableNames)
 
 # Test Pipeline Configuration
 class Check_2_Pipeline_Conf(unittest.TestCase):
@@ -72,13 +128,42 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
                              dbKey = dbKey)
     copy_conn = copy_xferDB.connectDB()
 
+    # parameters for connecting to DB with wrong Tables
+    wrongTables_dbFileName = "wrongTables_Pipeline.db"
+    wrongTables_xferDB = TransferDB(dbFileName = wrongTables_dbFileName,
+                                    dbDirectory = dbDirectory,
+                                    dbKey = dbKey)
+    wrongTables_conn = wrongTables_xferDB.connectDB()
+    wrongTables_c = wrongTables_conn.cursor()
+
+    # parameters for connecting to DB with wrong fields
+    wrongFields_dbFileName = "wrongFields_Pipeline.db"
+    wrongFields_xferDB = TransferDB(dbFileName = wrongFields_dbFileName,
+                                    dbDirectory = dbDirectory,
+                                    dbKey = dbKey)
+    wrongFields_conn = wrongFields_xferDB.connectDB()
+
+    def test_2_pipelineConf_Exception_noTable(self):
+        """Test that Pipeline raises error if no Pipeline_Conf table."""
+        self.assertRaises(transferDB.PipelineConfigurationError,
+                          self.wrongTables_xferDB.configPipeline,
+                          self.wrongTables_conn
+        )
+    def test_2_pipelineConf_Exception_noField(self):
+        """Test that Pipeline raises error if no Pipeline_Conf table."""
+        self.assertRaises(transferDB.PipelineConfigurationError,
+                          self.wrongFields_xferDB.configPipeline,
+                          self.wrongFields_conn
+        )
+
     def test_2_pipelineConf_algorithmMetadataCode(self):
         """Test Pipeline_Conf table has valid algorithmMetadataCode."""
 
         validMetadataCode = self.settingsPipeline.algorithmMetadataCode in \
             [j for i in self.metadataQuery for j in i]
         self.assertTrue(validMetadataCode)
-    def test_2_pipelineConf_algorithmMetadataCode_Exception(self):
+
+    def test_2_pipelineConf_algorithmMetadataCode_Exception_value(self):
         """configPipeline should fail with invalid algorithmMetadataCode."""
 
         c = self.copy_conn.cursor()
@@ -161,10 +246,8 @@ class Check_3_ODK_Conf(unittest.TestCase):
 
     def test_3_odkConf_odkURL(self):
         """Test ODK_Conf table has valid odkURL"""
-        startHTML = self.settingsODK.odkURL[0:7]
-        startHTMLS = self.settingsODK.odkURL[0:8]
-        validURL = startHTML == "http://" or startHTMLS == "https://"
-        self.assertTrue(validURL)
+        self.assertEqual(self.settingsODK.odkURL,
+                         "https://odk.swisstph.ch/ODKAggregateOpenVa")
     def test_3_odkConf_odkURL_Exception(self):
         """configODK should fail with invalid url."""
         c = self.copy_conn.cursor()
@@ -1077,9 +1160,79 @@ class Check_5_SmartVA_Conf(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
-# Test invalid calls to DB
+# Test DHIS Configuration
+class Check_6_DHIS_Conf(unittest.TestCase):
+    """Test methods that grab DHIS configuration."""
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    dbDirectory = os.path.abspath(os.path.dirname(__file__))
 
-# Test when Transfer DB has invalid info / setup
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    settingsDHIS = xferDB.configDHIS(conn)
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey)
+    copy_conn = copy_xferDB.connectDB()
+
+    def test_6_dhisConf_dhisURL(self):
+        """Test DHIS_Conf table has valid dhisURL"""        
+        self.assertEqual(self.settingsDHIS.dhisURL,
+                         "https://va30se.swisstph-mis.ch")
+    def test_6_dhisConf_dhisURL_Exception(self):
+        """configDHIS should fail with invalid url."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE DHIS_Conf SET dhisURL = ?"
+        par = ("wrong.url",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.DHISConfigurationError,
+                          self.copy_xferDB.configDHIS, self.copy_conn)
+        self.copy_conn.rollback()
+
+    def test_6_dhisConf_dhisUser(self):
+        """Test DHIS_Conf table has valid dhisUser"""
+        self.assertEqual(self.settingsDHIS.dhisUser, "va-demo")
+    def test_6_dhisConf_dhisUser_Exception(self):
+        """configDHIS should fail with invalid dhisUser."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE DHIS_Conf SET dhisUser = ?"
+        par = ("",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.DHISConfigurationError,
+                          self.copy_xferDB.configDHIS, self.copy_conn)
+        self.copy_conn.rollback()
+
+    def test_6_dhisConf_dhisPassword(self):
+        """Test DHIS_Conf table has valid dhisPassword"""
+        self.assertEqual(self.settingsDHIS.dhisPassword, "VerbalAutopsy99!")
+    def test_6_dhisConf_dhisPassword_Exception(self):
+        """configDHIS should fail with invalid dhisPassword."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE DHIS_Conf SET dhisPassword = ?"
+        par = ("",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.DHISConfigurationError,
+                          self.copy_xferDB.configDHIS, self.copy_conn)
+        self.copy_conn.rollback()
+
+    def test_6_dhisConf_dhisOrgUnit(self):
+        """Test DHIS_Conf table has valid dhisOrgUnit"""
+        self.assertEqual(self.settingsDHIS.dhisOrgUnit, "SCVeBskgiK6")
+    def test_6_dhisConf_dhisOrgUnit_Exception(self):
+        """configDHIS should fail with invalid dhisOrgUnit."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE DHIS_Conf SET dhisOrgUnit = ?"
+        par = ("",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.DHISConfigurationError,
+                          self.copy_xferDB.configDHIS, self.copy_conn)
+        self.copy_conn.rollback()
+
+# Test VA Storage Configuration
+# Test EventLog Configuration
 
 if __name__ == "__main__":
     unittest.main()

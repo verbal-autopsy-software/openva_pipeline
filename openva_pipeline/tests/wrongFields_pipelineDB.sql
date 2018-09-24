@@ -1,170 +1,372 @@
--- Set up Pipeline database for ODK, openVA/SmartVA, and DHIS2 configuration, and create table for an event log.
+-- Used for testing pipeline (when field name is missing/expecting different name)
 
 -- Pipeline Configuration
 CREATE TABLE Pipeline_Conf
 (
-  algorithmMetadataCode char(100), -- see table Algorithm_Metadata_Options (below)
-  codSource             char ( 6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff", "wrong")),
-  algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "Insilico", "SmartVA", "wrong")),
-  workingDirectory      char(100)
+  a char(100), -- see table Algorithm_Metadata_Options (below)
+  b             char ( 6) NOT NULL CHECK (b IN ("ICD10", "WHO", "Tariff")),
+  c             char(  8) NOT NULL CHECK (c IN ("InterVA", "Insilico", "SmartVA")),
+  d      char(100)
 );
 
 INSERT INTO Pipeline_Conf
-  (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("wrong", "wrong", "wrong", "/not/valid/directory");
+  (a,b,c,d)
+  VALUES("SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1", "Tariff", "SmartVA", ".");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage
 (
-  id          char(100) NOT NULL,
-  outcome     char( 19) NOT NULL CHECK (outcome IN ("Pushed to DHIS2", "No CoD Assigned", "wrong")),
-  record      blob,
-  dateEntered date
+  a     char(100) NOT NULL,
+  b     char( 19) NOT NULL CHECK (b IN ("Pushed to DHIS2", "No CoD Assigned")),
+  c      blob,
+  d date
 );
 
 -- Event Log (also stores error messages)
 CREATE TABLE EventLog
 (
-  eventDesc char(255),
-  eventType char(255),
-  eventTime char( 20)
+  a char(255),
+  b char(255),
+  c char( 20)
 );
 
 -- ODK configuration
 CREATE TABLE ODK_Conf
 (
-  odkID            char(50),
-  odkURL           char(50),
-  odkUser          char(50),
-  odkPassword      char(50),
-  odkFormID        char(50),
-  odkLastRun       date,
-  odkLastRunResult int
+  a char(50),
+  b char(50),
+  c char(50),
+  d char(50),
+  e char(50),
+  f date,
+  g int
 );
 
 INSERT INTO ODK_Conf
-  (odkURL, odkUser, odkPassword, odkFormID, odkLastRun, odkLastRunResult)
-  VALUES("wrong", "", "", "", "", "wrong");
+  (b, c, d, e, f, g)
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "PHMRC_Shortened_Instrument_8_20_2015", "1900-01-01_00:00:01", "0");
 
 -- openVA Configuration: algorithm-specific tables
----- InterVA4
-CREATE TABLE InterVA4_Conf
+---- InterVA
+CREATE TABLE InterVA_Conf
 (
-  HIV     char(1) NOT NULL CHECK (HIV IN ("v", "l", "h", "wrong")),
-  Malaria char(1) NOT NULL CHECK (Malaria IN ("v", "l", "h", "wrong"))
+  a char(1) NOT NULL CHECK (a IN ("4", "5")),
+  b     char(1) NOT NULL CHECK (b IN ("v", "l", "h")),
+  c char(1) NOT NULL CHECK (c IN ("v", "l", "h"))
 );
 
-INSERT INTO InterVA4_Conf (HIV, Malaria) VALUES("wrong", "wrong");
+INSERT INTO InterVA_Conf (a, b, c) VALUES("4", "v", "v");
 
-CREATE TABLE Advanced_InterVA4_Conf
+CREATE TABLE Advanced_InterVA_Conf
 (
-  directory      char(50),
-  filename       char(50),
-  output         char( 8) NOT NULL CHECK (output    IN ("classic", "extended", "wrong")),
-  append         char( 5) NOT NULL CHECK (append    IN ("TRUE", "FALSE", "wrong")),
-  groupcode      char( 5) NOT NULL CHECK (groupcode IN ("TRUE", "FALSE", "wrong")),
-  replicate      char( 5) NOT NULL CHECK (replicate IN ("TRUE", "FALSE", "wrong")),
-  replicate_bug1 char( 5) NOT NULL CHECK (replicate_bug1 IN ("TRUE", "FALSE", "wrong")),
-  replicate_bug2 char( 5) NOT NULL CHECK (replicate_bug1 IN ("TRUE", "FALSE", "wrong")),
-  write          char( 5) NOT NULL CHECK (write     IN ("TRUE", "FALSE", "wrong"))
+  a      char(50),
+  b       char(50),
+  c         char( 8) NOT NULL CHECK (c    IN ("classic", "extended")),
+  d         char( 5) NOT NULL CHECK (d    IN ("TRUE", "FALSE")),
+  e      char( 5) NOT NULL CHECK (e IN ("TRUE", "FALSE")),
+  f      char( 5) NOT NULL CHECK (f IN ("TRUE", "FALSE")),
+  g char( 5) NOT NULL CHECK (g IN ("TRUE", "FALSE")),
+  h char( 5) NOT NULL CHECK (h IN ("TRUE", "FALSE")),
+  i          char( 5) NOT NULL CHECK (i     IN ("TRUE", "FALSE"))
 );
 
-INSERT INTO Advanced_InterVA4_Conf
-  (directory, filename, output, append, groupcode, replicate, replicate_bug1, replicate_bug2, write)
-  VALUES("/not/valid/directory", "", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong");
+INSERT INTO Advanced_InterVA_Conf
+  (a, b, c, d, e, f, g, h, i)
+  VALUES("OpenVAFiles", "interVA4_results", "classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
 
 ---- InSilicoVA
 CREATE TABLE InSilicoVA_Conf
 (
-  Nsim char(9)
+  a char(7) NOT NULL CHECK (a IN ("WHO2012", "WHO2016")),
+  b char(9)
 );
 
-INSERT INTO InSilicoVA_Conf (Nsim) VALUES("wrong");
+INSERT INTO InSilicoVA_Conf (a, b) VALUES("WHO2012", "4000");
 
 CREATE TABLE Advanced_InSilicoVA_Conf
 (
-  isNumeric                  char( 5) NOT NULL CHECK (isNumeric                IN ("TRUE", "FALSE", "wrong")),
-  updateCondProb             char( 5) NOT NULL CHECK (updateCondProb           IN ("TRUE", "FALSE", "wrong")),
-  keepProbbase_level         char( 5) NOT NULL CHECK (keepProbbase_level       IN ("TRUE", "FALSE", "wrong")),
-  CondProb                   char(50),
-  CondProbNum                char(50),
-  datacheck                  char( 5) NOT NULL CHECK (datacheck                IN ("TRUE", "FALSE", "wrong")),
-  datacheck_missing          char( 5) NOT NULL CHECK (datacheck_missing        IN ("TRUE", "FALSE", "wrong")),
-  warning_write              char( 5) NOT NULL CHECK (warning_write            IN ("TRUE", "FALSE", "wrong")),
-  external_sep               char( 5) NOT NULL CHECK (external_sep             IN ("TRUE", "FALSE", "wrong")),
-  thin                       char( 9),
-  burnin                     char( 9),
-  auto_length                char( 5) NOT NULL CHECK (auto_length              IN ("TRUE", "FALSE", "wrong")),
-  conv_csmf                  char(10),
-  jump_scale                 char(10),
-  levels_prior               char(10),
-  levels_strength            char(10),
-  trunc_min                  char(10),
-  trunc_max                  char(10),
-  subpop                     char(50),
-  java_option                char(10),
-  seed                       char(10),
-  phy_code                   char(50),
-  phy_cat                    char(50),
-  phy_unknown                char(50),
-  phy_external               char(50),
-  phy_debias                 char(50),
-  exclude_impossible_cause   char( 5) NOT NULL CHECK (exclude_impossible_cause IN ("TRUE", "FALSE", "wrong")),
-  indiv_CI                   char(10)
+  a char( 5) NOT NULL CHECK (a                IN ("TRUE", "FALSE")),
+  b char( 5) NOT NULL CHECK (b           IN ("TRUE", "FALSE")),
+  c char( 5) NOT NULL CHECK (c       IN ("TRUE", "FALSE")),
+  d char(50),
+  e char(50),
+  f char( 5) NOT NULL CHECK (f                IN ("TRUE", "FALSE")),
+  g char( 5) NOT NULL CHECK (g        IN ("TRUE", "FALSE")),
+  h char( 5) NOT NULL CHECK (h            IN ("TRUE", "FALSE")),
+  i char(50),
+  j char( 5) NOT NULL CHECK (j             IN ("TRUE", "FALSE")),
+  k char( 9),
+  l char( 9),
+  m char( 5) NOT NULL CHECK (m              IN ("TRUE", "FALSE")),
+  n char(10),
+  o char(10),
+  p char(10),
+  q char(10),
+  r char(10),
+  s char(10),
+  t char(50),
+  u char(10),
+  v char(10),
+  w char(50),
+  x char(50),
+  y char(50),
+  z char(50),
+  aa char(50),
+  ab char( 5) NOT NULL CHECK (ab IN ("subset", "all", "InterVA", "none")),
+  ac char( 5) NOT NULL CHECK (ac            IN ("TRUE", "FALSE")),
+  ad char(10),
+  ae char( 5) NOT NULL CHECK (ae                IN ("TRUE", "FALSE"))
 );
 
 INSERT INTO Advanced_InSilicoVA_Conf
-  (isNumeric, updateCondProb, keepProbbase_level, CondProb, CondProbNum, datacheck, datacheck_missing,
-   warning_write, external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
-   levels_prior, levels_strength, trunc_min, trunc_max, subpop, java_option, seed,
-   phy_code, phy_cat, phy_unknown, phy_external, phy_debias, exclude_impossible_cause, indiv_CI)
+  (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y,
+  z, aa, ab, ac, ad, ae)
   VALUES
-    ("wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong",
-     "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong",
-     "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "1",
-     "wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong");
+    ("FALSE", "TRUE", "TRUE", "NULL", "NULL", "TRUE", "TRUE",
+     "FALSE", "usePipelineVar", "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
+     "NULL", "1", "0.0001", "0.9999", "NULL", "-Xmx1g", "1",
+     "NULL", "NULL", "NULL", "NULL", "NULL", "subset",
+     "FALSE", "NULL", "FALSE");
 
 --  SmartVA Configuration
 CREATE TABLE SmartVA_Conf
 (
-  country       char(7), -- Unknown or 3 letter country abbreviation
-  hiv           char(5) NOT NULL CHECK (hiv           IN ("True", "False", "wrong")),
-  malaria       char(5) NOT NULL CHECK (malaria       IN ("True", "False", "wrong")),
-  hce           char(5) NOT NULL CHECK (hce           IN ("True", "False", "wrong")),
-  freetext      char(5) NOT NULL CHECK (freetext      IN ("True", "False", "wrong")),
-  figures       char(5) NOT NULL CHECK (figures       IN ("True", "False", "wrong")),
-  language      char(7) NOT NULL CHECK (language      IN ("english", "chinese", "spanish", "wrong"))
+  a       char(7), -- Unknown or 3 letter country abbreviation
+  b           char(5) NOT NULL CHECK (b           IN ("True", "False")),
+  c       char(5) NOT NULL CHECK (c       IN ("True", "False")),
+  d           char(5) NOT NULL CHECK (d           IN ("True", "False")),
+  e      char(5) NOT NULL CHECK (e      IN ("True", "False")),
+  f       char(5) NOT NULL CHECK (f       IN ("True", "False")),
+  g      char(7) NOT NULL CHECK (g      IN ("english", "chinese", "spanish"))
 );
 
 INSERT INTO SmartVA_Conf
-  (country, hiv, malaria, hce, freetext, figures, language)
-  VALUES ("wrong", "wrong", "wrong", "wrong", "wrong", "wrong", "wrong");
+  (a, b, c, d, e, f, g)
+  VALUES ("Unknown", "False", "False", "False", "False", "False", "english");
+
+---- SmartVA Country List
+CREATE TABLE SmartVA_Country
+(
+  a char(50),
+  b char(7)
+);
+INSERT INTO SmartVA_Country
+  (a, b)
+  VALUES
+  ("Unknown", "Unknown"),
+  ("Afghanistan", "AFG"),
+  ("Albania", "ALB"),
+  ("Algeria", "DZA"),
+  ("Andorra", "AND"),
+  ("Angola", "AGO"),
+  ("Antigua and Barbuda", "ATG"),
+  ("Argentina", "ARG"),
+  ("Armenia", "ARM"),
+  ("Australia", "AUS"),
+  ("Austria", "AUT"),
+  ("Azerbaijan", "AZE"),
+  ("Bahrain", "BHR"),
+  ("Bangladesh", "BGD"),
+  ("Barbados", "BRB"),
+  ("Belarus", "BLR"),
+  ("Belgium", "BEL"),
+  ("Belize", "BLZ"),
+  ("Benin", "BEN"),
+  ("Bhutan", "BTN"),
+  ("Bolivia", "BOL"),
+  ("Bosnia and Herzegovina", "BIH"),
+  ("Botswana", "BWA"),
+  ("Brazil", "BRA"),
+  ("Brunei", "BRN"),
+  ("Bulgaria", "BGR"),
+  ("Burkina Faso", "BFA"),
+  ("Burundi", "BDI"),
+  ("Cambodia", "KHM"),
+  ("Cameroon", "CMR"),
+  ("Canada", "CAN"),
+  ("Cape Verde", "CPV"),
+  ("Central African Republic", "CAF"),
+  ("Chad", "TCD"),
+  ("Chile", "CHL"),
+  ("China", "CHN"),
+  ("Colombia", "COL"),
+  ("Comoros", "COM"),
+  ("Congo", "COG"),
+  ("Costa Rica", "CRI"),
+  ("Cote d’Ivoire", "CIV"),
+  ("Croatia", "HRV"),
+  ("Cuba", "CUB"),
+  ("Cyprus", "CYP"),
+  ("Czech Republic", "CZE"),
+  ("Democratic Republic of the Congo", "COD"),
+  ("Denmark", "DNK"),
+  ("Djibouti", "DJI"),
+  ("Dominica", "DMA"),
+  ("Dominican Republic", "DOM"),
+  ("Ecuador", "ECU"),
+  ("Egypt", "EGY"),
+  ("El Salvador", "SLV"),
+  ("Equatorial Guinea", "GNQ"),
+  ("Eritrea", "ERI"),
+  ("Estonia", "EST"),
+  ("Ethiopia", "ETH"),
+  ("Federated States of Micronesia", "FSM"),
+  ("Fiji", "FJI"),
+  ("Finland", "FIN"),
+  ("France", "FRA"),
+  ("Gabon", "GAB"),
+  ("Georgia", "GEO"),
+  ("Germany", "DEU"),
+  ("Ghana", "GHA"),
+  ("Greece", "GRC"),
+  ("Grenada", "GRD"),
+  ("Guatemala", "GTM"),
+  ("Guinea", "GIN"),
+  ("Guinea-Bissau", "GNB"),
+  ("Guyana", "GUY"),
+  ("Haiti", "HTI"),
+  ("Honduras", "HND"),
+  ("Hungary", "HUN"),
+  ("Iceland", "ISL"),
+  ("India", "IND"),
+  ("Indonesia", "IDN"),
+  ("Iran", "IRN"),
+  ("Iraq", "IRQ"),
+  ("Ireland", "IRL"),
+  ("Israel", "ISR"),
+  ("Italy", "ITA"),
+  ("Jamaica", "JAM"),
+  ("Japan", "JPN"),
+  ("Jordan", "JOR"),
+  ("Kazakhstan", "KAZ"),
+  ("Kenya", "KEN"),
+  ("Kiribati", "KIR"),
+  ("Kuwait", "KWT"),
+  ("Kyrgyzstan", "KGZ"),
+  ("Laos", "LAO"),
+  ("Latvia", "LVA"),
+  ("Lebanon", "LBN"),
+  ("Lesotho", "LSO"),
+  ("Liberia", "LBR"),
+  ("Libya", "LBY"),
+  ("Lithuania", "LTU"),
+  ("Luxembourg", "LUX"),
+  ("Macedonia", "MKD"),
+  ("Madagascar", "MDG"),
+  ("Malawi", "MWI"),
+  ("Malaysia", "MYS"),
+  ("Maldives", "MDV"),
+  ("Mali", "MLI"),
+  ("Malta", "MLT"),
+  ("Marshall Islands", "MHL"),
+  ("Mauritania", "MRT"),
+  ("Mauritius", "MUS"),
+  ("Mexico", "MEX"),
+  ("Moldova", "MDA"),
+  ("Mongolia", "MNG"),
+  ("Montenegro", "MNE"),
+  ("Morocco", "MAR"),
+  ("Mozambique", "MOZ"),
+  ("Myanmar", "MMR"),
+  ("Namibia", "NAM"),
+  ("Nepal", "NPL"),
+  ("Netherlands", "NLD"),
+  ("New Zealand", "NZL"),
+  ("Nicaragua", "NIC"),
+  ("Niger", "NER"),
+  ("Nigeria", "NGA"),
+  ("North Korea", "PRK"),
+  ("Norway", "NOR"),
+  ("Oman", "OMN"),
+  ("Pakistan", "PAK"),
+  ("Palestine", "PSE"),
+  ("Panama", "PAN"),
+  ("Papua New Guinea", "PNG"),
+  ("Paraguay", "PRY"),
+  ("Peru", "PER"),
+  ("Philippines", "PHL"),
+  ("Poland", "POL"),
+  ("Portugal", "PRT"),
+  ("Qatar", "QAT"),
+  ("Romania", "ROU"),
+  ("Russia", "RUS"),
+  ("Rwanda", "RWA"),
+  ("Saint Lucia", "LCA"),
+  ("Saint Vincent and the Grenadines", "VCT"),
+  ("Samoa", "WSM"),
+  ("Sao Tome and Principe", "STP"),
+  ("Saudi Arabia", "SAU"),
+  ("Senegal", "SEN"),
+  ("Serbia", "SRB"),
+  ("Seychelles", "SYC"),
+  ("Sierra Leone", "SLE"),
+  ("Singapore", "SGP"),
+  ("Slovakia", "SVK"),
+  ("Slovenia", "SVN"),
+  ("Solomon Islands", "SLB"),
+  ("Somalia", "SOM"),
+  ("South Africa", "ZAF"),
+  ("South Korea", "KOR"),
+  ("Spain", "ESP"),
+  ("Sri Lanka", "LKA"),
+  ("Sudan", "SDN"),
+  ("Suriname", "SUR"),
+  ("Swaziland", "SWZ"),
+  ("Sweden", "SWE"),
+  ("Switzerland", "CHE"),
+  ("Syria", "SYR"),
+  ("Taiwan", "TWN"),
+  ("Tajikistan", "TJK"),
+  ("Tanzania", "TZA"),
+  ("Thailand", "THA"),
+  ("The Bahamas", "BHS"),
+  ("The Gambia", "GMB"),
+  ("Timor-Leste", "TLS"),
+  ("Togo", "TGO"),
+  ("Tonga", "TON"),
+  ("Trinidad and Tobago", "TTO"),
+  ("Tunisia", "TUN"),
+  ("Turkey", "TUR"),
+  ("Turkmenistan", "TKM"),
+  ("Uganda", "UGA"),
+  ("Ukraine", "UKR"),
+  ("United Arab Emirates", "ARE"),
+  ("United Kingdom", "GBR"),
+  ("United States", "USA"),
+  ("Uruguay", "URY"),
+  ("Uzbekistan", "UZB"),
+  ("Vanuatu", "VUT"),
+  ("Venezuela", "VEN"),
+  ("Vietnam", "VNM"),
+  ("Yemen", "YEM"),
+  ("Zambia", "ZMB"),
+  ("Zimbabwe", "ZWE");
+
 
 --  DHIS2 Configuration
 CREATE TABLE DHIS_Conf
 (
-  dhisAlgorithmUsed char(20) NOT NULL CHECK (dhisAlgorithmUsed IN ("insilicova", "interva4", "interva5", "nbc", "smartva", "tariff", "wrong")),
-  dhisURL           char(50),
-  dhisUser          char(50),
-  dhisPass          char(50),
-  dhisOrgUnit       char(20)
+  a           char(50),
+  b          char(50),
+  c      char(50),
+  d       char(20)
 );
 
 INSERT INTO DHIS_Conf
-  (dhisAlgorithmUsed, dhisURL, dhisUser, dhisPass, dhisOrgUnit)
-  VALUES ("wrong", "wrong", "", "", "");
+  (a, b, c, d)
+  VALUES ("https://va30se.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6");
 
 ---- DHIS metadata: Cause of Death (COD)
 CREATE TABLE COD_Codes_DHIS
 (
-  codSource  char(  6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff", "wrong")),
-  codCode    char( 20),
-  codName    char(100),
-  codID      char( 20)
+  a  char(  6) NOT NULL CHECK (a IN ("ICD10", "WHO", "Tariff")),
+  b    char( 20),
+  c    char(100),
+  d      char( 20)
 );
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("Tariff", "A-1", "A-1 AIDS", "O34yESZR6OZ"),
     ("Tariff", "A-3", "A-3 Bite of Venomous Animal", "HSkdTFXEiK2"),
@@ -229,7 +431,7 @@ INSERT INTO COD_Codes_DHIS
     ("Tariff", "N-6", "N-6 Stillbirth", "DXAvi49NO5c");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("WHO", "1.01", "01.01 Sepsis (non-obstetric)", "jH7NEsolXEA"),
     ("WHO", "1.02", "01.02 Acute respiratory infection, including pneumonia", "x8emxOen5lP"),
@@ -295,7 +497,7 @@ INSERT INTO COD_Codes_DHIS
     ("WHO", "99", "99 Cause of death unknown", "r1sgBzRWLjE");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "A00", "A00 Cholera", "YrElhzkDv6W"),
     ("ICD10", "A00.0", "A00.0 Cholera due to Vibrio cholerae 01, biovar cholerae", "Ghd8Jbmz86M"),
@@ -763,7 +965,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "A99", "A99 Unspecified viral haemorrhagic fever", "bqEe7fgxlMs");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "B00", "B00 Herpesviral [herpes simplex] infections", "WoWqMjEwdij"),
     ("ICD10", "B00.0", "B00.0 Eczema herpeticum", "CBbMVWTwt7L"),
@@ -1017,7 +1219,7 @@ INSERT INTO COD_Codes_DHIS
 
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "B50.0", "B50.0 Plasmodium falciparum malaria with cerebral complications", "f6OTxy1s6Ax"),
     ("ICD10", "B50.8", "B50.8 Other severe and complicated Plasmodium falciparum malaria", "RL1HM5TZJYX"),
@@ -1228,7 +1430,7 @@ INSERT INTO COD_Codes_DHIS
 
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "C00", "C00 Malignant neoplasm of lip", "m80L3Uy6Vhi"),
     ("ICD10", "C00.0", "C00.0 Malignant neoplasm: External upper lip", "XH2yy97RjJb"),
@@ -1316,7 +1518,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "C15.5", "C15.5 Malignant neoplasm: Lower third of oesophagus", "TRNRu57Iqvz");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "C15.8", "C15.8 Malignant neoplasm: Overlapping lesion of oesophagus", "BCyg27MEGhb"),
     ("ICD10", "C15.9", "C15.9 Malignant neoplasm: Oesophagus, unspecified", "pbqQoLFtJrN"),
@@ -1616,7 +1818,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "C75", "C75 Malignant neoplasm of other endocrine glands and related structures", "cU4QarpDhgk");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "C75.0", "C75.0 Malignant neoplasm: Parathyroid gland", "Eh0QANs9ZPE"),
     ("ICD10", "C75.1", "C75.1 Malignant neoplasm: Pituitary gland", "NeVUAsV5mxZ"),
@@ -1779,7 +1981,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "C97", "C97 Malignant neoplasms of independent (primary) multiple sites", "FCNnu7Im4OM");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "D00", "D00 Carcinoma in situ of oral cavity, oesophagus and stomach", "nHYsBTLycba"),
     ("ICD10", "D00.0", "D00.0 Carcinoma in situ: Lip, oral cavity and pharynx", "DWGDQLYON9b"),
@@ -1916,7 +2118,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "D17.7", "D17.7 Benign lipomatous neoplasm of other sites", "AO6rq9udAx2");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "D17.9", "D17.9 Benign lipomatous neoplasm, unspecified", "wPiMhDQPr0N"),
     ("ICD10", "D18", "D18 Haemangioma and lymphangioma, any site", "pGjtIz2tgNg"),
@@ -2219,7 +2421,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "D68.9", "D68.9 Coagulation defect, unspecified", "iOPQtKoNOvb");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "D69", "D69 Purpura and other haemorrhagic conditions", "XxAdG9cxfpw"),
     ("ICD10", "D69.0", "D69.0 Allergic purpura", "fXxaXIEnK2R"),
@@ -2318,7 +2520,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "D89.9", "D89.9 Disorder involving the immune mechanism, unspecified", "eaEMxN2k6Q8");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "E00", "E00 Congenital iodine-deficiency syndrome", "XOsWUrkLaCx"),
     ("ICD10", "E00.0", "E00.0 Congenital iodine-deficiency syndrome, neurological type", "th9OvZXh2DZ"),
@@ -2524,7 +2726,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "E61.4", "E61.4 Chromium deficiency", "m3r8PPimRiz");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "E61.5", "E61.5 Molybdenum deficiency", "Tl1ljhMk0c1"),
     ("ICD10", "E61.6", "E61.6 Vanadium deficiency", "D2HjYq1B0on"),
@@ -2688,7 +2890,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "E90", "E90 Nutritional and metabolic disorders in diseases classified elsewhere", "UNhiBbV4ud8");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "F00", "F00 Dementia in Alzheimer disease", "pjO4K2ymGLH"),
     ("ICD10", "F00.0", "F00.0 Dementia in Alzheimer disease with early onset", "BqRBekcT3of"),
@@ -2983,7 +3185,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "F84.3", "F84.3 Other childhood disintegrative disorder", "F9FXlbh32Dg");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "F84.4", "F84.4 Overactive disorder associated with mental retardation and stereotyped movements", "MrmwuPtrM5p"),
     ("ICD10", "F84.5", "F84.5 Asperger syndrome", "VxjoQIXwQnC"),
@@ -3039,7 +3241,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "F99", "F99 Mental disorder, not otherwise specified", "UnRlDaXGJld");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "G00", "G00 Bacterial meningitis, not elsewhere classified", "F8OxiXQgJpJ"),
     ("ICD10", "G00.0", "G00.0 Haemophilus meningitis", "tedyHg1rTda"),
@@ -3433,7 +3635,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "G99.8", "G99.8 Other specified disorders of nervous system in diseases classified elsewhere", "kGxmGgARDW5");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "H00", "H00 Hordeolum and chalazion", "I51yuTnKAUQ"),
     ("ICD10", "H00.0", "H00.0 Hordeolum and other deep inflammation of eyelid", "nkhQIRJDtHm"),
@@ -3716,7 +3918,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "H53.3", "H53.3 Other disorders of binocular vision", "OAwnt79D1Kk");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "H53.4", "H53.4 Visual field defects", "w6TZv4QYiSg"),
     ("ICD10", "H53.5", "H53.5 Colour vision deficiencies", "Ryl30y4xFji"),
@@ -3883,7 +4085,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "H95.9", "H95.9 Postprocedural disorder of ear and mastoid process, unspecified", "hrlH6japTgX");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "I00", "I00 Rheumatic fever without mention of heart involvement", "E17F69V3Lfi"),
     ("ICD10", "I01", "I01 Rheumatic fever with heart involvement", "xrMcpbNYXZY"),
@@ -4186,7 +4388,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "I66.0", "I66.0 Occlusion and stenosis of middle cerebral artery", "hqLvfjvTxa1");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "I66.1", "I66.1 Occlusion and stenosis of anterior cerebral artery", "IDqXM1hVAtN"),
     ("ICD10", "I66.2", "I66.2 Occlusion and stenosis of posterior cerebral artery", "CGOaKL3Hqbm"),
@@ -4345,7 +4547,7 @@ INSERT INTO COD_Codes_DHIS
 
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "J00", "J00 Acute nasopharyngitis [common cold]", "OjijHDExgAJ"),
     ("ICD10", "J01", "J01 Acute sinusitis", "Tx7QCeeVlZo"),
@@ -4616,7 +4818,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "J98.0", "J98.0 Diseases of bronchus, not elsewhere classified", "zVdt7byTh0w");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "J98.1", "J98.1 Pulmonary collapse", "J1MK98YhyBe"),
     ("ICD10", "J98.2", "J98.2 Interstitial emphysema", "yoLMxGinFcF"),
@@ -4632,7 +4834,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "J99.8", "J99.8 Respiratory disorders in other diseases classified elsewhere", "gwcst6PTISk");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "K00", "K00 Disorders of tooth development and eruption", "bhm2uh99T9i"),
     ("ICD10", "K00.0", "K00.0 Anodontia", "sFkLp0hypBK"),
@@ -4916,7 +5118,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "K60.0", "K60.0 Acute anal fissure", "XMPSy6LojTz");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "K60.1", "K60.1 Chronic anal fissure", "yPaYL9M5iSZ"),
     ("ICD10", "K60.2", "K60.2 Anal fissure, unspecified", "skbhggSHkpE"),
@@ -5107,7 +5309,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "K93.8", "K93.8 Disorders of other specified digestive organs in diseases classified elsewhere", "T3iVpVptWNB");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "L00", "L00 Staphylococcal scalded skin syndrome", "XAFwh4oyjZf"),
     ("ICD10", "L01", "L01 Impetigo", "MFxYTmH4JkF"),
@@ -5317,7 +5519,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "L57.0", "L57.0 Actinic keratosis", "gdJiHEaCKUi");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "L57.1", "L57.1 Actinic reticuloid", "wQcPFOrvcn9"),
     ("ICD10", "L57.2", "L57.2 Cutis rhomboidalis nuchae", "mmDlnNznAuG"),
@@ -5515,7 +5717,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "L99.8", "L99.8 Other specified disorders of skin and subcutaneous tissue in diseases classified elsewhere", "uAMeCtCyd7q");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "M00", "M00 Pyogenic arthritis", "lqRLcQmRO5a"),
     ("ICD10", "M00.0", "M00.0 Staphylococcal arthritis and polyarthritis", "Zk6wClnHgka"),
@@ -5813,7 +6015,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "M47.9", "M47.9 Spondylosis, unspecified", "p1KdbGbMDR5");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "M48", "M48 Other spondylopathies", "OorPTZbxpys"),
     ("ICD10", "M48.0", "M48.0 Spinal stenosis", "ja32I5gcCsk"),
@@ -6146,7 +6348,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "M99.9", "M99.9 Biomechanical lesion, unspecified", "l6jK3NS3T2Q");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "N00", "N00 Acute nephritic syndrome", "eGHOaCLeNZv"),
     ("ICD10", "N01", "N01 Rapidly progressive nephritic syndrome", "xukZHUaSZJk"),
@@ -6462,7 +6664,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "N84.0", "N84.0 Polyp of corpus uteri", "zCvB5r1mEoA");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "N84.1", "N84.1 Polyp of cervix uteri", "QJ7zoPU1if6"),
     ("ICD10", "N84.2", "N84.2 Polyp of vagina", "TTIFG3sGHI1"),
@@ -6579,7 +6781,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "N99.9", "N99.9 Postprocedural disorder of genitourinary system, unspecified", "dIIv4oMir2a");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "O00", "O00 Ectopic pregnancy", "H6w2ahJxjxj"),
     ("ICD10", "O00.0", "O00.0 Abdominal pregnancy", "lvhi0Tg2av0"),
@@ -6893,7 +7095,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "O71.4", "O71.4 Obstetric high vaginal laceration", "zMzOi6TM9zN");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "O71.5", "O71.5 Other obstetric injury to pelvic organs", "d6A3d2uBaCZ"),
     ("ICD10", "O71.6", "O71.6 Obstetric damage to pelvic joints and ligaments", "DepA4vPxiwG"),
@@ -7048,7 +7250,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "O99.8", "O99.8 Other specified diseases and conditions complicating pregnancy, childbirth and the puerperium", "Csl35HPwwDZ");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "P00", "P00 Fetus and newborn affected by maternal conditions that may be unrelated to present pregnancy", "b60lyZOV6iO"),
     ("ICD10", "P00.0", "P00.0 Fetus and newborn affected by maternal hypertensive disorders", "A9dZedy6dRj"),
@@ -7368,7 +7570,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "P74.8", "P74.8 Other transitory metabolic disturbances of newborn", "hj8rarU7S7j");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "P74.9", "P74.9 Transitory metabolic disturbance of newborn, unspecified", "QzIPChctYdo"),
     ("ICD10", "P75", "P75 Meconium ileus in cystic fibrosis", "Ga2erS9yKFT"),
@@ -7444,7 +7646,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "P96.9", "P96.9 Condition originating in the perinatal period, unspecified", "LHXmEq0iHvP");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Q00", "Q00 Anencephaly and similar malformations", "mb78pRuzjm0"),
     ("ICD10", "Q00.0", "Q00.0 Anencephaly", "VIz8G8reE1k"),
@@ -7747,7 +7949,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Q43.1", "Q43.1 Hirschsprung disease", "C3inrIDzpEX");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Q43.2", "Q43.2 Other congenital functional disorders of colon", "aifkvJszRKK"),
     ("ICD10", "Q43.3", "Q43.3 Congenital malformations of intestinal fixation", "VeQ0MKNqcJ5"),
@@ -8019,7 +8221,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Q80.4", "Q80.4 Harlequin fetus", "walrbjbsbCm");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Q80.8", "Q80.8 Other congenital ichthyosis", "J7yYeBqIQSn"),
     ("ICD10", "Q80.9", "Q80.9 Congenital ichthyosis, unspecified", "srDsID0MrEm"),
@@ -8161,7 +8363,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Q99.9", "Q99.9 Chromosomal abnormality, unspecified", "lYYpkBTAVu0");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "R00", "R00 Abnormalities of heart beat", "xtQFZNJ9Vwr"),
     ("ICD10", "R00.0", "R00.0 Tachycardia, unspecified", "B1clmSVbCgz"),
@@ -8464,7 +8666,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "R82.9", "R82.9 Other and unspecified abnormal findings in urine", "bZbHqym8H9j");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "R83", "R83 Abnormal findings in cerebrospinal fluid", "kxjFtpQL5rG"),
     ("ICD10", "R84", "R84 Abnormal findings in specimens from respiratory organs and thorax", "cStz9JTCEf9"),
@@ -8507,7 +8709,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "R99", "R99 Other ill-defined and unspecified causes of mortality", "BpXBjID7ToT");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "S00", "S00 Superficial injury of head", "JQeS3DcM1V6"),
     ("ICD10", "S00.0", "S00.0 Superficial injury of scalp", "xcAUnWAMcrm"),
@@ -8811,7 +9013,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "S39.9", "S39.9 Unspecified injury of abdomen, lower back and pelvis", "JcbZMI0hQCi");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "S40", "S40 Superficial injury of shoulder and upper arm", "jStMiwCUDci"),
     ("ICD10", "S40.0", "S40.0 Contusion of shoulder and upper arm", "dggyicnD32z"),
@@ -9116,7 +9318,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "S85.1", "S85.1 Injury of (anterior)(posterior) tibial artery", "YTTQwspPuza");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "S85.2", "S85.2 Injury of peroneal artery", "ZCUMh7otmYP"),
     ("ICD10", "S85.3", "S85.3 Injury of greater saphenous vein at lower leg level", "sQ3YzXv9HoF"),
@@ -9213,7 +9415,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "S99.9", "S99.9 Unspecified injury of ankle and foot", "CX5k7k5Jgwy");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "T00", "T00 Superficial injuries involving multiple body regions", "ZETkFWCwHun"),
     ("ICD10", "T00.0", "T00.0 Superficial injuries involving head with neck", "c3HHWKJR6VP"),
@@ -9519,7 +9721,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "T36.6", "T36.6 Poisoning: Rifamycins", "aZEKkmJUoUF");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "T36.7", "T36.7 Poisoning: Antifungal antibiotics, systemically used", "WAP2qy2wAdj"),
     ("ICD10", "T36.8", "T36.8 Poisoning: Other systemic antibiotics", "A4afzSDzwHp"),
@@ -9831,7 +10033,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "T79.3", "T79.3 Post-traumatic wound infection, not elsewhere classified", "jEd2Yn628zV");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "T79.4", "T79.4 Traumatic shock", "vs72qZChN1m"),
     ("ICD10", "T79.5", "T79.5 Traumatic anuria", "XE8WjNsMX8D"),
@@ -9988,7 +10190,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "T98.3", "T98.3 Sequelae of complications of surgical and medical care, not elsewhere classified", "zVFZMC8nnyI");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "V01", "V01 Pedestrian injured in collision with pedal cycle", "O7VllQNRmSY"),
     ("ICD10", "V02", "V02 Pedestrian injured in collision with two- or three-wheeled motor vehicle", "lCDfkd9hZCG"),
@@ -10265,7 +10467,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "V99", "V99 Unspecified transport accident", "dX0eJ7msrYo");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "W00", "W00 Fall on same level involving ice and snow", "LModBeuNIrm"),
     ("ICD10", "W01", "W01 Fall on same level from slipping, tripping and stumbling", "pUPDIoUXP4l"),
@@ -10360,7 +10562,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "W99", "W99 Exposure to other and unspecified man-made environmental factors", "v7uSh6LKmkl");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "X00", "X00 Exposure to uncontrolled fire in building or structure", "GEF9d071yOH"),
     ("ICD10", "X01", "X01 Exposure to uncontrolled fire, not in building or structure", "QeDZcxbeukH"),
@@ -10467,7 +10669,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "X99", "X99 Assault by sharp object", "Q6oQaBZxdww");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Y00", "Y00 Assault by blunt object", "EtHB1V3GWt1"),
     ("ICD10", "Y01", "Y01 Assault by pushing from high place", "iDz93ZEgnzC"),
@@ -10760,7 +10962,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Y62.4", "Y62.4 During endoscopic examination", "klUbdmLI946");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Y62.5", "Y62.5 During heart catheterization", "DalGwtOcECO"),
     ("ICD10", "Y62.6", "Y62.6 During aspiration, puncture and other catheterization", "kvkNzAqy1nV"),
@@ -10865,7 +11067,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Y98", "Y98 Lifestyle-related condition", "KQAtHD82qQw");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Z00", "Z00 General examination and investigation of persons without complaint and reported diagnosis", "UhyO6jL9NMZ"),
     ("ICD10", "Z00.0", "Z00.0 General medical examination", "gTpI5g5Slkx"),
@@ -11033,7 +11235,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Z28.8", "Z28.8 Immunization not carried out for other reasons", "b7CfwcdCynK");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Z28.9", "Z28.9 Immunization not carried out for unspecified reason", "pxZBhlF6a5D"),
     ("ICD10", "Z29", "Z29 Need for other prophylactic measures", "WmnfnZC4ePn"),
@@ -11322,7 +11524,7 @@ INSERT INTO COD_Codes_DHIS
     ("ICD10", "Z64.0", "Z64.0 Problems related to unwanted pregnancy", "Q6w9Gew4Xcq");
 
 INSERT INTO COD_Codes_DHIS
-  (codSource, codCode, codName, codID)
+  (a, b, c, d)
   VALUES
     ("ICD10", "Z64.1", "Z64.1 Problems related to multiparity", "W11qeSQuDXH"),
     ("ICD10", "Z64.2", "Z64.2 Seeking and accepting physical, nutritional and chemical interventions known to be hazardous and harmful", "Mme3889WyWF"),
@@ -11637,17 +11839,17 @@ INSERT INTO COD_Codes_DHIS
 ---- algorithm metadata options
 CREATE TABLE Algorithm_Metadata_Options
 (
-  algorithmName     char( 50),
-  algorithmVersion  char( 10),
-  sciName           char( 50),
-  sciVersion        char( 10),
-  instrumentName    char( 50),
-  instrumentVersion char( 50),
-  dhisCode          char(100)
+  a     char( 50),
+  b  char( 10),
+  c           char( 50),
+  d        char( 10),
+  e    char( 50),
+  f char( 50),
+  g          char(100)
 );
 
 INSERT INTO Algorithm_Metadata_Options
-  (algorithmName, algorithmVersion, sciName, sciVersion, instrumentName, instrumentVersion, dhisCode) 
+  (a, b, c, d, e, f, g) 
   VALUES 
   ("InsilicoVA", "1.1.4", "Custom", "1", "2012 WHO Verbal Autopsy Form", "RC1", "InsilicoVA|1.1.4|Custom|1|2012 WHO Verbal Autopsy Form|RC1"),
   ("InsilicoVA", "1.1.4", "Custom", "1", "2014 WHO Verbal Autopsy Form", "final10", "InsilicoVA|1.1.4|Custom|1|2014 WHO Verbal Autopsy Form|final10"),
@@ -11921,7 +12123,7 @@ INSERT INTO Algorithm_Metadata_Options
   ("Tariff", "1.0.2", "PHMRCShort", "1", "PHMRCShort", "1", "Tariff|1.0.2|PHMRCShort|1|PHMRCShort|1");
 
 INSERT INTO Algorithm_Metadata_Options
-  (algorithmName, algorithmVersion, sciName, sciVersion, instrumentName, instrumentVersion, dhisCode) 
+  (a, b, c, d, e, f, g)
   VALUES 
   ("SmartVA", "2.0.0-a8", "Custom", "1", "2012 WHO Verbal Autopsy Form", "RC1", "SmartVA|2.0.0_a8|Custom|1|2012 WHO Verbal Autopsy Form|RC1"),
   ("SmartVA", "2.0.0-a8", "Custom", "1", "2014 WHO Verbal Autopsy Form", "final10", "SmartVA|2.0.0_a8|Custom|1|2014 WHO Verbal Autopsy Form|final10"),
