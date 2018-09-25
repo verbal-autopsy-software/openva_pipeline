@@ -177,7 +177,7 @@ class TransferDB:
 
         This method is intended to be used in conjunction with (1)
         TransferDB.connectDB(), which establishes a connection to a database
-        with the Pipeline configuration settings; and (2) ODK.connect(), which
+        with the Pipeline configuration settings; and (2) ODK.briefcase(), which
         establishes a connection to an ODK Aggregate server.  Thus,
         TransferDB.configODK() gets its input from TransferDB.connectDB() and
         the output from TransferDB.configODK() is a valid argument for ODK.config().
@@ -189,7 +189,7 @@ class TransferDB:
         Returns
         -------
         tuple
-            Contains all parameters for ODK.connect().
+            Contains all parameters for ODK.briefcase().
 
         Raises
         ------
@@ -216,6 +216,9 @@ class TransferDB:
         odkFormID = queryODK[0][4]
         odkLastRun = queryODK[0][5]
         odkLastRunResult = queryODK[0][6]
+        if not odkLastRunResult in ("success", "fail"):
+            raise ODKConfigurationError \
+                ("Problem in database: ODK_Conf.odkLastRunResult")
         odkLastRunDate = datetime.datetime.strptime(odkLastRun,
                                                     "%Y-%m-%d_%H:%M:%S"
                                                    ).strftime("%Y/%m/%d")
@@ -949,7 +952,7 @@ class TransferDB:
         This method is intended to be used in conjunction with
         (1) TransferDB.connectDB(), which establishes a connection to a
         database with the Pipeline configuration settings; and (2)
-        ODK.connect(), which establishes a connection to an ODK Aggregate
+        ODK.briefcase(), which establishes a connection to an ODK Aggregate
         server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
         and the output from ODK.config() is a valid argument for ODK.config().
 
@@ -960,7 +963,7 @@ class TransferDB:
         Returns
         -------
         tuple
-            Contains all parameters for ODK.connect().
+            Contains all parameters for ODK.briefcase().
 
         Raises
         ------
@@ -975,7 +978,7 @@ class TransferDB:
         This method is intended to be used in conjunction with
         (1) TransferDB.connectDB(), which establishes a connection to a
         database with the Pipeline configuration settings; and (2)
-        ODK.connect(), which establishes a connection to an ODK Aggregate
+        ODK.briefcase(), which establishes a connection to an ODK Aggregate
         server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
         and the output from ODK.config() is a valid argument for ODK.config().
 
@@ -986,7 +989,7 @@ class TransferDB:
         Returns
         -------
         tuple
-            Contains all parameters for ODK.connect().
+            Contains all parameters for ODK.briefcase().
 
         Raises
         ------

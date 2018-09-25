@@ -285,7 +285,16 @@ class Check_3_ODK_Conf(unittest.TestCase):
 
     def test_3_odkConf_odkLastRunResult(self):
         """Test ODK_Conf table has valid odkLastRunResult"""
-        self.assertIn(self.settingsODK.odkLastRunResult, (0,1))
+        self.assertIn(self.settingsODK.odkLastRunResult, ("success","fail"))
+    def test_3_odkConf_odkLastRunResult_Exception(self):
+        """configODK should fail with invalid odkLastRunResult."""
+        c = self.copy_conn.cursor()
+        sql = "UPDATE ODK_Conf SET odkLastRunResult = ?"
+        par = ("wrong",)
+        c.execute(sql, par)
+        self.assertRaises(transferDB.ODKConfigurationError,
+                          self.copy_xferDB.configODK, self.copy_conn)
+        self.copy_conn.rollback()
 
 # Test InterVA Configuration
 class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
