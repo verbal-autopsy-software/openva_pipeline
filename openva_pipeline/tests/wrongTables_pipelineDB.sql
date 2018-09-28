@@ -5,12 +5,12 @@ CREATE TABLE A
 (
   algorithmMetadataCode char(100), -- see table Algorithm_Metadata_Options (below)
   codSource             char ( 6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff")),
-  algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "Insilico", "SmartVA")),
+  algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "InSilicoVA", "SmartVA")),
   workingDirectory      char(100)
 );
 
 INSERT INTO A
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1", "Tariff", "SmartVA", ".");
+  VALUES("InsilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
 
 .exit

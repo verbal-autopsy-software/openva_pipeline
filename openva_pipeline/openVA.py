@@ -1,0 +1,214 @@
+#------------------------------------------------------------------------------#
+# openVA.py
+#
+# Notes
+#
+# (1) maybe you should remove ODKBCExportFile once it has been analyzed by
+#     openVA(); or perhaps when records are stored in DHIS2.  Alternatively,
+#     write a new class/method that checks if the records from the last
+#     briefcase export have been given a COD and checked in to DB. 
+#
+#-----------------------------------------------------------------------------#
+import subprocess
+import shutil
+import os
+from pipeline import PipelineError
+from pysqlcipher3 import dbapi2 as sqlcipher
+
+class OpenVA:
+    """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.
+
+    This class creates and executes an R script that copies (and merges) ODK Briefcase
+    exports, runs openVA to assign CODs, and creates outputs for depositing in
+    the Transfers DB and to a DHIS server.
+
+    Parameters
+    ----------
+    algorithm : str
+      Which VA algorithm should be used to assign COD.
+
+    Methods
+    -------
+    copyVA(self)
+        Create data file for openVA by merging ODK export files.
+    checkDuplicates(self)
+        Search for duplicate VA records in the data file and the tranfser DB.
+    rScript(self)
+        Wrapper for algorithm-specific methods that create an R script to use
+        openVA to assign CODs.
+    __rScript_InSilicoVA(self)__:
+        Write an R script for running InSilicoVA and assigning CODs.
+    __rScript_InterVA(self)__:
+        Write an R script for running InterVA and assigning CODs.
+    getCOD(self)
+        Run R as subprocess and run the script for assigning CODs.
+    rmODKExport(self)
+        If R script exits without error, clear ODK Export files.
+
+    Raises
+    ------
+    OpenVAError
+
+    """
+
+
+    def __init__(self, vaArgs, pipelineArgs, odkID, runDate):
+
+        self.vaArgs = vaArgs
+        self.pipelineArgs = pipelineArgs
+        self.odkID = odkID
+        self.runDate = runDate
+
+        dirOpenVA = os.path.join(pipelineArgs.workingDirectory, "OpenVAFiles")
+        self.dirOpenVA = dirOpenVA
+        dirODK = os.path.join(pipelineArgs.workingDirectory, "ODKFiles")
+        self.dirODK = dirODK
+
+    def copyVA(self): # what if the file "openVA_input.csv" already exists
+        """Create data file for openVA by merging ODK export files."""
+
+        exportFile_prev = os.path.join(self.dirODK, "odkBCExportPrev.csv")
+        exportFile_new = os.path.join(self.dirODK, "odkBCExportNew.csv")
+        openVAInputFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
+
+        isExportFile_prev = os.path.isfile(exportFile_prev)
+        isExportFile_new = os.path.isfile(exportFile_new)
+
+        zeroRecords = False
+
+        if isExportFile_prev and isExportFile_new:
+            with open(exportFile_new, "r", newline = "") as fNew:
+                fNewLines = fNew.readlines()
+            with open(exportFile_prev, "r", newline = "") as fPrev:
+                fPrevLines = fPrev.readlines()
+
+        if len(fNewLines) == 1 and len(fPrevLines) == 1:
+            zeroRecords = True
+            return(zeroRecords)
+
+        if isExportFile_prev and isExportFile_new:
+            shutil.copy(exportFile_new, openVAInputFile)
+            with open(openVAInputFile, "a", newline = "") as fCombined:
+                for line in fPrevLines:
+                    if line not in fNewLines:
+                        fCombined.write(line)
+
+        if isExportFile_new and not isExportFile_prev:
+
+            if len(fNewLines) == 1:
+                zeroRecords = True
+                return(zeroRecords)
+            else:
+                shutil.copy(exportFile_new, openVAInputFile)
+
+        return(zeroRecords)
+
+    def checkDuplicates(self):
+        pass
+
+    def rScript(self):
+        """Create an R script for running openVA and assigning CODs."""
+
+        try:
+            os.makedirs(
+                os.path.join(self.dirOpenVA, self.runDate)
+                )
+        except PermissionError as e:
+            raise OpenVAError("Unable to create dir" + str(e))
+        
+        if self.pipelineArgs.algorithm == "InSilicoVA":
+            self._rScript_insilicoVA()
+            print("RAN the method _rScript_insilicoVA")
+        if self.pipelineArgs.algorithm == "InterVA":
+            self._rScript_interVA()
+
+    def _rScript_insilicoVA(self):
+
+        fileName = os.path.join(self.dirOpenVA,
+                                self.runDate,
+                                "Rscript_" + self.runDate + ".R")
+
+        try:
+            with open(fileName, "w", newline = "") as f:
+                f.write("date() \n")
+                f.write("library(openVA); library(CrossVA) \n")
+                f.write("getwd() \n")
+                f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
+                f.write("names(data) <- tolower(data) \n")
+                f.write("data <- map_records_insilicova(records) \n")
+                if self.odkID == None:
+                    f.write("data$ID <- records$meta.instanceID \n")
+                else: 
+                    f.write("data$ID <- records$" + self.odkID + "\n")
+                f.write("results <- insilico(data = data, " + ", \n")
+                f.write("\t data.type = " + self.vaArgs.InSilicoVA_data_type + ", \n")
+                f.write("\t isNumeric = " + self.vaArgs.InSilicoVA_isNumeric + ", \n")
+                f.write("\t updateCondProb = " + self.vaArgs.InSilicoVA_updateCondProb + ", \n")
+                f.write("\t keepProbbase.level = " + self.vaArgs.InSilicoVA_keepProbbase_level + ", \n")
+                f.write("\t CondProb = " + self.vaArgs.InSilicoVA_CondProb + ", \n")
+                f.write("\t CondProbNum = " + self.vaArgs.InSilicoVA_CondProbNum + ", \n")
+                f.write("\t datacheck = " + self.vaArgs.InSilicoVA_datacheck + ", \n")
+                f.write("\t datacheck.missing = " + self.vaArgs.InSilicoVA_datacheck_missing + ", \n")
+                f.write("\t warning.write = " + self.vaArgs.InSilicoVA_warning_write + ", \n")
+                f.write("\t external.sep = " + self.vaArgs.InSilicoVA_external_sep + ", \n")
+                f.write("\t Nsim = " + self.vaArgs.InSilicoVA_Nsim + ", \n")
+                f.write("\t thin = " + self.vaArgs.InSilicoVA_thin + ", \n")
+                f.write("\t burnin = " + self.vaArgs.InSilicoVA_burnin + ", \n")
+                f.write("\t auto.length = " + self.vaArgs.InSilicoVA_auto_length + ", \n")
+                f.write("\t conv.csmf = " + self.vaArgs.InSilicoVA_conv_csmf + ", \n")
+                f.write("\t jump.scale = " + self.vaArgs.InSilicoVA_jump_scale + ", \n")
+                f.write("\t levels.prior = " + self.vaArgs.InSilicoVA_levels_prior + ", \n")
+                f.write("\t levels.strength = " + self.vaArgs.InSilicoVA_levels_strength + ", \n")
+                f.write("\t trunc.min = " + self.vaArgs.InSilicoVA_trunc_min + ", \n")
+                f.write("\t trunc.max = " + self.vaArgs.InSilicoVA_trunc_max + ", \n")
+                f.write("\t subpop = " + self.vaArgs.InSilicoVA_subpop + ", \n")
+                f.write("\t java_option = " + self.vaArgs.InSilicoVA_java_option + ", \n")
+                f.write("\t seed = " + self.vaArgs.InSilicoVA_seed + ", \n")
+                f.write("\t phy.code = " + self.vaArgs.InSilicoVA_phy_code + ", \n")
+                f.write("\t phy.cat = " + self.vaArgs.InSilicoVA_phy_cat + ", \n")
+                f.write("\t phy.unknown = " + self.vaArgs.InSilicoVA_phy_unknown + ", \n")
+                f.write("\t phy.external = " + self.vaArgs.InSilicoVA_phy_external + ", \n")
+                f.write("\t phy.debias = " + self.vaArgs.InSilicoVA_phy_debias + ", \n")
+                f.write("\t exclude.impossible.cause = " + self.vaArgs.InSilicoVA_exclude_impossible_cause + ", \n")
+                f.write("\t no.is.missing = " + self.vaArgs.InSilicoVA_no_is_missing + ", \n")
+                f.write("\t indiv.CI = " + self.vaArgs.InSilicoVA_indiv_CI + ", \n")
+                f.write("\t groupcode = " + self.vaArgs.InSilicoVA_no_is_missing + ") \n")
+                f.write("sex <- ifelse(tolower(data$male)=='y', 'Male', 'Female') \n")
+                f.write("cod <- getTopCOD(results) \n")
+                f.write("hasCOD <- as.character(data$ID) %in% as.character(levels(cod$ID)) \n")
+                f.write("dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') \n")
+                f.write("dod <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10023), '%b %d, %Y') \n")
+                f.write("age <- floor(records$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
+                f.write("## create matrices for DHIS2 blob (data2) and transfer database (data3) \n")
+                f.write("## first column must be ID \n")
+                f.write("metadataCode <- '" + self.pipelineArgs.algorithmMetadataCode + "'\n")
+                f.write("cod2 <- rep('MISSING', nrow(data)); cod2[hasCOD] <- as.character(cod[,2]) \n")
+                f.write("data2 <- cbind(data[,-1], cod2, metadataCode) \n")
+                f.write("names(data2) <- c(names(data[,-1]), 'Cause of Death', 'Metadata') \n")
+                f.write("evaBlob <- cbind(rep(as.character(data[,1]), each=ncol(data2)), rep(names(data2)), c(apply(data2, 1, c))) \n")
+                f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
+                f.write("write.csv(evaBlob, file='" + self.dirOpenVA + "/entityAttributeValue.csv', row.names=FALSE, na='') \n\n")
+                f.write("data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, data[,-1]) \n")
+                f.write("names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', names(data[,-1])) \n")
+                f.write("write.csv(data3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
+        except:
+            raise OpenVAError("Problem writing R script for InSilicoVA.")
+
+    def _rScript_interVA(self):
+        pass
+    
+    def getCOD(self):
+        # InsilicoVA
+        # InterVA
+        # SmartVA
+        pass
+
+    def rmODKExport(self):
+        pass
+
+
+
+#------------------------------------------------------------------------------#
+# Exceptions
+#------------------------------------------------------------------------------#
+class OpenVAError(PipelineError): pass

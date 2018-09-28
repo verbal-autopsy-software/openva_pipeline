@@ -14,6 +14,7 @@ from context import transferDB
 from transferDB import TransferDB
 from pysqlcipher3 import dbapi2 as sqlcipher
 
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 # Test valid DB connection & structure (i.e. all tables are there)
 class Check_1_Connection(unittest.TestCase):
@@ -22,7 +23,8 @@ class Check_1_Connection(unittest.TestCase):
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
     wrong_dbKey = "wrongKey"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -112,7 +114,8 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
     # parameters for connecting to DB (assuming DB is in tests folder)
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -195,7 +198,7 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
         """Test Pipeline_Conf table has valid algorithm"""
 
         validAlgorithm = self.settingsPipeline.algorithm in \
-            ("InSilico", "InSilico2016", "InterVA4", "InterVA5", "SmartVA")
+            ("InSilicoVA", "InterVA", "SmartVA")
 
         self.assertTrue(validAlgorithm)
     def test_2_pipelineConf_algorithm_Exception(self):
@@ -231,7 +234,8 @@ class Check_3_ODK_Conf(unittest.TestCase):
     """Test methods that grab ODK configuration."""
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -301,7 +305,8 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
     """Test methods that grab InterVA configuration."""
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -309,7 +314,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
     conn = xferDB.connectDB()
     settingsPipeline = xferDB.configPipeline(conn)
     settingsOpenVA = xferDB.configOpenVA(conn,
-                                         "InterVA4",
+                                         "InterVA",
                                          settingsPipeline.workingDirectory)
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
@@ -328,7 +333,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -343,7 +348,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -358,7 +363,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -373,7 +378,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -388,7 +393,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -405,7 +410,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -422,7 +427,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -439,7 +444,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -456,7 +461,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -473,7 +478,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -490,7 +495,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -507,7 +512,7 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA4",
+                          self.copy_conn, "InterVA",
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
@@ -516,7 +521,8 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     """Test methods that grab InSilicoVA configuration."""
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -1048,7 +1054,8 @@ class Check_5_SmartVA_Conf(unittest.TestCase):
     """Test methods that grab InSilicoVA configuration."""
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
@@ -1174,7 +1181,8 @@ class Check_6_DHIS_Conf(unittest.TestCase):
     """Test methods that grab DHIS configuration."""
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
-    dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,

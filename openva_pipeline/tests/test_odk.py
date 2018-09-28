@@ -16,6 +16,8 @@ import os
 import unittest
 import collections
 
+os.chdir(os.path.abspath(os.path.dirname(__file__)))
+
 class ValidConnection(unittest.TestCase):
     """Check the everything works as it should."""
 
@@ -33,10 +35,8 @@ class ValidConnection(unittest.TestCase):
         datetime.timedelta(days=1)
     ).strftime("%Y/%m/%d")
     odkLastRunResult = "fail"
-    bcExportDir = "Temp"
-    bcStorageDir = "Temp"
-    # bcFileName = "bc_export_" + \
-    #   datetime.date.today().strftime("%Y_%m_%d") + ".csv"
+    bcExportDir = "ODKFiles"
+    bcStorageDir = "ODKFiles"
 
     ntODK = collections.namedtuple("ntODK",
                                    ["odkID",
@@ -60,72 +60,72 @@ class ValidConnection(unittest.TestCase):
                         odkLastRunDatePrev)
 
     def test_ODK_briefcase_1(self):
-        """Check mergePrevExport() moves odkBCExportNew.csv"""
-        if os.path.isfile("Temp/odkBCExportNew.csv"):
-            os.remove("Temp/odkBCExportNew.csv")
-        if os.path.isfile("Temp/odkBCExportPrev.csv"):
-            os.remove("Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/previous_bc_export.csv", "Temp/odkBCExportNew.csv")
+        """Check mergeToPrevExport() moves odkBCExportNew.csv"""
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            os.remove("ODKFiles/odkBCExportNew.csv")
+        if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            os.remove("ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
         pipelineODK = odk.ODK(self.settingsODK,
                               self.bcExportDir,
                               self.bcStorageDir)
-        pipelineODK.mergePrevExport()
-        self.assertTrue(os.path.isfile("Temp/odkBCExportPrev.csv"))
-        os.remove("Temp/odkBCExportPrev.csv")
+        pipelineODK.mergeToPrevExport()
+        self.assertTrue(os.path.isfile("ODKFiles/odkBCExportPrev.csv"))
+        os.remove("ODKFiles/odkBCExportPrev.csv")
 
     def test_ODK_briefcase_2(self):
-        """Check mergePrevExport() merges ODK BC export files."""
-        if os.path.isfile("Temp/odkBCExportNew.csv"):
-            os.remove("Temp/odkBCExportNew.csv")
-        if os.path.isfile("Temp/odkBCExportPrev.csv"):
-            os.remove("Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/previous_bc_export.csv", "Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/another_bc_export.csv", "Temp/odkBCExportNew.csv")
+        """Check mergePrevToExport() merges ODK BC export files."""
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            os.remove("ODKFiles/odkBCExportNew.csv")
+        if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            os.remove("ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
         pipelineODK = odk.ODK(self.settingsODK,
                               self.bcExportDir,
                               self.bcStorageDir)
-        pipelineODK.mergePrevExport()
-        self.assertTrue(os.path.isfile("Temp/odkBCExportPrev.csv"))
-        os.remove("Temp/odkBCExportPrev.csv")
+        pipelineODK.mergeToPrevExport()
+        self.assertTrue(os.path.isfile("ODKFiles/odkBCExportPrev.csv"))
+        os.remove("ODKFiles/odkBCExportPrev.csv")
 
     def test_ODK_briefcase_3(self):
-        """Check mergePrevExport() merges ODK BC export files."""
-        if os.path.isfile("Temp/odkBCExportNew.csv"):
-            os.remove("Temp/odkBCExportNew.csv")
-        if os.path.isfile("Temp/odkBCExportPrev.csv"):
-            os.remove("Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/previous_bc_export.csv", "Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/another_bc_export.csv", "Temp/odkBCExportNew.csv")
+        """Check mergeToPrevExport() removes new ODK BC export files."""
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            os.remove("ODKFiles/odkBCExportNew.csv")
+        if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            os.remove("ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
         pipelineODK = odk.ODK(self.settingsODK,
                               self.bcExportDir,
                               self.bcStorageDir)
-        pipelineODK.mergePrevExport()
-        self.assertFalse(os.path.isfile("Temp/odkBCExportNew.csv"))
-        os.remove("Temp/odkBCExportPrev.csv")
+        pipelineODK.mergeToPrevExport()
+        self.assertFalse(os.path.isfile("ODKFiles/odkBCExportNew.csv"))
+        os.remove("ODKFiles/odkBCExportPrev.csv")
 
     def test_ODK_briefcase_4(self):
-        """Check mergePrevExport() includes al VA records from ODK BC export files."""
-        if os.path.isfile("Temp/odkBCExportNew.csv"):
-            os.remove("Temp/odkBCExportNew.csv")
-        if os.path.isfile("Temp/odkBCExportPrev.csv"):
-            os.remove("Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/previous_bc_export.csv", "Temp/odkBCExportPrev.csv")
-        shutil.copy("Temp/another_bc_export.csv", "Temp/odkBCExportNew.csv")
+        """Check mergeToPrevExport() includes all VA records from ODK BC export files."""
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            os.remove("ODKFiles/odkBCExportNew.csv")
+        if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            os.remove("ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
+        shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
         pipelineODK = odk.ODK(self.settingsODK,
                               self.bcExportDir,
                               self.bcStorageDir)
-        pipelineODK.mergePrevExport()
+        pipelineODK.mergeToPrevExport()
 
         hasAll = True
-        with open("Temp/odkBCExportPrev.csv") as fCombined:
+        with open("ODKFiles/odkBCExportPrev.csv") as fCombined:
             fCombinedLines = fCombined.readlines()
-        with open("Temp/previous_bc_export.csv") as fPrevious:
+        with open("ODKFiles/previous_bc_export.csv") as fPrevious:
             fPreviousLines = fPrevious.readlines()
-        with open("Temp/another_bc_export.csv") as fAnother:
+        with open("ODKFiles/another_bc_export.csv") as fAnother:
             fAnotherLines = fAnother.readlines()
         for line in fPreviousLines:
             if line not in fCombinedLines:
@@ -134,28 +134,23 @@ class ValidConnection(unittest.TestCase):
             if line not in fCombinedLines:
                 hasAll = False
         self.assertTrue(hasAll)
-        os.remove("Temp/odkBCExportPrev.csv")
+        os.remove("ODKFiles/odkBCExportPrev.csv")
 
-    # def test_ODK_briefcase_4(self):
-    #     """Check successful run with valid parameters."""
+    def test_ODK_briefcase_5(self):
+        """Check successful run with valid parameters."""
 
-    #     shutil.rmtree("Temp/ODK Briefcase Storage/")
+        shutil.rmtree("ODKFiles/ODK Briefcase Storage/", ignore_errors = True)
 
-    #     pipelineODK = odk.ODK(self.settingsODK,
-    #                           self.bcExportDir,
-    #                           self.bcStorageDir)
-    #     odkBC = pipelineODK.briefcase()
+        pipelineODK = odk.ODK(self.settingsODK,
+                              self.bcExportDir,
+                              self.bcStorageDir)
+        odkBC = pipelineODK.briefcase()
 
-    #     self.assertEqual(0, odkBC.returncode)
+        self.assertEqual(0, odkBC.returncode)
 
-    # def test_ODK_briefcase_3(self):
-    #     """Check for exported CSV file."""
-    #     exportFile = self.bcExportDir + "/" + self.bcFileName
-    #     self.assertTrue(os.path.isfile(exportFile))
-
-    # def test_ODK_briefcase_4(self):
-    #     """Check method for merging export files."""
-    #     copy over new file that you created, then run prepareExport()
+    def test_ODK_briefcase_6(self):
+        """Check for exported CSV file."""
+        self.assertTrue(os.path.isfile("ODKFiles/odkBCExportNew.csv"))
 
 class InvalidConnection(unittest.TestCase):
     """Check that proper execptions are raised."""
@@ -174,10 +169,8 @@ class InvalidConnection(unittest.TestCase):
         datetime.timedelta(days=1)
     ).strftime("%Y/%m/%d")
     odkLastRunResult = "fail"
-    bcExportDir = "Temp"
-    bcStorageDir = "Temp"
-    # bcFileName = "bc_export_" + \
-    #   datetime.date.today().strftime("%Y_%m_%d") + ".csv"
+    bcExportDir = "ODKFiles"
+    bcStorageDir = "ODKFiles"
 
     ntODK = collections.namedtuple("ntODK",
                                    ["odkID",

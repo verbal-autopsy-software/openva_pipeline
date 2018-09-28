@@ -152,7 +152,7 @@ class TransferDB:
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.codSource")
         algorithm = queryPipeline[0][2]
-        if algorithm not in ("InterVA", "Insilico", "SmartVA", "InterVA5"):
+        if algorithm not in ("InterVA", "InSilicoVA", "SmartVA"):
             raise PipelineConfigurationError \
                 ("Problem in database: Pipeline_Conf.algorithm")
         workingDirectory = queryPipeline[0][3]
@@ -278,17 +278,20 @@ class TransferDB:
         OpenVAConfigurationError
         """
 
-        if(algorithm in ("InterVA4", "InterVA5")):
-            settingsInterVA = self.__configInterVA__(conn, pipelineDir)
+        if algorithm == "InterVA":
+            settingsInterVA = self._configInterVA(conn, pipelineDir)
             return(settingsInterVA)
-        elif(algorithm == "InSilicoVA"):
-            settingsInSilicoVA = self.__configInSilicoVA__(conn, pipelineDir)
+        elif algorithm == "InSilicoVA":
+            settingsInSilicoVA = self._configInSilicoVA(conn, pipelineDir)
             return(settingsInSilicoVA)
-        else:
-            settingsSmartVA = self.__configSmartVA__(conn, pipelineDir)
+        elif algorithm == "SmartVA":
+            settingsSmartVA = self._configSmartVA(conn, pipelineDir)
             return(settingsSmartVA)
+        else:
+            raise PipelineConfigurationError \
+                ("Not an acceptable parameter for 'algorithm'.")
 
-    def __configInterVA__(self, conn, pipelineDir):
+    def _configInterVA(self, conn, pipelineDir):
         """Query OpenVA configuration settings from database.
 
         This method is called by configOpenVA when the VA algorithm is either
@@ -411,7 +414,7 @@ class TransferDB:
                                     intervaWrite)
         return(settingsInterVA)
 
-    def __configInSilicoVA__(self, conn, pipelineDir):
+    def _configInSilicoVA(self, conn, pipelineDir):
         """Query OpenVA configuration settings from database.
 
         This method is called by configOpenVA when the VA algorithm is
@@ -796,7 +799,7 @@ class TransferDB:
                                           insilicovaGroupcode)              
         return(settingsInSilicoVA)
 
-    def __configSmartVA__(self, conn, pipelineDir):
+    def _configSmartVA(self, conn, pipelineDir):
         """Query OpenVA configuration settings from database.
 
         This method is called by configOpenVA when the VA algorithm is

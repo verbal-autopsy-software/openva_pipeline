@@ -5,13 +5,13 @@ CREATE TABLE Pipeline_Conf
 (
   a char(100), -- see table Algorithm_Metadata_Options (below)
   b             char ( 6) NOT NULL CHECK (b IN ("ICD10", "WHO", "Tariff")),
-  c             char(  8) NOT NULL CHECK (c IN ("InterVA", "Insilico", "SmartVA")),
+  c             char(  8) NOT NULL CHECK (c IN ("InterVA", "InSilicoVA", "SmartVA")),
   d      char(100)
 );
 
 INSERT INTO Pipeline_Conf
   (a,b,c,d)
-  VALUES("SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1", "Tariff", "SmartVA", ".");
+  VALUES("InsilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage
