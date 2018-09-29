@@ -11,6 +11,6 @@ CREATE TABLE A
 
 INSERT INTO A
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InsilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
+  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
 
 .exit
