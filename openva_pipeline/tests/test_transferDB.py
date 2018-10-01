@@ -367,36 +367,6 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
-    def test_4_openvaConf_InterVA_directory(self):
-        """Test Advanced_InterVA_Conf table has valid directory"""
-        self.assertTrue(os.path.isdir(self.settingsOpenVA.InterVA_directory))
-    def test_4_openvaConf_InterVA_directory_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.directory value."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE Advanced_InterVA_Conf SET directory = ?"
-        par = ("/wrong/path",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA",
-                          self.settingsPipeline.workingDirectory)
-        self.copy_conn.rollback()
-
-    def test_4_openvaConf_InterVA_filename(self):
-        """Test Advanced_InterVA_Conf table has valid filename."""
-        self.assertNotIn(self.settingsOpenVA.InterVA_filename, (None, ""))
-    def test_4_openvaConf_InterVA_filename_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.filename value."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE Advanced_InterVA_Conf SET filename = ?"
-        par = ("",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA",
-                          self.settingsPipeline.workingDirectory)
-        self.copy_conn.rollback()
-
     def test_4_openvaConf_InterVA_output(self):
         """Test Advanced_InterVA_Conf table has valid output."""
         self.assertIn(self.settingsOpenVA.InterVA_output,
@@ -491,23 +461,6 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
         """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate_bug2 value."""
         c = self.copy_conn.cursor()
         sql = "UPDATE Advanced_InterVA_Conf SET replicate_bug2 = ?"
-        par = ("wrong",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InterVA",
-                          self.settingsPipeline.workingDirectory)
-        self.copy_conn.rollback()
-
-    def test_4_openvaConf_InterVA_write(self):
-        """Test Advanced_InterVA_Conf table has valid write."""
-        self.assertIn(self.settingsOpenVA.InterVA_write,
-                      ("TRUE", "FALSE")
-        )
-    def test_4_openvaConf_InterVA_write_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.write value."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE Advanced_InterVA_Conf SET write = ?"
         par = ("wrong",)
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
@@ -689,38 +642,6 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         c = self.copy_conn.cursor()
         sql = "UPDATE Advanced_InSilicoVA_Conf SET datacheck_missing = ?"
         par = ("wrong",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InSilicoVA",
-                          self.settingsPipeline.workingDirectory)
-        self.copy_conn.rollback()
-
-    def test_5_openvaConf_InSilicoVA_warning_write(self):
-        """Test InSilicoVA_Conf table has valid warning_write"""
-        self.assertIn(self.settingsOpenVA.InSilicoVA_warning_write,
-                      ("TRUE", "FALSE")
-        )
-    def test_5_openvaConf_InSilicoVA_warning_write_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.warning_write value."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE Advanced_InSilicoVA_Conf SET warning_write = ?"
-        par = ("wrong",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
-                          self.copy_conn, "InSilicoVA",
-                          self.settingsPipeline.workingDirectory)
-        self.copy_conn.rollback()
-
-    def test_5_openvaConf_InSilicoVA_directory(self):
-        """Test InSilicoVA_Conf table has valid directory"""
-        self.assertTrue(self.settingsPipeline.workingDirectory)
-    def test_5_openvaConf_InSilicoVA_directory_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.directory value."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE Advanced_InSilicoVA_Conf SET directory = ?"
-        par = ("nonExistentFold",)
         c.execute(sql, par)
         self.assertRaises(transferDB.OpenVAConfigurationError,
                           self.copy_xferDB.configOpenVA,

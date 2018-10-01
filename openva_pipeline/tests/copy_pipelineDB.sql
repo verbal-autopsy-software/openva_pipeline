@@ -59,8 +59,6 @@ INSERT INTO InterVA_Conf (version, HIV, Malaria) VALUES("4", "v", "v");
 
 CREATE TABLE Advanced_InterVA_Conf
 (
-  directory      char(50),
-  filename       char(50),
   output         char( 8),
   append         char( 5),
   groupcode      char( 5),
@@ -71,8 +69,8 @@ CREATE TABLE Advanced_InterVA_Conf
 );
 
 INSERT INTO Advanced_InterVA_Conf
-  (directory, filename, output, append, groupcode, replicate, replicate_bug1, replicate_bug2, write)
-  VALUES("OpenVAFiles", "interVA4_results", "classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
+  (output, append, groupcode, replicate, replicate_bug1, replicate_bug2, write)
+  VALUES("classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
 
 ---- InSilicoVA
 CREATE TABLE InSilicoVA_Conf
@@ -92,8 +90,6 @@ CREATE TABLE Advanced_InSilicoVA_Conf
   CondProbNum                char(50),
   datacheck                  char( 5),
   datacheck_missing          char( 5),
-  warning_write              char( 5),
-  directory                  char(50),
   external_sep               char( 5),
   thin                       char( 9),
   burnin                     char( 9),
@@ -120,13 +116,13 @@ CREATE TABLE Advanced_InSilicoVA_Conf
 
 INSERT INTO Advanced_InSilicoVA_Conf
   (isNumeric, updateCondProb, keepProbbase_level, CondProb, CondProbNum, datacheck, datacheck_missing,
-   warning_write, directory, external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
+   external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
    levels_prior, levels_strength, trunc_min, trunc_max, subpop, java_option, seed,
    phy_code, phy_cat, phy_unknown, phy_external, phy_debias, exclude_impossible_cause, no_is_missing,
    indiv_CI, groupcode)
   VALUES
     ("FALSE", "TRUE", "TRUE", "NULL", "NULL", "TRUE", "TRUE",
-     "FALSE", "usePipelineVar", "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
+     "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
      "NULL", "1", "0.0001", "0.9999", "NULL", "-Xmx1g", "1",
      "NULL", "NULL", "NULL", "NULL", "NULL", "subset",
      "FALSE", "NULL", "FALSE");

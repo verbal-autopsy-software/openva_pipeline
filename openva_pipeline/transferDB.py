@@ -340,78 +340,59 @@ class TransferDB:
         
         # Database Table: Advanced_InterVA_Conf
         try:
-            sqlAdvancedInterVA = "SELECT directory, filename, output, append, \
-            groupcode, replicate, replicate_bug1, replicate_bug2, write \
+            sqlAdvancedInterVA = "SELECT output, append, \
+            groupcode, replicate, replicate_bug1, replicate_bug2 \
             FROM Advanced_InterVA_Conf;"
             queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
                 ("Problem in database table Advanced_InterVA_Conf, " + str(e))
 
-        intervaDirectory = queryAdvancedInterVA[0][0]
-        intervaPath = os.path.join(pipelineDir, intervaDirectory)
-        if not os.path.isdir(intervaPath):
-            raise OpenVAConfigurationError \
-                ("Problem in database: Advanced_InterVA_Conf.directory.")
-        intervaFilename = queryAdvancedInterVA[0][1]
-        if intervaFilename == None or intervaFilename == "":
-            raise OpenVAConfigurationError \
-                ("Problem in database: Advanced_InterVA_Conf.filename.")
-        intervaOutput = queryAdvancedInterVA[0][2]
+        intervaOutput = queryAdvancedInterVA[0][0]
         if not intervaOutput in ("classic", "extended"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.output.")
-        intervaAppend = queryAdvancedInterVA[0][3]
+        intervaAppend = queryAdvancedInterVA[0][1]
         if not intervaAppend in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.append.")
-        intervaGroupcode = queryAdvancedInterVA[0][4]
+        intervaGroupcode = queryAdvancedInterVA[0][2]
         if not intervaGroupcode in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.groupcode.")
-        intervaReplicate = queryAdvancedInterVA[0][5]
+        intervaReplicate = queryAdvancedInterVA[0][3]
         if not intervaReplicate in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.replicate.")
-        intervaReplicateBug1 = queryAdvancedInterVA[0][6]
+        intervaReplicateBug1 = queryAdvancedInterVA[0][4]
         if not intervaReplicateBug1 in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.replicate_bug1.")
-        intervaReplicateBug2 = queryAdvancedInterVA[0][7]
+        intervaReplicateBug2 = queryAdvancedInterVA[0][5]
         if not intervaReplicateBug2 in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.replicate_bug2.")
-        intervaWrite = queryAdvancedInterVA[0][8]
-        if not intervaWrite in ("TRUE", "FALSE"):
-            raise OpenVAConfigurationError \
-                ("Problem in database: Advanced_InterVA_Conf.write.")
         
         ntInterVA = collections.namedtuple("ntInterVA",
                                            ["InterVA_Version",
                                             "InterVA_HIV",
                                             "InterVA_Malaria",
-                                            "InterVA_directory",
-                                            "InterVA_filename",
                                             "InterVA_output",
                                             "InterVA_append",
                                             "InterVA_groupcode",
                                             "InterVA_replicate",
                                             "InterVA_replicate_bug1",
-                                            "InterVA_replicate_bug2",
-                                            "InterVA_write"]
+                                            "InterVA_replicate_bug2"]
         )
         settingsInterVA = ntInterVA(intervaVersion,
                                     intervaHIV,
                                     intervaMalaria,
-                                    intervaDirectory,
-                                    intervaFilename,
                                     intervaOutput,
                                     intervaAppend,
                                     intervaGroupcode,
                                     intervaReplicate,
                                     intervaReplicateBug1,
-                                    intervaReplicateBug2,
-                                    intervaWrite)
+                                    intervaReplicateBug2)
         return(settingsInterVA)
 
     def _configInSilicoVA(self, conn, pipelineDir):
@@ -459,7 +440,7 @@ class TransferDB:
         try:
             sqlAdvancedInSilicoVA = "SELECT isNumeric, updateCondProb, \
               keepProbbase_level, CondProb, CondProbNum, datacheck, \
-              datacheck_missing, warning_write, directory, external_sep, thin, \
+              datacheck_missing, external_sep, thin, \
               burnin, auto_length, conv_csmf, jump_scale, levels_prior, \
               levels_strength, trunc_min, trunc_max, subpop, java_option, seed, \
               phy_code, phy_cat, phy_unknown, phy_external, phy_debias, \
@@ -514,24 +495,12 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.datacheck_missing \
                 (valid options: 'TRUE' or 'FALSE').")
-        insilicovaWarningWrite = queryAdvancedInSilicoVA[0][7]
-        if not insilicovaWarningWrite in ("TRUE", "FALSE"):
-            raise OpenVAConfigurationError \
-                ("Problem in database: InSilicoVA_Conf.warning_write \
-                (valid options: 'TRUE' or 'FALSE').")
-        insilicovaDirectory = queryAdvancedInSilicoVA[0][8]
-        if not insilicovaDirectory == "usePipelineVar":
-            insilicovaWD = os.path.join(pipelineDir, insilicovaDirectory)
-            if not os.path.isdir(insilicovaWD):
-                raise OpenVAConfigurationError \
-                    ("Problem in database: InSilicoVA_Conf.directory \
-                    (must be valid directory).")
-        insilicovaExternalSep = queryAdvancedInSilicoVA[0][9]
+        insilicovaExternalSep = queryAdvancedInSilicoVA[0][7]
         if not insilicovaExternalSep in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.external_sep \
                 (valid options: 'TRUE' or 'FALSE').")
-        insilicovaThin = queryAdvancedInSilicoVA[0][10]
+        insilicovaThin = queryAdvancedInSilicoVA[0][8]
         try:
             thinFloat = float(insilicovaThin)
             validThin = (0 < thinFloat)
@@ -544,7 +513,7 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.thin \
                 (must be 'thin' > 0.")
-        insilicovaBurnin = queryAdvancedInSilicoVA[0][11]
+        insilicovaBurnin = queryAdvancedInSilicoVA[0][9]
         try:
             burninFloat = float(insilicovaBurnin)
             validBurnin = (0 < burninFloat)
@@ -557,12 +526,12 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.burnin \
                 (must be 'burnin' > 0.")
-        insilicovaAutoLength = queryAdvancedInSilicoVA[0][12]
+        insilicovaAutoLength = queryAdvancedInSilicoVA[0][10]
         if not insilicovaAutoLength in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.auto_length \
                 (valid options: 'TRUE' or 'FALSE').")
-        insilicovaConvCSMF = queryAdvancedInSilicoVA[0][13]
+        insilicovaConvCSMF = queryAdvancedInSilicoVA[0][11]
         try:
             floatConvCSMF = float(insilicovaConvCSMF)
             validConvCSMF = (0 <= floatConvCSMF <= 1)
@@ -575,7 +544,7 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.conv_csmf \
                 (must be between '0' and '1').")
-        insilicovaJumpScale = queryAdvancedInSilicoVA[0][14]
+        insilicovaJumpScale = queryAdvancedInSilicoVA[0][12]
         try:
             floatJumpScale = float(insilicovaJumpScale)
             validJumpScale = (0 < floatJumpScale)
@@ -588,12 +557,12 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.jump_scale \
                 (must be greater than '0').")
-        insilicovaLevelsPrior = queryAdvancedInSilicoVA[0][15]
+        insilicovaLevelsPrior = queryAdvancedInSilicoVA[0][13]
         if insilicovaLevelsPrior in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.levels_prior \
                 (valid options: name of R object).")
-        insilicovaLevelsStrength = queryAdvancedInSilicoVA[0][16]
+        insilicovaLevelsStrength = queryAdvancedInSilicoVA[0][14]
         try:
             floatLevelsStrength = float(insilicovaLevelsStrength)
             validLevelsStrength = (0 < floatLevelsStrength)
@@ -606,7 +575,7 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.levels_strength \
                 (must be greater than '0').")
-        insilicovaTruncMin = queryAdvancedInSilicoVA[0][17]
+        insilicovaTruncMin = queryAdvancedInSilicoVA[0][15]
         try:
             floatTruncMin = float(insilicovaTruncMin)
             validTruncMin = (0 <= floatTruncMin <= 1)
@@ -619,7 +588,7 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_min \
                 (must be between '0' and '1').")
-        insilicovaTruncMax = queryAdvancedInSilicoVA[0][18]
+        insilicovaTruncMax = queryAdvancedInSilicoVA[0][16]
         try:
             floatTruncMax = float(insilicovaTruncMax)
             validTruncMax = (0 <= floatTruncMax <= 1)
@@ -632,12 +601,12 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_max \
                 (must be between '0' and '1').")
-        insilicovaSubpop = queryAdvancedInSilicoVA[0][19]
+        insilicovaSubpop = queryAdvancedInSilicoVA[0][17]
         if insilicovaSubpop in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.subpop \
                 (valid options: name of R object).")
-        insilicovaJavaOption = queryAdvancedInSilicoVA[0][20]
+        insilicovaJavaOption = queryAdvancedInSilicoVA[0][18]
         if insilicovaJavaOption == "" or len(insilicovaJavaOption) < 6:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.java_option \
@@ -666,50 +635,50 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.java_option \
                 (should look like '-Xmx1g').")
-        insilicovaSeed = queryAdvancedInSilicoVA[0][21]
+        insilicovaSeed = queryAdvancedInSilicoVA[0][19]
         try:
             floatSeed = float(insilicovaSeed)
         except:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.seed \
                 (must be between a number; preferably an integer).")
-        insilicovaPhyCode = queryAdvancedInSilicoVA[0][22]
+        insilicovaPhyCode = queryAdvancedInSilicoVA[0][20]
         if insilicovaPhyCode in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.phy_code \
                 (valid options: name of R object).")
-        insilicovaPhyCat = queryAdvancedInSilicoVA[0][23]
+        insilicovaPhyCat = queryAdvancedInSilicoVA[0][21]
         if insilicovaPhyCat in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.phy_cat \
                 (valid options: name of R object).")
-        insilicovaPhyUnknown = queryAdvancedInSilicoVA[0][24]
+        insilicovaPhyUnknown = queryAdvancedInSilicoVA[0][22]
         if insilicovaPhyUnknown in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.phy_unknown \
                 (valid options: name of R object).")
-        insilicovaPhyExternal = queryAdvancedInSilicoVA[0][25]
+        insilicovaPhyExternal = queryAdvancedInSilicoVA[0][23]
         if insilicovaPhyExternal in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.phy_external \
                 (valid options: name of R object).")
-        insilicovaPhyDebias = queryAdvancedInSilicoVA[0][26]
+        insilicovaPhyDebias = queryAdvancedInSilicoVA[0][24]
         if insilicovaPhyDebias in ("", None):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.phy_debias \
                 (valid options: name of R object).")
-        insilicovaExcludeImpossibleCause = queryAdvancedInSilicoVA[0][27]
+        insilicovaExcludeImpossibleCause = queryAdvancedInSilicoVA[0][25]
         if not insilicovaExcludeImpossibleCause in \
           ("subset", "all", "InterVA", "none"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.exclude_impossible_cause \
                 (valid options: 'subset', 'all', 'InterVA', and 'none').")
-        insilicovaNoIsMissing = queryAdvancedInSilicoVA[0][28]
+        insilicovaNoIsMissing = queryAdvancedInSilicoVA[0][26]
         if not insilicovaNoIsMissing in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.no_is_missing \
                 (valid options: 'TRUE' or 'FALSE').")
-        insilicovaIndivCI = queryAdvancedInSilicoVA[0][29]
+        insilicovaIndivCI = queryAdvancedInSilicoVA[0][27]
         if not insilicovaIndivCI == "NULL":
             try:
                 floatIndivCI = float(insilicovaIndivCI)
@@ -723,7 +692,7 @@ class TransferDB:
                 raise OpenVAConfigurationError \
                     ("Problem in database: InSilicoVA_Conf.indiv_CI \
                     (must be between '0' and '1').")
-        insilicovaGroupcode = queryAdvancedInSilicoVA[0][30]
+        insilicovaGroupcode = queryAdvancedInSilicoVA[0][28]
         if not insilicovaGroupcode in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.groupcode \
@@ -739,8 +708,6 @@ class TransferDB:
                                                "InSilicoVA_CondProbNum",
                                                "InSilicoVA_datacheck",
                                                "InSilicoVA_datacheck_missing",
-                                               "InSilicoVA_warning_write",
-                                               "InSilicoVA_directory",
                                                "InSilicoVA_external_sep",
                                                "InSilicoVA_thin",
                                                "InSilicoVA_burnin",
@@ -773,8 +740,6 @@ class TransferDB:
                                           insilicovaCondProbNum,
                                           insilicovaDatacheck,
                                           insilicovaDatacheckMissing,
-                                          insilicovaWarningWrite,
-                                          insilicovaDirectory,
                                           insilicovaExternalSep,
                                           insilicovaThin,
                                           insilicovaBurnin,

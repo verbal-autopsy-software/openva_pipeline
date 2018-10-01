@@ -11,7 +11,7 @@ CREATE TABLE Pipeline_Conf
 
 INSERT INTO Pipeline_Conf
   (a,b,c,d)
-  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
+  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InSilicoVA", ".");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage
@@ -59,8 +59,6 @@ INSERT INTO InterVA_Conf (a, b, c) VALUES("4", "v", "v");
 
 CREATE TABLE Advanced_InterVA_Conf
 (
-  a      char(50),
-  b       char(50),
   c         char( 8) NOT NULL CHECK (c    IN ("classic", "extended")),
   d         char( 5) NOT NULL CHECK (d    IN ("TRUE", "FALSE")),
   e      char( 5) NOT NULL CHECK (e IN ("TRUE", "FALSE")),
@@ -71,8 +69,8 @@ CREATE TABLE Advanced_InterVA_Conf
 );
 
 INSERT INTO Advanced_InterVA_Conf
-  (a, b, c, d, e, f, g, h, i)
-  VALUES("OpenVAFiles", "interVA4_results", "classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
+  (c, d, e, f, g, h, i)
+  VALUES("classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
 
 ---- InSilicoVA
 CREATE TABLE InSilicoVA_Conf
@@ -92,8 +90,6 @@ CREATE TABLE Advanced_InSilicoVA_Conf
   e char(50),
   f char( 5) NOT NULL CHECK (f                IN ("TRUE", "FALSE")),
   g char( 5) NOT NULL CHECK (g        IN ("TRUE", "FALSE")),
-  h char( 5) NOT NULL CHECK (h            IN ("TRUE", "FALSE")),
-  i char(50),
   j char( 5) NOT NULL CHECK (j             IN ("TRUE", "FALSE")),
   k char( 9),
   l char( 9),
@@ -119,11 +115,11 @@ CREATE TABLE Advanced_InSilicoVA_Conf
 );
 
 INSERT INTO Advanced_InSilicoVA_Conf
-  (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y,
+  (a, b, c, d, e, f, g, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y,
   z, aa, ab, ac, ad, ae)
   VALUES
     ("FALSE", "TRUE", "TRUE", "NULL", "NULL", "TRUE", "TRUE",
-     "FALSE", "usePipelineVar", "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
+     "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
      "NULL", "1", "0.0001", "0.9999", "NULL", "-Xmx1g", "1",
      "NULL", "NULL", "NULL", "NULL", "NULL", "subset",
      "FALSE", "NULL", "FALSE");

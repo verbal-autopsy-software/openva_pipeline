@@ -118,7 +118,6 @@ class OpenVA:
         
         if self.pipelineArgs.algorithm == "InSilicoVA":
             self._rScript_insilicoVA()
-            print("RAN the method _rScript_insilicoVA")
         if self.pipelineArgs.algorithm == "InterVA":
             self._rScript_interVA()
 
@@ -130,6 +129,12 @@ class OpenVA:
         algorithmMetadata = self.pipelineArgs.algorithmMetadataCode.split("|")
         whoInstrumentVersion = algorithmMetadata[5]
         rCode_crossVA = "data <- map_records_insilicova(records) \n"
+
+        if whoInstrumentVersion not in ["v1_4_1"]:
+            raise OpenVAError \
+                ("CrossVA not able to process WHO instrument version: " +
+                 whoInstrumentVersion)
+
         if whoInstrumentVersion == "v1_4_1" and self.vaArgs.InSilicoVA_data_type == "WHO2016":
             rCode_crossVA = "data <- odk2openVA(records) \n"
             # rCode_crossVA = "data <- odk2openVA_v141(records) \n"
@@ -141,14 +146,14 @@ class OpenVA:
                 f.write("library(openVA); library(CrossVA) \n")
                 f.write("getwd() \n")
                 f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
-                f.write("names(data) <- tolower(data) \n")
                 f.write(rCode_crossVA)
+                f.write("names(data) <- tolower(names(data)) \n")
                 if self.odkID == None:
-                    f.write("data$ID <- records$meta.instanceID \n")
+                    f.write("data$id <- as.character(records$meta.instanceID) \n")
                 else: 
-                    f.write("data$ID <- records$" + self.odkID + "\n")
-                f.write("results <- insilico(data = data, " + ", \n")
-                f.write("\t data.type = " + self.vaArgs.InSilicoVA_data_type + ", \n")
+                    f.write("data$id <- as.character(records$" + self.odkID + ")\n")
+                f.write("results <- insilico(data = data, \n")
+                f.write("\t data.type = '" + self.vaArgs.InSilicoVA_data_type + "', \n")
                 f.write("\t isNumeric = " + self.vaArgs.InSilicoVA_isNumeric + ", \n")
                 f.write("\t updateCondProb = " + self.vaArgs.InSilicoVA_updateCondProb + ", \n")
                 f.write("\t keepProbbase.level = " + self.vaArgs.InSilicoVA_keepProbbase_level + ", \n")
@@ -156,7 +161,10 @@ class OpenVA:
                 f.write("\t CondProbNum = " + self.vaArgs.InSilicoVA_CondProbNum + ", \n")
                 f.write("\t datacheck = " + self.vaArgs.InSilicoVA_datacheck + ", \n")
                 f.write("\t datacheck.missing = " + self.vaArgs.InSilicoVA_datacheck_missing + ", \n")
-                f.write("\t warning.write = " + self.vaArgs.InSilicoVA_warning_write + ", \n")
+                # f.write("\t warning.write = " + self.vaArgs.InSilicoVA_warning_write + ", \n")
+                # f.write("\t directory = " + self.vaArgs.InSilicoVA_directory + ", \n")
+                f.write("\t warning.write = TRUE, \n")
+                f.write("\t directory = '" + os.path.join(self.dirOpenVA, self.runDate) + "', \n")
                 f.write("\t external.sep = " + self.vaArgs.InSilicoVA_external_sep + ", \n")
                 f.write("\t Nsim = " + self.vaArgs.InSilicoVA_Nsim + ", \n")
                 f.write("\t thin = " + self.vaArgs.InSilicoVA_thin + ", \n")
@@ -169,20 +177,20 @@ class OpenVA:
                 f.write("\t trunc.min = " + self.vaArgs.InSilicoVA_trunc_min + ", \n")
                 f.write("\t trunc.max = " + self.vaArgs.InSilicoVA_trunc_max + ", \n")
                 f.write("\t subpop = " + self.vaArgs.InSilicoVA_subpop + ", \n")
-                f.write("\t java_option = " + self.vaArgs.InSilicoVA_java_option + ", \n")
+                f.write("\t java_option = '" + self.vaArgs.InSilicoVA_java_option + "', \n")
                 f.write("\t seed = " + self.vaArgs.InSilicoVA_seed + ", \n")
                 f.write("\t phy.code = " + self.vaArgs.InSilicoVA_phy_code + ", \n")
                 f.write("\t phy.cat = " + self.vaArgs.InSilicoVA_phy_cat + ", \n")
                 f.write("\t phy.unknown = " + self.vaArgs.InSilicoVA_phy_unknown + ", \n")
                 f.write("\t phy.external = " + self.vaArgs.InSilicoVA_phy_external + ", \n")
                 f.write("\t phy.debias = " + self.vaArgs.InSilicoVA_phy_debias + ", \n")
-                f.write("\t exclude.impossible.cause = " + self.vaArgs.InSilicoVA_exclude_impossible_cause + ", \n")
+                f.write("\t exclude.impossible.cause = '" + self.vaArgs.InSilicoVA_exclude_impossible_cause + "', \n")
                 f.write("\t no.is.missing = " + self.vaArgs.InSilicoVA_no_is_missing + ", \n")
                 f.write("\t indiv.CI = " + self.vaArgs.InSilicoVA_indiv_CI + ", \n")
                 f.write("\t groupcode = " + self.vaArgs.InSilicoVA_no_is_missing + ") \n")
                 f.write("sex <- ifelse(tolower(data$male)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
-                f.write("hasCOD <- as.character(data$ID) %in% as.character(levels(cod$ID)) \n")
+                f.write("hasCOD <- as.character(data$id) %in% as.character(levels(cod$ID)) \n")
                 f.write("dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') \n")
                 f.write("dod <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10023), '%b %d, %Y') \n")
                 f.write("age <- floor(records$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
@@ -210,6 +218,12 @@ class OpenVA:
         algorithmMetadata = self.pipelineArgs.algorithmMetadataCode.split("|")
         whoInstrumentVersion = algorithmMetadata[5]
         rCode_crossVA = "data <- map_records_interva4(records) \n"
+
+        if whoInstrumentVersion not in ["v1_4_1"]:
+            raise OpenVAError \
+                ("CrossVA not able to process WHO instrument version: " +
+                 whoInstrumentVersion)
+
         if whoInstrumentVersion == "v1_4_1" and self.vaArgs.InterVA_Version == "5":
             rCode_crossVA = "data <- odk2openVA(records) \n"
             # rCode_crossVA = "data <- odk2openVA_v141(records) \n"
@@ -220,13 +234,12 @@ class OpenVA:
                 f.write("date() \n")
                 f.write("library(openVA); library(CrossVA) \n")
                 f.write("getwd() \n")
-                f.write(rCode_crossVA)
-                f.write("names(data) <- tolower(data) \n")
+                f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
                 f.write(rCode_crossVA)
                 if self.odkID == None:
-                    f.write("data$ID <- records$meta.instanceID \n")
+                    f.write("data$ID <- as.character(records$meta.instanceID) \n")
                 else: 
-                    f.write("data$ID <- records$" + self.odkID + "\n")
+                    f.write("data$ID <- as.character(records$" + self.odkID + ")\n")
                 if self.vaArgs.InterVA_Version == "4":
                     f.write("results <- InterVA(Input = data, \n")
                 else:
@@ -234,17 +247,19 @@ class OpenVA:
                 f.write("\t HIV = '" + self.vaArgs.InterVA_HIV + "', \n")
                 f.write("\t Malaria = '" + self.vaArgs.InterVA_Malaria + "', \n")
                 f.write("\t output = '" + self.vaArgs.InterVA_output + "', \n")
-                f.write("\t groupcode = " + self.vaArgs.InterVA_groupcode + ", \n")
-                f.write("\t write = " + self.vaArgs.InterVA_write + ", \n")
-                f.write("\t directory = " + self.vaArgs.InterVA_directory + ", \n")
-                f.write("\t filename = " +
-                        self.vaArgs.InterVA_filename + "_" + self.runDate + ", \n")
                 if self.vaArgs.InterVA_Version == "4":
                     f.write("\t replicate = " + self.vaArgs.InterVA_replicate + ", \n")
                     f.write("\t replicate.bug1 = " + self.vaArgs.InterVA_replicate_bug1 + ", \n")
                     f.write("\t replicate.bug2 = " + self.vaArgs.InterVA_replicate_bug2 + ", \n")
-                f.write("\t write = TRUE) \n")
-                f.write("sex <- ifelse(tolower(data$male) == 'y', 'Male', 'Female') \n")
+                f.write("\t groupcode = " + self.vaArgs.InterVA_groupcode + ", \n")
+                # f.write("\t write = " + self.vaArgs.InterVA_write + ", \n")
+                # f.write("\t directory = '" + self.vaArgs.InterVA_directory + "', \n")
+                # f.write("\t filename = '" +
+                #         self.vaArgs.InterVA_filename + "_" + self.runDate + "') \n")
+                f.write("\t write = TRUE, \n")
+                f.write("\t directory = '" + os.path.join(self.dirOpenVA, self.runDate) + "', \n")
+                f.write("\t filename = 'warnings_" + self.runDate + "') \n")
+                f.write("sex <- ifelse(tolower(data$MALE) == 'y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
                 f.write("hasCOD <- as.character(data$ID) %in% as.character(levels(cod$ID)) \n")
                 f.write("dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') \n")
@@ -267,10 +282,22 @@ class OpenVA:
 
     
     def getCOD(self):
-        # InsilicoVA
-        # InterVA
-        # SmartVA
-        pass
+       if self.pipelineArgs.algorithm in ["InSilicoVA", "InterVA"]:
+           rScriptIn = os.path.join(self.dirOpenVA, self.runDate,
+                                    "Rscript_" + self.runDate + ".R")
+           rScriptOut = os.path.join(self.dirOpenVA, self.runDate,
+                                     "Rscript_" + self.runDate + ".Rout")
+           rArgs = ["R", "CMD", "BATCH", "--vanilla",
+                     rScriptIn, rScriptOut]
+           completed = subprocess.run(args = rArgs,
+                                      stdin  = subprocess.PIPE,
+                                      stdout = subprocess.PIPE,
+                                      stderr = subprocess.PIPE)
+           if completed.returncode == 1:
+               raise OpenVAError(completed.stderr)
+           return(completed)
+       # if self.pipelineArgs.algorithm == "SmartVA":
+
 
     def rmODKExport(self):
         pass

@@ -15,7 +15,7 @@ import datetime
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-class Check_1_importVA(unittest.TestCase):
+class Check_1_copyVA(unittest.TestCase):
 
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
@@ -40,8 +40,8 @@ class Check_1_importVA(unittest.TestCase):
                     odkID = settingsODK.odkID,
                     runDate = runDate)
 
-    def test_1_importVA_isFile(self):
-        """Check that importVA() brings in new file."""
+    def test_1_copyVA_isFile(self):
+        """Check that copyVA() brings in new file."""
 
         if os.path.isfile(self.dirODK + "/odkBCExportNew.csv"):
             os.remove(self.dirODK + "/odkBCExportNew.csv")
@@ -61,8 +61,8 @@ class Check_1_importVA(unittest.TestCase):
         os.remove(self.dirODK + "/odkBCExportNew.csv")
         os.remove(self.dirOpenVA + "/openVA_input.csv")
 
-    def test_1_importVA_merge(self):
-        """Check that importVA() includes all records."""
+    def test_1_copyVA_merge(self):
+        """Check that copyVA() includes all records."""
 
         if os.path.isfile(self.dirODK + "/odkBCExportNew.csv"):
             os.remove(self.dirODK + "/odkBCExportNew.csv")
@@ -93,8 +93,8 @@ class Check_1_importVA(unittest.TestCase):
         os.remove(self.dirODK + "/odkBCExportNew.csv")
         os.remove(self.dirOpenVA + "/openVA_input.csv")
 
-    def test_1_importVA_zeroRecords_1(self):
-        """Check that importVA() returns zeroRecords == True."""
+    def test_1_copyVA_zeroRecords_1(self):
+        """Check that copyVA() returns zeroRecords == True."""
 
         if os.path.isfile(self.dirODK + "/odkBCExportNew.csv"):
             os.remove(self.dirODK + "/odkBCExportNew.csv")
@@ -113,8 +113,8 @@ class Check_1_importVA(unittest.TestCase):
         os.remove(self.dirODK + "/odkBCExportPrev.csv")
         os.remove(self.dirODK + "/odkBCExportNew.csv")
 
-    def test_1_importVA_zeroRecords_2(self):
-        """Check that importVA() does not produce file if zero records."""
+    def test_1_copyVA_zeroRecords_2(self):
+        """Check that copyVA() does not produce file if zero records."""
 
         if os.path.isfile(self.dirODK + "/odkBCExportNew.csv"):
             os.remove(self.dirODK + "/odkBCExportNew.csv")
@@ -134,8 +134,8 @@ class Check_1_importVA(unittest.TestCase):
         os.remove(self.dirODK + "/odkBCExportNew.csv")
         os.remove(self.dirOpenVA + "/openVA_input.csv")
       
-    def test_1_importVA_zeroRecords_3(self):
-        """Check that importVA() doesn't create new file if returns zeroRecords == True."""
+    def test_1_copyVA_zeroRecords_3(self):
+        """Check that copyVA() doesn't create new file if returns zeroRecords == True."""
 
         if os.path.isfile(self.dirODK + "/odkBCExportNew.csv"):
             os.remove(self.dirODK + "/odkBCExportNew.csv")
@@ -174,7 +174,7 @@ class Check_2_rScript(unittest.TestCase):
 
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InSilicoVA", "InsilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
+        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -250,6 +250,113 @@ class Check_2_rScript(unittest.TestCase):
         openVA.rScript()
 
         self.assertTrue(os.path.isfile(rScriptFile))
+        shutil.rmtree(
+            os.path.join(dirOpenVA, runDate),
+            ignore_errors = True
+        )
+
+class Check_3_getCOD(unittest.TestCase):
+
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
+    dirODK = "ODKFiles"
+    dirOpenVA = "OpenVAFiles"
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+
+    settingsPipeline = xferDB.configPipeline(conn)
+    settingsODK = xferDB.configODK(conn)
+    settingsInterVA = xferDB.configOpenVA(conn,
+                                          "InterVA",
+                                          settingsPipeline.workingDirectory)
+    runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+      strftime("%Y_%m_%d_%H:%M:%S")
+
+    def test_3_getCOD_insilico(self):
+        """Check that getCOD() executes R script for insilico"""
+        c = self.conn.cursor()
+        sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
+        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        c.execute(sql, par)
+        settingsPipeline = self.xferDB.configPipeline(self.conn)
+        settingsODK = self.xferDB.configODK(self.conn)
+        settingsInSilicoVA = self.xferDB.configOpenVA(self.conn,
+                                                      "InSilicoVA",
+                                                      settingsPipeline.workingDirectory)
+        self.conn.rollback()
+        dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
+        dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
+        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                  strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, runDate,
+                                "Rscript_" + runDate + ".Rout")
+
+        openVA = OpenVA(vaArgs = settingsInSilicoVA,
+                        pipelineArgs = settingsPipeline,
+                        odkID = settingsODK.odkID,
+                        runDate = runDate)
+
+        if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
+            os.remove(dirODK + "/odkBCExportNew.csv")
+        if os.path.isfile(dirODK + "/odkBCExportPrev.csv"):
+            os.remove(dirODK + "/odkBCExportPrev.csv")
+        shutil.copy(dirODK + "/previous_bc_export.csv",
+                    dirODK + "/odkBCExportPrev.csv")
+        shutil.copy(dirODK + "/another_bc_export.csv",
+                    dirODK + "/odkBCExportNew.csv")
+
+        zeroRecords = openVA.copyVA()
+        openVA.rScript()
+        openVA.getCOD()
+
+        self.assertTrue(os.path.isfile(rOutFile))
+        shutil.rmtree(
+            os.path.join(dirOpenVA, runDate),
+            ignore_errors = True
+        )
+
+    def test_3_getCOD_interva(self):
+        """Check that getCOD() executes R script for interva"""
+        c = self.conn.cursor()
+        sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
+        par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        c.execute(sql, par)
+        settingsPipeline = self.xferDB.configPipeline(self.conn)
+        settingsODK = self.xferDB.configODK(self.conn)
+        settingsInterVA = self.xferDB.configOpenVA(self.conn,
+                                                   "InterVA",
+                                                   settingsPipeline.workingDirectory)
+        self.conn.rollback()
+        dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
+        dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
+        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                  strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, runDate,
+                                "Rscript_" + runDate + ".Rout")
+
+        openVA = OpenVA(vaArgs = settingsInterVA,
+                        pipelineArgs = settingsPipeline,
+                        odkID = settingsODK.odkID,
+                        runDate = runDate)
+
+        if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
+            os.remove(dirODK + "/odkBCExportNew.csv")
+        if os.path.isfile(dirODK + "/odkBCExportPrev.csv"):
+            os.remove(dirODK + "/odkBCExportPrev.csv")
+        shutil.copy(dirODK + "/previous_bc_export.csv",
+                    dirODK + "/odkBCExportPrev.csv")
+        shutil.copy(dirODK + "/another_bc_export.csv",
+                    dirODK + "/odkBCExportNew.csv")
+
+        zeroRecords = openVA.copyVA()
+        openVA.rScript()
+        openVA.getCOD()
+
+        self.assertTrue(os.path.isfile(rOutFile))
         shutil.rmtree(
             os.path.join(dirOpenVA, runDate),
             ignore_errors = True

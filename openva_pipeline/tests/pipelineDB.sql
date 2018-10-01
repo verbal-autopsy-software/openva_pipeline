@@ -3,7 +3,7 @@
 -- Pipeline Configuration
 CREATE TABLE Pipeline_Conf
 (
-  algorithmMetadataCode char(100), -- see table Algorithm_Metadata_Options (below)
+  algorithmMetadataCode char(100),
   codSource             char ( 6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff")),
   algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "InSilicoVA", "SmartVA")),
   workingDirectory      char(100)
@@ -11,7 +11,7 @@ CREATE TABLE Pipeline_Conf
 
 INSERT INTO Pipeline_Conf
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_2", "WHO", "InSilicoVA", ".");
+  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InSilicoVA", ".");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage
@@ -59,20 +59,17 @@ INSERT INTO InterVA_Conf (version, HIV, Malaria) VALUES("4", "v", "v");
 
 CREATE TABLE Advanced_InterVA_Conf
 (
-  directory      char(50),
-  filename       char(50),
   output         char( 8) NOT NULL CHECK (output    IN ("classic", "extended")),
   append         char( 5) NOT NULL CHECK (append    IN ("TRUE", "FALSE")),
   groupcode      char( 5) NOT NULL CHECK (groupcode IN ("TRUE", "FALSE")),
   replicate      char( 5) NOT NULL CHECK (replicate IN ("TRUE", "FALSE")),
   replicate_bug1 char( 5) NOT NULL CHECK (replicate_bug1 IN ("TRUE", "FALSE")),
-  replicate_bug2 char( 5) NOT NULL CHECK (replicate_bug1 IN ("TRUE", "FALSE")),
-  write          char( 5) NOT NULL CHECK (write     IN ("TRUE", "FALSE"))
+  replicate_bug2 char( 5) NOT NULL CHECK (replicate_bug1 IN ("TRUE", "FALSE"))
 );
 
 INSERT INTO Advanced_InterVA_Conf
-  (directory, filename, output, append, groupcode, replicate, replicate_bug1, replicate_bug2, write)
-  VALUES("OpenVAFiles", "interVA4_results", "classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE", "TRUE");
+  (output, append, groupcode, replicate, replicate_bug1, replicate_bug2)
+  VALUES("classic", "FALSE", "FALSE", "FALSE", "FALSE", "FALSE");
 
 ---- InSilicoVA
 CREATE TABLE InSilicoVA_Conf
@@ -92,8 +89,6 @@ CREATE TABLE Advanced_InSilicoVA_Conf
   CondProbNum                char(50),
   datacheck                  char( 5) NOT NULL CHECK (datacheck                IN ("TRUE", "FALSE")),
   datacheck_missing          char( 5) NOT NULL CHECK (datacheck_missing        IN ("TRUE", "FALSE")),
-  warning_write              char( 5) NOT NULL CHECK (warning_write            IN ("TRUE", "FALSE")),
-  directory                  char(50),
   external_sep               char( 5) NOT NULL CHECK (external_sep             IN ("TRUE", "FALSE")),
   thin                       char( 9),
   burnin                     char( 9),
@@ -120,13 +115,13 @@ CREATE TABLE Advanced_InSilicoVA_Conf
 
 INSERT INTO Advanced_InSilicoVA_Conf
   (isNumeric, updateCondProb, keepProbbase_level, CondProb, CondProbNum, datacheck, datacheck_missing,
-   warning_write, directory, external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
+   external_sep, thin, burnin, auto_length, conv_csmf, jump_scale,
    levels_prior, levels_strength, trunc_min, trunc_max, subpop, java_option, seed,
    phy_code, phy_cat, phy_unknown, phy_external, phy_debias, exclude_impossible_cause, no_is_missing,
    indiv_CI, groupcode)
   VALUES
     ("FALSE", "TRUE", "TRUE", "NULL", "NULL", "TRUE", "TRUE",
-     "FALSE", "usePipelineVar", "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
+     "TRUE", "10", "2000", "TRUE", "0.02", "0.1",
      "NULL", "1", "0.0001", "0.9999", "NULL", "-Xmx1g", "1",
      "NULL", "NULL", "NULL", "NULL", "NULL", "subset",
      "FALSE", "NULL", "FALSE");
