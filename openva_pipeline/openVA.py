@@ -64,7 +64,11 @@ class OpenVA:
         dirODK = os.path.join(pipelineArgs.workingDirectory, "ODKFiles")
         self.dirODK = dirODK
 
-    def copyVA(self): # what if the file "openVA_input.csv" already exists
+        dirSmartVA = os.path.abspath(os.path.dirname(__file__))
+        self.cliSmartVA = os.path.join(dirSmartVA, "libs/smartva")
+        self.successfulRun = None
+
+    def copyVA(self): 
         """Create data file for openVA by merging ODK export files."""
 
         exportFile_prev = os.path.join(self.dirODK, "odkBCExportPrev.csv")
@@ -114,7 +118,7 @@ class OpenVA:
                 os.path.join(self.dirOpenVA, self.runDate)
                 )
         except PermissionError as e:
-            raise OpenVAError("Unable to create dir" + str(e))
+            raise OpenVAError("Unable to create openVA dir" + str(e))
         
         if self.pipelineArgs.algorithm == "InSilicoVA":
             self._rScript_insilicoVA()
@@ -280,31 +284,75 @@ class OpenVA:
         except:
             raise OpenVAError("Problem writing R script for InterVA.")
 
-    
     def getCOD(self):
-       if self.pipelineArgs.algorithm in ["InSilicoVA", "InterVA"]:
-           rScriptIn = os.path.join(self.dirOpenVA, self.runDate,
-                                    "Rscript_" + self.runDate + ".R")
-           rScriptOut = os.path.join(self.dirOpenVA, self.runDate,
-                                     "Rscript_" + self.runDate + ".Rout")
-           rArgs = ["R", "CMD", "BATCH", "--vanilla",
+        """Create and execute R script to assign a COD with openVA; or call the SmartVA CLI to assign COD."""
+        if self.pipelineArgs.algorithm in ["InSilicoVA", "InterVA"]:
+            rScriptIn = os.path.join(self.dirOpenVA, self.runDate,
+                                     "Rscript_" + self.runDate + ".R")
+            rScriptOut = os.path.join(self.dirOpenVA, self.runDate,
+                                      "Rscript_" + self.runDate + ".Rout")
+            rArgs = ["R", "CMD", "BATCH", "--vanilla",
                      rScriptIn, rScriptOut]
-           completed = subprocess.run(args = rArgs,
-                                      stdin  = subprocess.PIPE,
-                                      stdout = subprocess.PIPE,
-                                      stderr = subprocess.PIPE)
-           if completed.returncode == 1:
-               raise OpenVAError(completed.stderr)
-           return(completed)
-       # if self.pipelineArgs.algorithm == "SmartVA":
+            completed = subprocess.run(args = rArgs,
+                                       stdin  = subprocess.PIPE,
+                                       stdout = subprocess.PIPE,
+                                       stderr = subprocess.PIPE)
+            if completed.returncode == 1:
+                self.successfulRun = False
+                raise OpenVAError("Error running R script:" + str(completed.stderr))
+            self.successfulRun = True
+            return(completed)
 
+        if self.pipelineArgs.algorithm == "SmartVA":
+            try:
+                os.makedirs(
+                    os.path.join(self.dirOpenVA, self.runDate)
+                )
+            except PermissionError as e:
+                raise OpenVAError("Unable to create openVA dir" + str(e))
+
+            inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
+            outDir = os.path.join(self.dirOpenVA, self.runDate)
+            svaArgs = [self.cliSmartVA,
+                       "--country", "{}".format(self.vaArgs.SmartVA_country),
+                       "--hiv", "{}".format(self.vaArgs.SmartVA_hiv),
+                       "--malaria", "{}".format(self.vaArgs.SmartVA_malaria),
+                       "--hce", "{}".format(self.vaArgs.SmartVA_hce),
+                       "--freetext", "{}".format(self.vaArgs.SmartVA_freetext),
+                       "--figures", "{}".format(self.vaArgs.SmartVA_figures),
+                       "--language", "{}".format(self.vaArgs.SmartVA_language),
+                       inFile,
+                       outDir]
+
+            completed = subprocess.run(args = svaArgs,
+                                       stdin  = subprocess.PIPE,
+                                       stdout = subprocess.PIPE,
+                                       stderr = subprocess.PIPE)
+            
+            if completed.returncode == 2:
+                self.successfulRun = False
+                raise SmartVAError \
+                    ("Error running SmartVA:" + str(completed.stderr))
+            stdOut = str(completed.stdout)
+            if "Country list" in stdOut:
+                self.successfulRun = False
+                raise SmartVAError("Problem with SmartVA country code")
+
+            self.successfulRun = True
+            return(completed)
 
     def rmODKExport(self):
-        pass
-
-
+        """If successful execution of openVA/SmartVA, clear the ODK Export files."""
+        if self.successfulRun == True:
+            os.remove(os.path.join(self.dirODK, "odkBCExportNew.csv"))
+            if os.path.isfile(self.dirODK + "/odkBCExportPrev.csv"):
+                os.remove(self.dirODK + "/odkBCExportPrev.csv")
+        if self.successfulRun in [False, None]:
+            raise OpenVAError \
+                ("Not clearing ODKExport Files; last run of getCOD() unsuccessful.")
 
 #------------------------------------------------------------------------------#
 # Exceptions
 #------------------------------------------------------------------------------#
 class OpenVAError(PipelineError): pass
+class SmartVAError(PipelineError): pass
