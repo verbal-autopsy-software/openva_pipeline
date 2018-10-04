@@ -83,12 +83,16 @@ class API(object):
         try:
             r = requests.post(url=url, json=data, auth=self.auth)
             if r.status_code not in range(200, 206):
-                print("HTTP Code: {}".format(r.status_code)) ## HERE
-                print(r.text)
+                raise DHISError\
+                    ("Problem with API.post..." +
+                     "HTTP Code: {}...".format(r.status_code) +
+                     str(r.text)
+                     )
             else:
                 return r.json()
         except requests.RequestException:
-            raise requests.RequestException
+            raise DHISError\
+                ("Problem with API.post..." + str(requests.RequestException))
 
     def post_blob(self, f):
         """ Post file to DHIS2 and return created UID for that file
@@ -100,14 +104,20 @@ class API(object):
             try:
                 r = requests.post(url, files=files, auth=self.auth)
                 if r.status_code not in (200, 202):
-                    print("HTTP Code: {}".format(r.status_code)) ## HERE
-                    print(r.text)
+                    raise DHISError\
+                        ("Problem with API.post_blob..." +
+                         "HTTP Code: {}...".format(r.status_code) +
+                         str(r.text)
+                        )
                 else:
                     response = r.json()
                     file_id = response["response"]["fileResource"]["id"]
                     return file_id
             except requests.RequestException:
-                raise requests.RequestException
+                raise DHISError\
+                    ("Problem with API.post_blob..." +
+                     str(requests.RequestException)
+                     )
 
 class VerbalAutopsyEvent(object):
     """ DHIS2 event + a BLOB file resource"""
@@ -170,7 +180,7 @@ def create_db(fName, evaList):
 
 def getCODCode(myDict, searchFor):
     """
-    Return COD label expected by DHIS.
+    Return COD label expected by DHIS2.
     :rtype: str
     """
     for i in range(len(myDict.keys())):
@@ -178,9 +188,20 @@ def getCODCode(myDict, searchFor):
         if match:
             return list(myDict.values())[i]
 
+def findKeyValue(key, d):
+    """
+    Return a key's value in a nested dictionary.
+    """
+    if key in d:
+        yield d[key]
+    for k in d:
+        if isinstance(d[k], list):
+            for i in d[k]:
+                for j in findKeyValue(key, i):
+                    yield j
 
 class DHIS():
-    """Class for transfering VA records (with assigned CODs) to the DHIS server.
+    """Class for transfering VA records (with assigned CODs) to the DHIf2S server.
 
     This class includes methods for importing VA results (i.e. assigned causes of
     death from openVA or SmartVA) as CSV files, connecting to a DHIS2 server
@@ -190,7 +211,7 @@ class DHIS():
     Parameters
     ----------
     dhisArgs : (named) tuple
-        Contains parameter values for connected to DHIS, as returned by
+        Contains parameter values for connected to DHIS2, as returned by
         transferDB.configDHIS().
 
     Methods
@@ -201,7 +222,9 @@ class DHIS():
     postVA(self)
         Prepare and post VA objects to the DHIS2 server.
     storeDB(self)
-        Deposits VA objects to the Transfer DB.
+        Deposits VA objects to the Transfer DB. THIS SHOULD BE IN transferDB module.
+    verifyPost(self)
+        Verify that VA records were posted to DHIS2 server.
     CheckDuplicates(self)
         Checks the DHIS2 server for duplicate records.
 
@@ -222,6 +245,7 @@ class DHIS():
         self.dirDHIS = os.path.join(workingDirectory, "DHIS2")
         self.dirOpenVA = os.path.join(workingDirectory, "OpenVAFiles")
         self.vaProgramUID = None
+        self.nPostedRecords = 0
 
     def connect(self):
         """Run get method to retrieve VA program ID and Org Unit."""
@@ -244,7 +268,7 @@ class DHIS():
         validOrgUnit = self.dhisOrgUnit in [i["id"] for i in orgUnits]
         if not validOrgUnit:
             raise DHISError("Did not find Organisation Unit.")
-        return(apiDHIS)
+        return apiDHIS
 
     def postVA(self, apiDHIS):
         """Post VA records to DHIS."""
@@ -325,71 +349,39 @@ class DHIS():
                 else:
                     row.extend(["", "No CoD Assigned"])
                     writer.writerow(row)
-
-        # dfDHIS2 = read_csv(evaPath)
-        # grouped = dfDHIS2.groupby(["ID"])
-        # with open(recordStoragePath, "r", newline="") as csvIn:
-        #     with open(newStoragePath, "w", newline="") as csvOut:
-        #         reader = csv.reader(csvIn)
-        #         writer = csv.writer(csvOut, lineterminator="\n")
-
-        #         header = next(reader)
-        #         header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
-        #         writer.writerow(header)
-
-        #         for row in reader:
-        #             if row[5]!="MISSING":
-
-        #                 vaID = str(row[0])
-        #                 blobFile = "{}.db".format(
-        #                     os.path.join(self.dirDHIS, "blobs", vaID)
-        #                 )
-        #                 blobRecord = grouped.get_group(str(row[0]))
-        #                 blobEVA = blobRecord.values.tolist()
-
-        #                 try:
-        #                     create_db(blobFile, blobEVA)
-        #                 except:
-        #                     raise DHISError("Unable to create blob.")
-        #                 try:
-        #                     fileID = apiDHIS.post_blob(blobFile)
-        #                 except requests.RequestException as e:
-        #                     raise DHISError\
-        #                         ("Unable to post blob to DHIS..." + str(e))
-
-        #                 sex = row[1].lower()
-        #                 dob = row[2]
-        #                 if row[3] =="":
-        #                     eventDate = datetime.date(9999,9,9)
-        #                 else:
-        #                     dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
-        #                     eventDate = datetime.date(dod.year, dod.month, dod.day)
-        #                 age = row[4]
-        #                 if row[5] == "Undetermined":
-        #                     codCode = "99"
-        #                 else:
-        #                     codCode = getCODCode(self.dhisCODCodes, row[5])
-        #                 algorithmMetadataCode = row[6]
-        #                 odkID = row[7]
-
-        #                 e = VerbalAutopsyEvent(vaID, self.vaProgramUID, self.dhisOrgUnit,
-        #                                        eventDate, sex, dob, age,
-        #                                        codCode, algorithmMetadataCode,
-        #                                        odkID, fileID)
-        #                 events.append(e.format_to_dhis2(self.dhisUser))
-
-        #                 row.extend([vaID, "Pushing to DHIS2"])
-        #                 writer.writerow(row)
-        #             else:
-        #                 row.extend(["", "No CoD Assigned"])
-        #                 writer.writerow(row)
-        
         export["events"] = events
         try:
             log = apiDHIS.post("events", data=export)
         except requests.RequestException as e:
-            raise DHISError("Unable to post events to DHIS..." + str(e))
-        return(log)
+            raise DHISError("Unable to post events to DHIS2..." + str(e))
+        self.nPostedRecords = len(log['response']['importSummaries'])
+        return log
+
+    def verifyPost(self, postLog, apiDHIS):
+        """Verify that VA records were posted to DHIS2 server."""
+
+        vaReferences = list(findKeyValue("reference", d = postLog["response"]))
+        try:
+            dfNewStorage = read_csv(self.dirOpenVA + "/newStorage.csv")
+        except:
+            raise DHISError\
+                ("Problem with DHIS.verifyPost...Can't find file " +
+                 self.dirOpenVA + "/newStorage.csv")
+
+        try:
+            for vaReference in vaReferences:
+                postedDataValues = apiDHIS.get("events/{}".format(vaReference)).get("dataValues")
+                postedVAIDIndex  = next((index for (index, d) in enumerate(postedDataValues) if d["dataElement"]=="htm6PixLJNy"), None)
+                postedVAID       = postedDataValues[postedVAIDIndex]["value"]
+                rowVAID          = dfNewStorage["dhisVerbalAutopsyID"] == postedVAID
+                dfNewStorage.loc[rowVAID,"pipelineOutcome"] = "Pushed to DHIS2"
+            dfNewStorage.to_csv(self.dirOpenVA + "/newStorage.csv")
+        except:
+            raise DHISError\
+                ("Problem with DHIS.postVA...couldn't verify posted records.")
+
+
+# cleanODK
 
 #------------------------------------------------------------------------------#
 # Exceptions
