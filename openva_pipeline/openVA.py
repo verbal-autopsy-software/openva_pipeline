@@ -25,7 +25,7 @@ class OpenVA:
     Parameters
     ----------
     algorithm : str
-      Which VA algorithm should be used to assign COD.
+        Which VA algorithm should be used to assign COD.
 
     Methods
     -------
@@ -36,9 +36,9 @@ class OpenVA:
     rScript(self)
         Wrapper for algorithm-specific methods that create an R script to use
         openVA to assign CODs.
-    __rScript_InSilicoVA(self)__:
+    __rScript_InSilicoVA(self)__
         Write an R script for running InSilicoVA and assigning CODs.
-    __rScript_InterVA(self)__:
+    __rScript_InterVA(self)__
         Write an R script for running InterVA and assigning CODs.
     getCOD(self)
         Run R as subprocess and run the script for assigning CODs.
@@ -152,8 +152,9 @@ class OpenVA:
                 f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
                 f.write(rCode_crossVA)
                 f.write("names(data) <- tolower(names(data)) \n")
+                f.write("odkMetaInstanceID <- as.character(records$meta.instanceID) \n")
                 if self.odkID == None:
-                    f.write("data$id <- as.character(records$meta.instanceID) \n")
+                    f.write("data$id <- odkMetaInstanceID \n")
                 else: 
                     f.write("data$id <- as.character(records$" + self.odkID + ")\n")
                 f.write("results <- insilico(data = data, \n")
@@ -207,8 +208,8 @@ class OpenVA:
                 f.write("evaBlob <- cbind(rep(as.character(data[,1]), each=ncol(data2)), rep(names(data2)), c(apply(data2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dirOpenVA + "/entityAttributeValue.csv', row.names=FALSE, na='') \n\n")
-                f.write("data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, data[,-1]) \n")
-                f.write("names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', names(data[,-1])) \n")
+                f.write("data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, odkMetaInstanceID, data[,-1]) \n")
+                f.write("names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(data[,-1])) \n")
                 f.write("write.csv(data3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
         except:
             raise OpenVAError("Problem writing R script for InSilicoVA.")
@@ -240,8 +241,9 @@ class OpenVA:
                 f.write("getwd() \n")
                 f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
                 f.write(rCode_crossVA)
+                f.write("odkMetaInstanceID <- as.character(records$meta.instanceID) \n")
                 if self.odkID == None:
-                    f.write("data$ID <- as.character(records$meta.instanceID) \n")
+                    f.write("data$ID <- odkMetaInstanceID \n")
                 else: 
                     f.write("data$ID <- as.character(records$" + self.odkID + ")\n")
                 if self.vaArgs.InterVA_Version == "4":
@@ -278,8 +280,8 @@ class OpenVA:
                 f.write("evaBlob <- cbind(rep(as.character(data[,1]), each=ncol(data2)), rep(names(data2)), c(apply(data2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dirOpenVA + "/entityAttributeValue.csv', row.names=FALSE, na='') \n\n")
-                f.write("data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, data[,-1]) \n")
-                f.write("names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', names(data[,-1])) \n")
+                f.write("data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, odkMetaInstanceID, data[,-1]) \n")
+                f.write("names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(data[,-1])) \n")
                 f.write("write.csv(data3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
         except:
             raise OpenVAError("Problem writing R script for InterVA.")

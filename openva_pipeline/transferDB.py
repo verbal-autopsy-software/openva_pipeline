@@ -848,7 +848,7 @@ class TransferDB:
                                     smartvaLanguage)
         return(settingsSmartVA)
 
-    def configDHIS(self, conn):
+    def configDHIS(self, conn, algorithm):
         """Query DHIS configuration settings from database.
 
         This method is intended to be used in conjunction with (1)
@@ -862,7 +862,8 @@ class TransferDB:
         Parameters
         ----------
         conn : sqlite3 Connection object (e.g., the object returned from
-        TransferDB.connectDB())
+            TransferDB.connectDB())
+        algorithm : VA algorithm used by R package openVA
 
         Returns
         -------
@@ -882,6 +883,18 @@ class TransferDB:
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
                 ("Problem in database table DHIS_Conf, " + str(e))
+
+        if algorithm == "Tariff":
+            sqlCODCodes = "SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = 'Tariff'"
+        else:
+            sqlCODCodes = "SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = 'WHO'"
+        try:
+            queryCODCodes = c.execute(sqlCODCodes).fetchall()
+            dhisCODCodes = dict(queryCODCodes)
+        except (sqlcipher.OperationalError) as e:
+            raise PipelineConfigurationError \
+                ("Problem in database table COD_Codes_DHIS, " + str(e))
+
         dhisURL = queryDHIS[0][0]
         startHTML = dhisURL[0:7]
         startHTMLS = dhisURL[0:8]
@@ -901,6 +914,18 @@ class TransferDB:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisOrgUnit (is empty)")
 
+        # ntDHIS = collections.namedtuple("ntDHIS",
+        #                                ["dhisURL",
+        #                                 "dhisUser",
+        #                                 "dhisPassword",
+        #                                 "dhisOrgUnit",
+        #                                 "dhisCODCodes"]
+        # )
+        # settingsDHIS = ntDHIS(dhisURL,
+        #                       dhisUser,
+        #                       dhisPassword,
+        #                       dhisOrgUnit,
+        #                       dhisCODCodes)
         ntDHIS = collections.namedtuple("ntDHIS",
                                        ["dhisURL",
                                         "dhisUser",
@@ -912,7 +937,7 @@ class TransferDB:
                               dhisPassword,
                               dhisOrgUnit)
 
-        return(settingsDHIS)
+        return([settingsDHIS, dhisCODCodes])
 
     def storeVA(self):
         """Query ODK configuration settings from database.

@@ -26,13 +26,13 @@ class ODK:
     Parameters
     ----------
     odkSettings : (named) tuple with all of configuration settings as
-      attributes.
+        attributes.
     exportDir : Directory where CSV file (containing VA records) is saved (ODK
-      Briefcase parameter).
+        Briefcase parameter).
     storageDir : Directory where ODK Briefcase files are stored (ODK
-      Briefcase parameter).
+        Briefcase parameter).
     fileName : Name of CSV file containing VA records exported from ODK
-      Aggregate (ODK Briefcase parameter).
+        Aggregate (ODK Briefcase parameter).
 
     Methods
     -------

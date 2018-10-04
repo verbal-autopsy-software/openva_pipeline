@@ -1104,12 +1104,13 @@ class Check_6_DHIS_Conf(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    algorithm = "InterVA"
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
                         dbKey = dbKey)
     conn = xferDB.connectDB()
-    settingsDHIS = xferDB.configDHIS(conn)
+    settingsDHIS = xferDB.configDHIS(conn, algorithm)
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
@@ -1127,7 +1128,8 @@ class Check_6_DHIS_Conf(unittest.TestCase):
         par = ("wrong.url",)
         c.execute(sql, par)
         self.assertRaises(transferDB.DHISConfigurationError,
-                          self.copy_xferDB.configDHIS, self.copy_conn)
+                          self.copy_xferDB.configDHIS,
+                          self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
     def test_6_dhisConf_dhisUser(self):
@@ -1140,7 +1142,8 @@ class Check_6_DHIS_Conf(unittest.TestCase):
         par = ("",)
         c.execute(sql, par)
         self.assertRaises(transferDB.DHISConfigurationError,
-                          self.copy_xferDB.configDHIS, self.copy_conn)
+                          self.copy_xferDB.configDHIS,
+                          self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
     def test_6_dhisConf_dhisPassword(self):
@@ -1153,7 +1156,8 @@ class Check_6_DHIS_Conf(unittest.TestCase):
         par = ("",)
         c.execute(sql, par)
         self.assertRaises(transferDB.DHISConfigurationError,
-                          self.copy_xferDB.configDHIS, self.copy_conn)
+                          self.copy_xferDB.configDHIS,
+                          self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
     def test_6_dhisConf_dhisOrgUnit(self):
@@ -1166,7 +1170,8 @@ class Check_6_DHIS_Conf(unittest.TestCase):
         par = ("",)
         c.execute(sql, par)
         self.assertRaises(transferDB.DHISConfigurationError,
-                          self.copy_xferDB.configDHIS, self.copy_conn)
+                          self.copy_xferDB.configDHIS,
+                          self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
 # Test VA Storage Configuration
