@@ -95,18 +95,19 @@ class API(object):
         :rtype: str
         """
         url = "{}/fileResources".format(self.url)
-        files = {"file": (f, open(f, "rb"), "application/x-sqlite3", {"Expires": "0"})}
-        try:
-            r = requests.post(url, files=files, auth=self.auth)
-            if r.status_code not in (200, 202):
-                print("HTTP Code: {}".format(r.status_code)) ## HERE
-                print(r.text)
-            else:
-                response = r.json()
-                file_id = response["response"]["fileResource"]["id"]
-                return file_id
-        except requests.RequestException:
-            raise requests.RequestException
+        with open(f, "rb") as fName:
+            files = {"file": (f, fName, "application/x-sqlite3", {"Expires": "0"})}
+            try:
+                r = requests.post(url, files=files, auth=self.auth)
+                if r.status_code not in (200, 202):
+                    print("HTTP Code: {}".format(r.status_code)) ## HERE
+                    print(r.text)
+                else:
+                    response = r.json()
+                    file_id = response["response"]["fileResource"]["id"]
+                    return file_id
+            except requests.RequestException:
+                raise requests.RequestException
 
 class VerbalAutopsyEvent(object):
     """ DHIS2 event + a BLOB file resource"""
@@ -165,6 +166,7 @@ def create_db(fName, evaList):
         cur.execute("CREATE TABLE vaRecord(ID INT, Attrtibute TEXT, Value TEXT)")
         cur.executemany("INSERT INTO vaRecord VALUES (?,?,?)", evaList)
     conn.close()
+
 
 def getCODCode(myDict, searchFor):
     """
@@ -266,61 +268,121 @@ class DHIS():
 
         dfDHIS2 = read_csv(evaPath)
         grouped = dfDHIS2.groupby(["ID"])
-        with open(recordStoragePath, "r", newline="") as csvIn:
-            with open(newStoragePath, "w", newline="") as csvOut:
-                reader = csv.reader(csvIn)
-                writer = csv.writer(csvOut, lineterminator="\n")
+        dfRecordStorage = read_csv(recordStoragePath)
 
-                header = next(reader)
-                header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
-                writer.writerow(header)
+        with open(newStoragePath, "w", newline="") as csvOut:
+            writer = csv.writer(csvOut, lineterminator="\n")
 
-                for row in reader:
-                    if row[5]!="MISSING":
+            header = list(dfRecordStorage)
+            header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
+            writer.writerow(header)
 
-                        vaID = str(row[0])
-                        blobFile = "{}.db".format(
-                            os.path.join(self.dirDHIS, "blobs", vaID)
-                        )
-                        blobRecord = grouped.get_group(str(row[0]))
-                        blobEVA = blobRecord.values.tolist()
+            for i in dfRecordStorage.itertuples(index = False):
+                row = list(i)
 
-                        try:
-                            create_db(blobFile, blobEVA)
-                        except:
-                            raise DHISError("Unable to create blob.")
-                        try:
-                            fileID = apiDHIS.post_blob(blobFile)
-                        except requests.RequestException as e:
-                            raise DHISError\
-                                ("Unable to post blob to DHIS..." + str(e))
+                if row[5]!="MISSING":
 
-                        sex = row[1].lower()
-                        dob = row[2]
-                        if row[3] =="":
-                            eventDate = datetime.date(9999,9,9)
-                        else:
-                            dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
-                            eventDate = datetime.date(dod.year, dod.month, dod.day)
-                        age = row[4]
-                        if row[5] == "Undetermined":
-                            codCode = "99"
-                        else:
-                            codCode = getCODCode(self.dhisCODCodes, row[5])
-                        algorithmMetadataCode = row[6]
-                        odkID = row[7]
+                    vaID = str(row[0])
+                    blobFile = "{}.db".format(
+                        os.path.join(self.dirDHIS, "blobs", vaID)
+                    )
+                    blobRecord = grouped.get_group(str(row[0]))
+                    blobEVA = blobRecord.values.tolist()
 
-                        e = VerbalAutopsyEvent(vaID, self.vaProgramUID, self.dhisOrgUnit,
-                                               eventDate, sex, dob, age,
-                                               codCode, algorithmMetadataCode,
-                                               odkID, fileID)
-                        events.append(e.format_to_dhis2(self.dhisUser))
+                    try:
+                        create_db(blobFile, blobEVA)
+                    except:
+                        raise DHISError("Unable to create blob.")
+                    try:
+                        fileID = apiDHIS.post_blob(blobFile)
+                    except requests.RequestException as e:
+                        raise DHISError\
+                            ("Unable to post blob to DHIS..." + str(e))
 
-                        row.extend([vaID, "Pushing to DHIS2"])
-                        writer.writerow(row)
+                    sex = row[1].lower()
+                    dob = row[2]
+                    if row[3] =="":
+                        eventDate = datetime.date(9999,9,9)
                     else:
-                        row.extend(["", "No CoD Assigned"])
-                        writer.writerow(row)
+                        dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
+                        eventDate = datetime.date(dod.year, dod.month, dod.day)
+                    age = row[4]
+                    if row[5] == "Undetermined":
+                        codCode = "99"
+                    else:
+                        codCode = getCODCode(self.dhisCODCodes, row[5])
+                    algorithmMetadataCode = row[6]
+                    odkID = row[7]
+
+                    e = VerbalAutopsyEvent(vaID, self.vaProgramUID, self.dhisOrgUnit,
+                                           eventDate, sex, dob, age,
+                                           codCode, algorithmMetadataCode,
+                                           odkID, fileID)
+                    events.append(e.format_to_dhis2(self.dhisUser))
+
+                    row.extend([vaID, "Pushing to DHIS2"])
+                    writer.writerow(row)
+                else:
+                    row.extend(["", "No CoD Assigned"])
+                    writer.writerow(row)
+
+        # dfDHIS2 = read_csv(evaPath)
+        # grouped = dfDHIS2.groupby(["ID"])
+        # with open(recordStoragePath, "r", newline="") as csvIn:
+        #     with open(newStoragePath, "w", newline="") as csvOut:
+        #         reader = csv.reader(csvIn)
+        #         writer = csv.writer(csvOut, lineterminator="\n")
+
+        #         header = next(reader)
+        #         header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
+        #         writer.writerow(header)
+
+        #         for row in reader:
+        #             if row[5]!="MISSING":
+
+        #                 vaID = str(row[0])
+        #                 blobFile = "{}.db".format(
+        #                     os.path.join(self.dirDHIS, "blobs", vaID)
+        #                 )
+        #                 blobRecord = grouped.get_group(str(row[0]))
+        #                 blobEVA = blobRecord.values.tolist()
+
+        #                 try:
+        #                     create_db(blobFile, blobEVA)
+        #                 except:
+        #                     raise DHISError("Unable to create blob.")
+        #                 try:
+        #                     fileID = apiDHIS.post_blob(blobFile)
+        #                 except requests.RequestException as e:
+        #                     raise DHISError\
+        #                         ("Unable to post blob to DHIS..." + str(e))
+
+        #                 sex = row[1].lower()
+        #                 dob = row[2]
+        #                 if row[3] =="":
+        #                     eventDate = datetime.date(9999,9,9)
+        #                 else:
+        #                     dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
+        #                     eventDate = datetime.date(dod.year, dod.month, dod.day)
+        #                 age = row[4]
+        #                 if row[5] == "Undetermined":
+        #                     codCode = "99"
+        #                 else:
+        #                     codCode = getCODCode(self.dhisCODCodes, row[5])
+        #                 algorithmMetadataCode = row[6]
+        #                 odkID = row[7]
+
+        #                 e = VerbalAutopsyEvent(vaID, self.vaProgramUID, self.dhisOrgUnit,
+        #                                        eventDate, sex, dob, age,
+        #                                        codCode, algorithmMetadataCode,
+        #                                        odkID, fileID)
+        #                 events.append(e.format_to_dhis2(self.dhisUser))
+
+        #                 row.extend([vaID, "Pushing to DHIS2"])
+        #                 writer.writerow(row)
+        #             else:
+        #                 row.extend(["", "No CoD Assigned"])
+        #                 writer.writerow(row)
         
         export["events"] = events
         try:

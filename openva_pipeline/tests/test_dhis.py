@@ -129,7 +129,6 @@ class Check_DHIS_Connect(unittest.TestCase):
         pipelineDHIS = dhis.DHIS(self.settingsDHIS, ".")
         apiDHIS = pipelineDHIS.connect()
         postLog = pipelineDHIS.postVA(apiDHIS)
-        print(str(postLog))
         checkLog = 'importSummaries' in postLog['response'].keys()
         self.assertTrue(checkLog)
 
