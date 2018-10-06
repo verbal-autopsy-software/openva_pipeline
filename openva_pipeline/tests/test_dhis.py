@@ -19,9 +19,10 @@ from pysqlcipher3 import dbapi2 as sqlcipher
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
-class Check_DHIS_Connect(unittest.TestCase):
+class Check_DHIS(unittest.TestCase):
     """Check the everything works as it should."""
 
+    shutil.rmtree("DHIS2/blobs/", ignore_errors = True)
     # Define valid parameters for SwissTPH DHIS2 Server.
     dirOpenVA = "OpenVAFiles"
     dhisURL = "https://va30se.swisstph-mis.ch"
@@ -43,11 +44,28 @@ class Check_DHIS_Connect(unittest.TestCase):
     conn = xferDB.connectDB()
     settingsDHIS = xferDB.configDHIS(conn, "InSilicoVA")
 
-    def test_DHIS_vaProgramUID(self):
+    pipelineDHIS = dhis.DHIS(settingsDHIS, ".")
+    apiDHIS = pipelineDHIS.connect()
+    postLog = pipelineDHIS.postVA(apiDHIS)
+
+    def test_DHIS_1_vaProgramUID(self):
         """Verify VA program is installed."""
-        pipelineDHIS = dhis.DHIS(self.settingsDHIS, ".")
-        pipelineDHIS.connect()
-        self.assertEqual(pipelineDHIS.vaProgramUID, "sv91bCroFFx")
+        self.assertEqual(self.pipelineDHIS.vaProgramUID, "sv91bCroFFx")
+
+    def test_DHIS_2_postVA(self):
+        """Post VA records to DHIS2."""
+        checkLog = 'importSummaries' in self.postLog['response'].keys()
+        self.assertTrue(checkLog)
+
+    def test_DHIS_3_verifyPost(self):
+        """Verify VA records got posted to DHIS2."""
+        self.pipelineDHIS.verifyPost(self.postLog, self.apiDHIS)
+        dfNewStorage = pd.read_csv("OpenVAFiles/newStorage.csv")
+        nPushed = sum(dfNewStorage['pipelineOutcome'] == "Pushed to DHIS2")
+        self.assertEqual(nPushed, self.pipelineDHIS.nPostedRecords)
+
+class Check_DHIS_Exceptions(unittest.TestCase):
+    """Check that DHIS raises exceptions when it should."""
 
     def test_DHIS_orgUnit_Exception(self):
         """Verify exception is raised with faulty input."""
@@ -63,12 +81,13 @@ class Check_DHIS_Connect(unittest.TestCase):
                                          "dhisOrgUnit",
                                          "dhisCODCodes"]
         )
-        badInput = ntDHIS(dhisURL,
-                          dhisUser,
-                          dhisPassword,
-                          dhisOrgUnit,
-                          "InSilicoVA")
-        badInput = [badInput, self.settingsDHIS[1]]
+        badSettings = ntDHIS(dhisURL,
+                             dhisUser,
+                             dhisPassword,
+                             dhisOrgUnit,
+                             "InSilicoVA")
+        mockCOD = {"cause1": "code1", "cause2": "code2"}
+        badInput = [badSettings, mockCOD]
         pipelineDHIS = dhis.DHIS(badInput, ".")
         self.assertRaises(dhis.DHISError, pipelineDHIS.connect)
 
@@ -86,44 +105,16 @@ class Check_DHIS_Connect(unittest.TestCase):
                                          "dhisOrgUnit",
                                          "dhisCODCodes"]
         )
-        badInput = ntDHIS(dhisURL,
-                          dhisUser,
-                          dhisPassword,
-                          dhisOrgUnit,
-                          "InSilicoVA")
-        badInput = [badInput, self.settingsDHIS[1]]
+        badSettings = ntDHIS(dhisURL,
+                             dhisUser,
+                             dhisPassword,
+                             dhisOrgUnit,
+                             "InSilicoVA")
+        mockCOD = {"cause1": "code1", "cause2": "code2"}
+        badInput = [badSettings, mockCOD]
+
         pipelineDHIS = dhis.DHIS(badInput, ".")
         self.assertRaises(dhis.DHISError, pipelineDHIS.connect)
-
-    def test_DHIS_postVA(self):
-        """Post VA records to DHIS2."""
-
-        shutil.rmtree("DHIS2/blobs/", ignore_errors = True)
-        shutil.copy("OpenVAFiles/sampleEAV.csv",
-                    "OpenVAFiles/entityAttributeValue.csv")
-
-        pipelineDHIS = dhis.DHIS(self.settingsDHIS, ".")
-        apiDHIS = pipelineDHIS.connect()
-        postLog = pipelineDHIS.postVA(apiDHIS)
-        checkLog = 'importSummaries' in postLog['response'].keys()
-
-        self.assertTrue(checkLog)
-
-    def test_DHIS_verifyPost(self):
-        """Verify VA records got posted to DHIS2."""
-
-        shutil.rmtree("DHIS2/blobs/", ignore_errors = True)
-        shutil.copy("OpenVAFiles/sampleEAV.csv",
-                    "OpenVAFiles/entityAttributeValue.csv")
-
-        pipelineDHIS = dhis.DHIS(self.settingsDHIS, ".")
-        apiDHIS = pipelineDHIS.connect()
-        postLog = pipelineDHIS.postVA(apiDHIS)
-        pipelineDHIS.verifyPost(postLog, apiDHIS)
-        dfNewStorage = pd.read_csv("OpenVAFiles/newStorage.csv")
-        nPushed = sum(dfNewStorage['pipelineOutcome'] == "Pushed to DHIS2")
-        print(nPushed)
-        self.assertEqual(nPushed, pipelineDHIS.nPostedRecords)
 
 if __name__ == "__main__":
     unittest.main()

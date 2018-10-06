@@ -9,6 +9,9 @@
 
 import unittest
 import os
+import sqlite3
+import shutil
+from pandas import read_csv
 from context import pipeline
 from context import transferDB
 from transferDB import TransferDB
@@ -1119,7 +1122,7 @@ class Check_6_DHIS_Conf(unittest.TestCase):
 
     def test_6_dhisConf_dhisURL(self):
         """Test DHIS_Conf table has valid dhisURL"""        
-        self.assertEqual(self.settingsDHIS.dhisURL,
+        self.assertEqual(self.settingsDHIS[0].dhisURL,
                          "https://va30se.swisstph-mis.ch")
     def test_6_dhisConf_dhisURL_Exception(self):
         """configDHIS should fail with invalid url."""
@@ -1134,7 +1137,7 @@ class Check_6_DHIS_Conf(unittest.TestCase):
 
     def test_6_dhisConf_dhisUser(self):
         """Test DHIS_Conf table has valid dhisUser"""
-        self.assertEqual(self.settingsDHIS.dhisUser, "va-demo")
+        self.assertEqual(self.settingsDHIS[0].dhisUser, "va-demo")
     def test_6_dhisConf_dhisUser_Exception(self):
         """configDHIS should fail with invalid dhisUser."""
         c = self.copy_conn.cursor()
@@ -1148,7 +1151,7 @@ class Check_6_DHIS_Conf(unittest.TestCase):
 
     def test_6_dhisConf_dhisPassword(self):
         """Test DHIS_Conf table has valid dhisPassword"""
-        self.assertEqual(self.settingsDHIS.dhisPassword, "VerbalAutopsy99!")
+        self.assertEqual(self.settingsDHIS[0].dhisPassword, "VerbalAutopsy99!")
     def test_6_dhisConf_dhisPassword_Exception(self):
         """configDHIS should fail with invalid dhisPassword."""
         c = self.copy_conn.cursor()
@@ -1162,7 +1165,7 @@ class Check_6_DHIS_Conf(unittest.TestCase):
 
     def test_6_dhisConf_dhisOrgUnit(self):
         """Test DHIS_Conf table has valid dhisOrgUnit"""
-        self.assertEqual(self.settingsDHIS.dhisOrgUnit, "SCVeBskgiK6")
+        self.assertEqual(self.settingsDHIS[0].dhisOrgUnit, "SCVeBskgiK6")
     def test_6_dhisConf_dhisOrgUnit_Exception(self):
         """configDHIS should fail with invalid dhisOrgUnit."""
         c = self.copy_conn.cursor()
@@ -1175,7 +1178,60 @@ class Check_6_DHIS_Conf(unittest.TestCase):
         self.copy_conn.rollback()
 
 # Test VA Storage Configuration
+class Check_7_DHIS_storeVA(unittest.TestCase):
+
+    shutil.copy("OpenVAFiles/sample_newStorage.csv",
+                "OpenVAFiles/newStorage.csv")
+
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    wrong_dbKey = "wrongKey"
+    dbDirectory = "."
+
+    xferDB = TransferDB(dbFileName = dbFileName,
+                        dbDirectory = dbDirectory,
+                        dbKey = dbKey)
+    conn = xferDB.connectDB()
+    xferDB.configPipeline(conn)
+
+    def test_DHIS_7_storeVA(self):
+        """Check that VA records get stored in Transfer DB."""
+        self.xferDB.storeVA(self.conn)
+        c = self.conn.cursor()
+        sql = "SELECT id FROM VA_Storage"
+        c.execute(sql)
+        vaIDs = c.fetchall()
+        vaIDsList = [j for i in vaIDs for j in i]
+        s1 = set(vaIDsList)
+        dfNewStorage = read_csv("OpenVAFiles/newStorage.csv")
+        dfNewStorageID = dfNewStorage['odkMetaInstanceID']
+        s2 = set(dfNewStorageID)
+        self.assertTrue(s2.issubset(s1))
+
 # Test EventLog Configuration
+
+# Test Cleanup
+    # def test_DHIS_cleanPipeline(self):
+
+    #     shutil.copy("OpenVAFiles/sampleEAV.csv",
+    #                 "OpenVAFiles/entityAttributeValue.csv")
+    #     shutil.copy("OpenVAFiles/sample_openVA_input.csv",
+    #                 "OpenVAFiles/openVA_input.csv")
+    #     shutil.copy("ODKFiles/previous_bc_export.csv",
+    #                 "ODKFiles/odkVCExportPrev.csv")
+    #     shutil.copy("ODKFiles/another_bc_export.csv",
+    #                 "ODKFiles/odkVCExportNew.csv")
+
+    #     pipelineDHIS = dhis.DHIS(self.settingsDHIS, ".")
+    #     apiDHIS = pipelineDHIS.connect()
+    #     postLog = pipelineDHIS.postVA(apiDHIS)
+    #     pipelineDHIS.verifyPost(postLog, apiDHIS)
+    #     dfNewStorage = pd.read_csv("OpenVAFiles/newStorage.csv")
+    #     nPushed = sum(dfNewStorage['pipelineOutcome'] == "Pushed to DHIS2")
+    #     print(nPushed)
+    #     self.assertEqual(nPushed, pipelineDHIS.nPostedRecords)
+
+
 
 if __name__ == "__main__":
     unittest.main()

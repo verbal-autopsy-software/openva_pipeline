@@ -221,8 +221,6 @@ class DHIS():
         openVA to assign CODs.
     postVA(self)
         Prepare and post VA objects to the DHIS2 server.
-    storeDB(self)
-        Deposits VA objects to the Transfer DB. THIS SHOULD BE IN transferDB module.
     verifyPost(self)
         Verify that VA records were posted to DHIS2 server.
     CheckDuplicates(self)
@@ -253,7 +251,7 @@ class DHIS():
         try:
             apiDHIS = API(self.dhisURL, self.dhisUser, self.dhisPassword)
         except (requests.RequestException) as e:
-            raise DHISError(str(e)) 
+            raise DHISError(str(e))
 
         vaPrograms = apiDHIS.get("programs",
                                  params={"filter": "name:like:Verbal Autopsy"}
@@ -295,12 +293,14 @@ class DHIS():
         dfRecordStorage = read_csv(recordStoragePath)
 
         with open(newStoragePath, "w", newline="") as csvOut:
-            writer = csv.writer(csvOut, lineterminator="\n")
+            # writer = csv.writer(csvOut, lineterminator="\n")
+            writer = csv.writer(csvOut)
 
             header = list(dfRecordStorage)
             header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
             writer.writerow(header)
 
+            ## this depends on openVA vs SmartVA
             for i in dfRecordStorage.itertuples(index = False):
                 row = list(i)
 
@@ -323,7 +323,18 @@ class DHIS():
                         raise DHISError\
                             ("Unable to post blob to DHIS..." + str(e))
 
-                    sex = row[1].lower()
+                    algorithm = row[6].split("|")[0]
+                    if algorithm == "SmartVA":
+                        if row[1] in ["1", "1.0", 1, 1.0]:
+                            sex = "male"
+                        elif row[1] in ["2", "2.0", 2, 2.0]:
+                            sex = "female"
+                        elif row[1] in ["8", "8.0", 8, 8.0]:
+                            sex = "don't know"
+                        else:
+                            sex = "refused to answer"
+                    else:
+                        sex = row[1].lower()
                     dob = row[2]
                     if row[3] =="":
                         eventDate = datetime.date(9999,9,9)
@@ -375,13 +386,10 @@ class DHIS():
                 postedVAID       = postedDataValues[postedVAIDIndex]["value"]
                 rowVAID          = dfNewStorage["dhisVerbalAutopsyID"] == postedVAID
                 dfNewStorage.loc[rowVAID,"pipelineOutcome"] = "Pushed to DHIS2"
-            dfNewStorage.to_csv(self.dirOpenVA + "/newStorage.csv")
+            dfNewStorage.to_csv(self.dirOpenVA + "/newStorage.csv", index = False)
         except:
             raise DHISError\
                 ("Problem with DHIS.postVA...couldn't verify posted records.")
-
-
-# cleanODK
 
 #------------------------------------------------------------------------------#
 # Exceptions

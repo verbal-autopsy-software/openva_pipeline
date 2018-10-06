@@ -16,6 +16,9 @@
 import os
 import collections
 import datetime
+import sqlite3
+from pickle import dumps
+from pandas import read_csv
 from pipeline import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
 
@@ -52,7 +55,8 @@ class TransferDB:
     configDHIS(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for connecting to DHIS2 server.
-
+    storeDB(self)
+        Deposits VA objects to the Transfer DB.
     """
 
 
@@ -62,7 +66,7 @@ class TransferDB:
         self.dbDirectory = dbDirectory
         self.dbKey = dbKey
         self.dbPath = os.path.join(dbDirectory, dbFileName)
-
+        self.workingDir = None
 
     def connectDB(self):
         """Connect to Transfer database.
@@ -93,7 +97,7 @@ class TransferDB:
               where type = 'table';"
             conn.execute(sqlTestConnection)
         except (sqlcipher.DatabaseError) as e:
-            raise DatabaseConnectionError("Database password error," + str(e))
+            raise DatabaseConnectionError("Database password error..." + str(e))
 
         return(conn)
 
@@ -131,7 +135,7 @@ class TransferDB:
             metadataQuery = c.fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table Algorithm_Metadata_Options, " +
+                ("Problem in database table Algorithm_Metadata_Options..." +
                  str(e)
                 )
 
@@ -141,7 +145,7 @@ class TransferDB:
             queryPipeline = c.execute(sqlPipeline).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table Pipeline_Conf, " + str(e))
+                ("Problem in database table Pipeline_Conf..." + str(e))
 
         algorithmMetadataCode = queryPipeline[0][0]
         if algorithmMetadataCode not in [j for i in metadataQuery for j in i]:
@@ -170,6 +174,7 @@ class TransferDB:
                                       codSource,
                                       algorithm,
                                       workingDirectory)
+        self.workingDirectory = workingDirectory
         return(settingsPipeline)
 
     def configODK(self, conn):
@@ -203,7 +208,7 @@ class TransferDB:
             queryODK = c.execute(sqlODK).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table ODK_Conf, " + str(e))
+                ("Problem in database table ODK_Conf..." + str(e))
         odkID = queryODK[0][0]
         odkURL = queryODK[0][1]
         startHTML = odkURL[0:7]
@@ -319,7 +324,7 @@ class TransferDB:
             queryInterVA = c.execute(sqlInterVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table InterVA_Conf, " + str(e))
+                ("Problem in database table InterVA_Conf..." + str(e))
 
         # Database Table: InterVA_Conf
         intervaVersion = queryInterVA[0][0]
@@ -346,7 +351,7 @@ class TransferDB:
             queryAdvancedInterVA = c.execute(sqlAdvancedInterVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table Advanced_InterVA_Conf, " + str(e))
+                ("Problem in database table Advanced_InterVA_Conf..." + str(e))
 
         intervaOutput = queryAdvancedInterVA[0][0]
         if not intervaOutput in ("classic", "extended"):
@@ -424,7 +429,7 @@ class TransferDB:
             queryInSilicoVA = c.execute(sqlInSilicoVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table InSilicoVA_Conf, " + str(e))
+                ("Problem in database table InSilicoVA_Conf..." + str(e))
 
         insilicovaDataType = queryInSilicoVA[0][0]
         if not insilicovaDataType in ("WHO2012", "WHO2016"):
@@ -449,7 +454,7 @@ class TransferDB:
             queryAdvancedInSilicoVA = c.execute(sqlAdvancedInSilicoVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table Advanced_InSilicoVA_Conf, " + str(e))
+                ("Problem in database table Advanced_InSilicoVA_Conf..." + str(e))
 
         insilicovaIsNumeric = queryAdvancedInSilicoVA[0][0]
         if not insilicovaIsNumeric in ("TRUE", "FALSE"):
@@ -792,14 +797,14 @@ class TransferDB:
             querySmartVA = c.execute(sqlSmartVA).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table SmartVA_Conf, " + str(e))
+                ("Problem in database table SmartVA_Conf..." + str(e))
 
         try:
             sqlCountryList = "SELECT abbrev FROM SmartVA_Country;"
             queryCountryList = c.execute(sqlCountryList).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table SmartVA_Country, " + str(e))
+                ("Problem in database table SmartVA_Country..." + str(e))
 
         smartvaCountry = querySmartVA[0][0]
         if smartvaCountry not in [j for i in queryCountryList for j in i]:
@@ -882,7 +887,7 @@ class TransferDB:
             queryDHIS = c.execute(sqlDHIS).fetchall()
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table DHIS_Conf, " + str(e))
+                ("Problem in database table DHIS_Conf..." + str(e))
 
         if algorithm == "Tariff":
             sqlCODCodes = "SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = 'Tariff'"
@@ -893,7 +898,7 @@ class TransferDB:
             dhisCODCodes = dict(queryCODCodes)
         except (sqlcipher.OperationalError) as e:
             raise PipelineConfigurationError \
-                ("Problem in database table COD_Codes_DHIS, " + str(e))
+                ("Problem in database table COD_Codes_DHIS..." + str(e))
 
         dhisURL = queryDHIS[0][0]
         startHTML = dhisURL[0:7]
@@ -914,18 +919,6 @@ class TransferDB:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisOrgUnit (is empty)")
 
-        # ntDHIS = collections.namedtuple("ntDHIS",
-        #                                ["dhisURL",
-        #                                 "dhisUser",
-        #                                 "dhisPassword",
-        #                                 "dhisOrgUnit",
-        #                                 "dhisCODCodes"]
-        # )
-        # settingsDHIS = ntDHIS(dhisURL,
-        #                       dhisUser,
-        #                       dhisPassword,
-        #                       dhisOrgUnit,
-        #                       dhisCODCodes)
         ntDHIS = collections.namedtuple("ntDHIS",
                                        ["dhisURL",
                                         "dhisUser",
@@ -939,57 +932,56 @@ class TransferDB:
 
         return([settingsDHIS, dhisCODCodes])
 
-    def storeVA(self):
-        """Query ODK configuration settings from database.
+    def storeVA(self, conn):
+        """Store VA records in Transfer database.
 
-        This method is intended to be used in conjunction with
-        (1) TransferDB.connectDB(), which establishes a connection to a
-        database with the Pipeline configuration settings; and (2)
-        ODK.briefcase(), which establishes a connection to an ODK Aggregate
-        server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
-        and the output from ODK.config() is a valid argument for ODK.config().
+        This method is intended to be used in conjunction with the DHIS module,
+        which prepares the records into the proper format for storage in the
+        Transfer database.
 
         Parameters
         ----------
         conn : sqlite3 Connection object
 
-        Returns
-        -------
-        tuple
-            Contains all parameters for ODK.briefcase().
-
         Raises
         ------
+        PipelineError
         DatabaseConnectionError
 
         """
-        pass
-
-    def storeBlob(self):
-        """Query ODK configuration settings from database.
-
-        This method is intended to be used in conjunction with
-        (1) TransferDB.connectDB(), which establishes a connection to a
-        database with the Pipeline configuration settings; and (2)
-        ODK.briefcase(), which establishes a connection to an ODK Aggregate
-        server.  Thus, ODK.config() gets its input from TransferDB.connectDB()
-        and the output from ODK.config() is a valid argument for ODK.config().
-
-        Parameters
-        ----------
-        conn : sqlite3 Connection object
-
-        Returns
-        -------
-        tuple
-            Contains all parameters for ODK.briefcase().
-
-        Raises
-        ------
-        DatabaseConnectionError
-
-        """
-        pass
+        
+        if self.workingDirectory == None:
+            raise PipelineError("Need to run configPipeline.")
+        c = conn.cursor()
+        newStoragePath = os.path.join(self.workingDirectory,
+                                      "OpenVAFiles",
+                                      "newStorage.csv")
+        dfNewStorage = read_csv(newStoragePath)
+        dfNewStorageID = dfNewStorage['odkMetaInstanceID']
+        timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        try:
+            for row in dfNewStorage.itertuples():
+                xferDBID = row[1]
+                nElements = len(row) - 1
+                xferDBOutcome = row[nElements]
+                vaData        = row[1], row[8:(nElements - 1)]
+                vaDataFlat    = tuple([y for x in vaData for y in (x if isinstance(x, tuple) else (x,))])
+                xferDBRecord  = dumps(vaDataFlat)
+                sqlXferDB = "INSERT INTO VA_Storage (id, outcome, record, dateEntered) VALUES (?,?,?,?)"
+                par       = [xferDBID, xferDBOutcome, sqlite3.Binary(xferDBRecord), timeFMT]
+                c.execute(sqlXferDB, par)
+            conn.commit()
+        except:
+            raise DatabaseConnectionError\
+                ("Problem storing VA record to Transfer DB.")
+        # try:
+        #     nNewStorage = dfNewStorage.shape[0]
+        #     sql = "INSERT INTO EventLog (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
+        #     par = ("Stored {} records to {}.db".format(nNewStorage, dbName), "Information", timeFMT)
+        #     c.execute(sql, par)
+        # except (sqlcipher.Error, sqlcipher.Warning, sqlcipher.DatabaseError) as e:
+        #     raise DatabaseConnectionError\
+        #         ("Problem storing blob to Transfer DB.")
 
 #------------------------------------------------------------------------------#
 # Exceptions
