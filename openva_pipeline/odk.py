@@ -27,12 +27,7 @@ class ODK:
     ----------
     odkSettings : (named) tuple with all of configuration settings as
         attributes.
-    exportDir : Directory where CSV file (containing VA records) is saved (ODK
-        Briefcase parameter).
-    storageDir : Directory where ODK Briefcase files are stored (ODK
-        Briefcase parameter).
-    fileName : Name of CSV file containing VA records exported from ODK
-        Aggregate (ODK Briefcase parameter).
+    workingDirectory : Directory where openVA Pipeline should create files.
 
     Methods
     -------
@@ -49,7 +44,7 @@ class ODK:
     """
 
 
-    def __init__(self, odkSettings, exportDir, storageDir):
+    def __init__(self, odkSettings, workingDirectory):
 
         self.odkID = odkSettings.odkID
         self.odkURL = odkSettings.odkURL
@@ -62,13 +57,17 @@ class ODK:
         self.odkLastRunResult = odkSettings.odkLastRunResult
         bcDir = os.path.abspath(os.path.dirname(__file__))
         self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.10.1.jar")
-        # note: changing exportDir (from one run to next) will cause problems!
-        self.exportDir = exportDir 
-        self.storageDir = storageDir
+        odkPath = os.path.join(workingDirectory, "ODKFiles")
+        self.exportDir = odkPath
+        self.storageDir = odkPath
         self.fileName = "odkBCExportNew.csv"
 
-    ## Do we really need this? how about don't update odkLastRunDate until you assign
-    ## COD and push files to DHIS2/TransferDB
+        try:
+            if not os.path.isdir(odkPath):
+                os.makedirs(odkPath)
+        except:
+            raise ODKError("Unable to create directory " + odkPath)
+
     def mergeToPrevExport(self):
         """Merge previous ODK Briefcase export files."""
         exportFile_prev = os.path.join(self.exportDir, "odkBCExportPrev.csv")
@@ -103,12 +102,10 @@ class ODK:
 
         Raises
         ------
-        ODKBriefcaseError
+        ODKError
 
         """
 
-        ## check that briefcase is present
-        ## does it need to be executable?
 
         bcArgs = ['java', '-jar', self.bcPath,
                   # '-e', '-oc', '-em', ## '-e' needed for ODK-Briefcase-v1.12.0.jar
@@ -121,17 +118,15 @@ class ODK:
                   '-u', self.odkUser,
                   '-p', self.odkPassword,
                   '-start', self.odkLastRunDatePrev]
-
         completed = subprocess.run(args = bcArgs,
                                    stdin  = subprocess.PIPE,
                                    stdout = subprocess.PIPE,
                                    stderr = subprocess.PIPE)
         if completed.returncode == 1:
-            raise ODKBriefcaseError(completed.stderr)
-
+            raise ODKError(completed.stderr)
         return(completed)
 
 #------------------------------------------------------------------------------#
 # Exceptions
 #------------------------------------------------------------------------------#
-class ODKBriefcaseError(PipelineError): pass
+class ODKError(PipelineError): pass

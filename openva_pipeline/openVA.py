@@ -31,8 +31,6 @@ class OpenVA:
     -------
     copyVA(self)
         Create data file for openVA by merging ODK export files.
-    checkDuplicates(self)
-        Search for duplicate VA records in the data file and the tranfser DB.
     rScript(self)
         Wrapper for algorithm-specific methods that create an R script to use
         openVA to assign CODs.
@@ -42,8 +40,6 @@ class OpenVA:
         Write an R script for running InterVA and assigning CODs.
     getCOD(self)
         Run R as subprocess and run the script for assigning CODs.
-    rmODKExport(self)
-        If R script exits without error, clear ODK Export files.
 
     Raises
     ------
@@ -67,6 +63,12 @@ class OpenVA:
         dirSmartVA = os.path.abspath(os.path.dirname(__file__))
         self.cliSmartVA = os.path.join(dirSmartVA, "libs/smartva")
         self.successfulRun = None
+
+        try:
+            if not os.path.isdir(dirOpenVA):
+                os.makedirs(dirOpenVA)
+        except:
+            raise OpenVAError("Unable to create directory" + dhisPath)
 
     def copyVA(self): 
         """Create data file for openVA by merging ODK export files."""
@@ -342,16 +344,6 @@ class OpenVA:
 
             self.successfulRun = True
             return(completed)
-
-    def rmODKExport(self):
-        """If successful execution of openVA/SmartVA, clear the ODK Export files."""
-        if self.successfulRun == True:
-            os.remove(os.path.join(self.dirODK, "odkBCExportNew.csv"))
-            if os.path.isfile(self.dirODK + "/odkBCExportPrev.csv"):
-                os.remove(self.dirODK + "/odkBCExportPrev.csv")
-        if self.successfulRun in [False, None]:
-            raise OpenVAError \
-                ("Not clearing ODKExport Files; last run of getCOD() unsuccessful.")
 
 #------------------------------------------------------------------------------#
 # Exceptions

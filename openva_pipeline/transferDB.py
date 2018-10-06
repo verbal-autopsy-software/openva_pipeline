@@ -52,11 +52,20 @@ class TransferDB:
     configOpenVA(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for R package openVA.
+    checkDuplicates(self)
+        Search for duplicate VA records in ODK Briefcase export file and the
+        tranfser DB.
     configDHIS(self, conn)
         Accepts SQLite Connection object and returns tuple with configuration
         settings for connecting to DHIS2 server.
-    storeDB(self)
+    storeVA(self)
         Deposits VA objects to the Transfer DB.
+    cleanODK(self)
+        Remove ODK Briefcase Export files.
+    cleanOpenVA(self)
+        Remove openVA files with COD results.
+    cleanDHIS(self)
+        Remove DHIS2 blob files.
     """
 
 
@@ -100,12 +109,6 @@ class TransferDB:
             raise DatabaseConnectionError("Database password error..." + str(e))
 
         return(conn)
-
-    # def logDB(self):
-    #     pass
-
-    # def logFile(self):
-    #     pass
 
     def configPipeline(self, conn):
         """Grabs Pipline configuration settings.
@@ -253,6 +256,53 @@ class TransferDB:
                             odkLastRunDatePrev)
 
         return(settingsODK)
+
+    def checkDuplicates(self, conn):
+        """Search for duplicate VA records.
+
+        This method searches for duplicate VA records in ODK Briefcase export
+        file and the Tranfser DB.  If duplicates are found, a warning message
+        is logged to the EventLog table in the Transfer database.
+
+        Parameters
+        ----------
+        conn : sqlite3 Connection object
+
+        Raises
+        ------
+        DatabaseConnectionError
+        PipelineError
+
+        """
+        
+        if self.workingDirectory == None:
+            raise PipelineError("Need to run configPipeline.")
+        c = conn.cursor()
+        odkBCExportPath = os.path.join(self.workingDirectory,
+                                       "ODKFiles",
+                                       "odkBCExportNew.csv")
+        dfODK = read_csv(odkBCExportPath)
+        dfODKID = dfODK["meta-instanceID"]
+
+        sql = "SELECT id FROM VA_Storage"
+        c.execute(sql)
+        vaIDs = c.fetchall()
+        vaIDsList = [j for i in vaIDs for j in i]
+        vaDuplicates = set(dfODKID).intersection(set(vaIDsList))
+        timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        if len(vaDuplicates) > 0:
+            nDuplicates = len(vaDuplicates)
+            sqlXferDB = "INSERT INTO EventLog \
+                         (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
+            eventDescPart1 = ["Duplicate record with ODK Meta-Instance ID: "] \
+                            * nDuplicates
+            eventDescPart2 = list(vaDuplicates)
+            eventDesc = [x + y for x, y in zip(eventDescPart1, eventDescPart2)]
+            eventType = ["Warning"] * nDuplicates
+            eventTime = [timeFMT] * nDuplicates
+            par = list(zip(eventDesc, eventType, eventTime))
+            c.executemany(sqlXferDB, par)
+            conn.commit()
 
     def configOpenVA(self, conn, algorithm, pipelineDir):
         """Query OpenVA configuration settings from database.
@@ -957,31 +1007,78 @@ class TransferDB:
                                       "OpenVAFiles",
                                       "newStorage.csv")
         dfNewStorage = read_csv(newStoragePath)
-        dfNewStorageID = dfNewStorage['odkMetaInstanceID']
+        dfNewStorageID = dfNewStorage["odkMetaInstanceID"]
         timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         try:
             for row in dfNewStorage.itertuples():
                 xferDBID = row[1]
                 nElements = len(row) - 1
                 xferDBOutcome = row[nElements]
-                vaData        = row[1], row[8:(nElements - 1)]
-                vaDataFlat    = tuple([y for x in vaData for y in (x if isinstance(x, tuple) else (x,))])
-                xferDBRecord  = dumps(vaDataFlat)
-                sqlXferDB = "INSERT INTO VA_Storage (id, outcome, record, dateEntered) VALUES (?,?,?,?)"
-                par       = [xferDBID, xferDBOutcome, sqlite3.Binary(xferDBRecord), timeFMT]
+                vaData = row[1], row[8:(nElements - 1)]
+                vaDataFlat = tuple(
+                    [y for x in vaData
+                     for y in (x if isinstance(x, tuple) else (x,))]
+                )
+                xferDBRecord = dumps(vaDataFlat)
+                sqlXferDB = "INSERT INTO VA_Storage \
+                             (id, outcome, record, dateEntered) \
+                             VALUES (?, ?, ?, ?)"
+                par = [xferDBID, xferDBOutcome,
+                       sqlite3.Binary(xferDBRecord), timeFMT]
                 c.execute(sqlXferDB, par)
             conn.commit()
         except:
             raise DatabaseConnectionError\
                 ("Problem storing VA record to Transfer DB.")
-        # try:
-        #     nNewStorage = dfNewStorage.shape[0]
-        #     sql = "INSERT INTO EventLog (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
-        #     par = ("Stored {} records to {}.db".format(nNewStorage, dbName), "Information", timeFMT)
-        #     c.execute(sql, par)
-        # except (sqlcipher.Error, sqlcipher.Warning, sqlcipher.DatabaseError) as e:
-        #     raise DatabaseConnectionError\
-        #         ("Problem storing blob to Transfer DB.")
+
+    def cleanODK(self):
+        """Remove ODK Briefcase Export files."""
+        if self.workingDirectory == None:
+            raise PipelineError("Need to run configPipeline.")
+        odkExportNewPath = os.path.join(self.workingDirectory,
+                                        "ODKFiles",
+                                        "odkBCExportNew.csv")
+        odkExportPrevPath = os.path.join(self.workingDirectory,
+                                         "ODKFiles",
+                                         "odkBCExportPrev.csv")
+        if os.path.isfile(odkExportNewPath):
+            os.remove(odkExportNewPath)
+        if os.path.isfile(odkExportPrevPath):
+            os.remove(odkExportPrevPath)
+
+
+    def cleanOpenVA(self):
+        """Remove openVA files with COD results."""
+        if self.workingDirectory == None:
+            raise PipelineError("Need to run configPipeline.")
+        openVAInputPath = os.path.join(self.workingDirectory,
+                                        "OpenVAFiles",
+                                        "openVA_input.csv")
+        recordStoragePath = os.path.join(self.workingDirectory,
+                                         "OpenVAFiles",
+                                         "recordStorage.csv")
+        newStoragePath = os.path.join(self.workingDirectory,
+                                      "OpenVAFiles",
+                                      "newStorage.csv")
+        evaPath = os.path.join(self.workingDirectory,
+                               "OpenVAFiles",
+                               "entityAttributeValue.csv")
+        if os.path.isfile(openVAInputPath):
+            os.remove(openVAInputPath)
+        if os.path.isfile(recordStoragePath):
+            os.remove(recordStoragePath)
+        if os.path.isfile(newStoragePath):
+            os.remove(newStoragePath)
+        if os.path.isfile(evaPath):
+            os.remove(evaPath)
+
+    def cleanDHIS(self):
+        """Remove DHIS2 blob files."""
+        if self.workingDirectory == None:
+            raise PipelineError("Need to run configPipeline.")
+        shutil.rmtree(
+            os.path.join(self.workingDireactory, "DHIS", "blobs")
+        )
 
 #------------------------------------------------------------------------------#
 # Exceptions

@@ -35,8 +35,6 @@ class ValidConnection(unittest.TestCase):
         datetime.timedelta(days=1)
     ).strftime("%Y/%m/%d")
     odkLastRunResult = "fail"
-    bcExportDir = "ODKFiles"
-    bcStorageDir = "ODKFiles"
 
     ntODK = collections.namedtuple("ntODK",
                                    ["odkID",
@@ -67,9 +65,7 @@ class ValidConnection(unittest.TestCase):
             os.remove("ODKFiles/odkBCExportPrev.csv")
         shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
         pipelineODK.mergeToPrevExport()
         self.assertTrue(os.path.isfile("ODKFiles/odkBCExportPrev.csv"))
         os.remove("ODKFiles/odkBCExportPrev.csv")
@@ -83,9 +79,7 @@ class ValidConnection(unittest.TestCase):
         shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
         shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
         pipelineODK.mergeToPrevExport()
         self.assertTrue(os.path.isfile("ODKFiles/odkBCExportPrev.csv"))
         os.remove("ODKFiles/odkBCExportPrev.csv")
@@ -99,9 +93,7 @@ class ValidConnection(unittest.TestCase):
         shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
         shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
         pipelineODK.mergeToPrevExport()
         self.assertFalse(os.path.isfile("ODKFiles/odkBCExportNew.csv"))
         os.remove("ODKFiles/odkBCExportPrev.csv")
@@ -115,9 +107,7 @@ class ValidConnection(unittest.TestCase):
         shutil.copy("ODKFiles/previous_bc_export.csv", "ODKFiles/odkBCExportPrev.csv")
         shutil.copy("ODKFiles/another_bc_export.csv", "ODKFiles/odkBCExportNew.csv")
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
         pipelineODK.mergeToPrevExport()
 
         hasAll = True
@@ -141,9 +131,7 @@ class ValidConnection(unittest.TestCase):
 
         shutil.rmtree("ODKFiles/ODK Briefcase Storage/", ignore_errors = True)
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
         odkBC = pipelineODK.briefcase()
 
         self.assertEqual(0, odkBC.returncode)
@@ -169,8 +157,6 @@ class InvalidConnection(unittest.TestCase):
         datetime.timedelta(days=1)
     ).strftime("%Y/%m/%d")
     odkLastRunResult = "fail"
-    bcExportDir = "ODKFiles"
-    bcStorageDir = "ODKFiles"
 
     ntODK = collections.namedtuple("ntODK",
                                    ["odkID",
@@ -196,10 +182,8 @@ class InvalidConnection(unittest.TestCase):
     def test_ODK_bad_odkID(self):
         """Check for error if odkID parameter is invalid."""
 
-        pipelineODK = odk.ODK(self.settingsODK,
-                              self.bcExportDir,
-                              self.bcStorageDir)
-        self.assertRaises(odk.ODKBriefcaseError, pipelineODK.briefcase)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
+        self.assertRaises(odk.ODKError, pipelineODK.briefcase)
 
 
 if __name__ == "__main__":

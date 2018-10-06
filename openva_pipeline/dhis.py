@@ -245,6 +245,14 @@ class DHIS():
         self.vaProgramUID = None
         self.nPostedRecords = 0
 
+        dhisPath = os.path.join(workingDirectory, "DHIS")
+
+        try:
+            if not os.path.isdir(dhisPath):
+                os.makedirs(dhisPath)
+        except:
+            raise DHISError("Unable to create directory" + dhisPath)
+
     def connect(self):
         """Run get method to retrieve VA program ID and Org Unit."""
 
@@ -378,7 +386,6 @@ class DHIS():
             raise DHISError\
                 ("Problem with DHIS.verifyPost...Can't find file " +
                  self.dirOpenVA + "/newStorage.csv")
-
         try:
             for vaReference in vaReferences:
                 postedDataValues = apiDHIS.get("events/{}".format(vaReference)).get("dataValues")
