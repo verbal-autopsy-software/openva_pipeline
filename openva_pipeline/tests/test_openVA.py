@@ -24,27 +24,29 @@ class Check_1_copyVA(unittest.TestCase):
     dbDirectory = "."
     dirODK = "ODKFiles"
     dirOpenVA = "OpenVAFiles"
+    pipelineRunDate = datetime.datetime.now()
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsPipeline = xferDB.configPipeline(conn)
     settingsODK = xferDB.configODK(conn)
     settingsInterVA = xferDB.configOpenVA(conn,
                                           "InterVA",
                                           settingsPipeline.workingDirectory)
-    runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+    staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
       strftime("%Y_%m_%d_%H:%M:%S")
 
     shutil.rmtree(
-        os.path.join(dirOpenVA, runDate),
+        os.path.join(dirOpenVA, staticRunDate),
         ignore_errors = True
     )
 
     rOpenVA = OpenVA(vaArgs = settingsInterVA,
                      pipelineArgs = settingsPipeline,
                      odkID = settingsODK.odkID,
-                     runDate = runDate)
+                     runDate = staticRunDate)
 
     def test_1_copyVA_isFile(self):
         """Check that copyVA() brings in new file."""
@@ -169,10 +171,12 @@ class Check_2_rScript(unittest.TestCase):
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
 
     def test_2_rScript_insilico(self):
@@ -190,18 +194,18 @@ class Check_2_rScript(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
-        rScriptFile = os.path.join(dirOpenVA, runDate,
-                                   "Rscript_" + runDate + ".R")
+        rScriptFile = os.path.join(dirOpenVA, staticRunDate,
+                                   "Rscript_" + staticRunDate + ".R")
         rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
                          pipelineArgs = settingsPipeline,
                          odkID = settingsODK.odkID,
-                         runDate = runDate)
+                         runDate = staticRunDate)
 
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
@@ -217,7 +221,7 @@ class Check_2_rScript(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(rScriptFile))
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -236,18 +240,18 @@ class Check_2_rScript(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                   strftime("%Y_%m_%d_%H:%M:%S")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
-        rScriptFile = os.path.join(dirOpenVA, runDate,
-                                   "Rscript_" + runDate + ".R")
+        rScriptFile = os.path.join(dirOpenVA, staticRunDate,
+                                   "Rscript_" + staticRunDate + ".R")
         rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
                          pipelineArgs = settingsPipeline,
                          odkID = settingsODK.odkID,
-                         runDate = runDate)
+                         runDate = staticRunDate)
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
         if os.path.isfile(dirODK + "/odkBCExportPrev.csv"):
@@ -260,7 +264,7 @@ class Check_2_rScript(unittest.TestCase):
         rOpenVA.rScript()
         self.assertTrue(os.path.isfile(rScriptFile))
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -270,11 +274,13 @@ class Check_3_getCOD(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
     dirODK = "ODKFiles"
     dirOpenVA = "OpenVAFiles"
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
 
     settingsPipeline = xferDB.configPipeline(conn)
@@ -282,8 +288,8 @@ class Check_3_getCOD(unittest.TestCase):
     settingsInterVA = xferDB.configOpenVA(conn,
                                           "InterVA",
                                           settingsPipeline.workingDirectory)
-    runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-      strftime("%Y_%m_%d_%H:%M:%S")
+    staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                    strftime("%Y_%m_%d_%H:%M:%S")
 
     def test_3_getCOD_insilico(self):
         """Check that getCOD() executes R script for insilico"""
@@ -299,18 +305,18 @@ class Check_3_getCOD(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
-        rOutFile = os.path.join(dirOpenVA, runDate,
-                                "Rscript_" + runDate + ".Rout")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, staticRunDate,
+                                "Rscript_" + staticRunDate + ".Rout")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
                          pipelineArgs = settingsPipeline,
                          odkID = settingsODK.odkID,
-                         runDate = runDate)
+                         runDate = staticRunDate)
 
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
@@ -327,7 +333,7 @@ class Check_3_getCOD(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(rOutFile))
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -345,18 +351,18 @@ class Check_3_getCOD(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
-        rOutFile = os.path.join(dirOpenVA, runDate,
-                                "Rscript_" + runDate + ".Rout")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, staticRunDate,
+                                "Rscript_" + staticRunDate + ".Rout")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
                          pipelineArgs = settingsPipeline,
                          odkID = "this should raise an exception",
-                         runDate = runDate)
+                         runDate = staticRunDate)
 
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
@@ -372,7 +378,7 @@ class Check_3_getCOD(unittest.TestCase):
 
         self.assertRaises(openVA.OpenVAError, rOpenVA.getCOD)
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -390,18 +396,18 @@ class Check_3_getCOD(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
-        rOutFile = os.path.join(dirOpenVA, runDate,
-                                "Rscript_" + runDate + ".Rout")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, staticRunDate,
+                                "Rscript_" + staticRunDate + ".Rout")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         rOpenVA = OpenVA(vaArgs = settingsInterVA,
                          pipelineArgs = settingsPipeline,
                          odkID = settingsODK.odkID,
-                         runDate = runDate)
+                         runDate = staticRunDate)
 
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
@@ -418,7 +424,7 @@ class Check_3_getCOD(unittest.TestCase):
 
         self.assertTrue(os.path.isfile(rOutFile))
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -436,18 +442,18 @@ class Check_3_getCOD(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
-        rOutFile = os.path.join(dirOpenVA, runDate,
-                                "Rscript_" + runDate + ".Rout")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
+        rOutFile = os.path.join(dirOpenVA, staticRunDate,
+                                "Rscript_" + staticRunDate + ".Rout")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         rOpenVA = OpenVA(vaArgs = settingsInterVA,
                          pipelineArgs = settingsPipeline,
                          odkID = "this should raise an exception",
-                         runDate = runDate)
+                         runDate = staticRunDate)
 
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
             os.remove(dirODK + "/odkBCExportNew.csv")
@@ -463,7 +469,7 @@ class Check_3_getCOD(unittest.TestCase):
 
         self.assertRaises(openVA.OpenVAError, rOpenVA.getCOD)
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -481,10 +487,10 @@ class Check_3_getCOD(unittest.TestCase):
         self.conn.rollback()
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
@@ -499,19 +505,19 @@ class Check_3_getCOD(unittest.TestCase):
         cliSmartVA = OpenVA(vaArgs = settingsSmartVA,
                             pipelineArgs = settingsPipeline,
                             odkID = settingsODK.odkID,
-                            runDate = runDate)
+                            runDate = staticRunDate)
 
         zeroRecords = cliSmartVA.copyVA()
         completed = cliSmartVA.getCOD()
         svaOut = os.path.join(
             dirOpenVA,
-            runDate,
+            staticRunDate,
             "1-individual-cause-of-death/individual-cause-of-death.csv"
         )
 
         self.assertTrue(os.path.isfile(svaOut))
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -542,10 +548,10 @@ class Check_3_getCOD(unittest.TestCase):
                                     "Wrong")
         dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
         dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-        runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                  strftime("%Y_%m_%d_%H:%M:%S")
+        staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                        strftime("%Y_%m_%d_%H:%M:%S")
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
         if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
@@ -560,13 +566,13 @@ class Check_3_getCOD(unittest.TestCase):
         cliSmartVA = OpenVA(vaArgs = settingsSmartVA,
                             pipelineArgs = settingsPipeline,
                             odkID = settingsODK.odkID,
-                            runDate = runDate)
+                            runDate = staticRunDate)
 
         zeroRecords = cliSmartVA.copyVA()
 
         self.assertRaises(openVA.SmartVAError, cliSmartVA.getCOD)
         shutil.rmtree(
-            os.path.join(dirOpenVA, runDate),
+            os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
         )
 
@@ -584,15 +590,15 @@ class Check_3_getCOD(unittest.TestCase):
     #     self.conn.rollback()
     #     dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
     #     dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-    #     runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-    #               strftime("%Y_%m_%d_%H:%M:%S")
-    #     rOutFile = os.path.join(dirOpenVA, runDate,
-    #                             "Rscript_" + runDate + ".Rout")
+    #     staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+    #                     strftime("%Y_%m_%d_%H:%M:%S")
+    #     rOutFile = os.path.join(dirOpenVA, staticRunDate,
+    #                             "Rscript_" + staticRunDate + ".Rout")
 
     #     rOpenVA = OpenVA(vaArgs = settingsInterVA,
     #                      pipelineArgs = settingsPipeline,
     #                      odkID = settingsODK.odkID,
-    #                      runDate = runDate)
+    #                      runDate = staticRunDate)
 
     #     if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
     #         os.remove(dirODK + "/odkBCExportNew.csv")
@@ -610,7 +616,7 @@ class Check_3_getCOD(unittest.TestCase):
 
     #     self.assertFalse(os.path.isfile(dirODK + "/odkBCExportNew.csv"))
     #     shutil.rmtree(
-    #         os.path.join(dirOpenVA, runDate),
+    #         os.path.join(dirOpenVA, staticRunDate),
     #         ignore_errors = True
     #     )
 
@@ -628,15 +634,15 @@ class Check_3_getCOD(unittest.TestCase):
     #     self.conn.rollback()
     #     dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
     #     dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-    #     runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-    #               strftime("%Y_%m_%d_%H:%M:%S")
-    #     rOutFile = os.path.join(dirOpenVA, runDate,
-    #                             "Rscript_" + runDate + ".Rout")
+    #     staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+    #                     strftime("%Y_%m_%d_%H:%M:%S")
+    #     rOutFile = os.path.join(dirOpenVA, staticRunDate,
+    #                             "Rscript_" + staticRunDate + ".Rout")
 
     #     rOpenVA = OpenVA(vaArgs = settingsInterVA,
     #                      pipelineArgs = settingsPipeline,
     #                      odkID = settingsODK.odkID,
-    #                      runDate = runDate)
+    #                      runDate = staticRunDate)
 
     #     if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
     #         os.remove(dirODK + "/odkBCExportNew.csv")
@@ -654,7 +660,7 @@ class Check_3_getCOD(unittest.TestCase):
 
     #     self.assertFalse(os.path.isfile(dirODK + "/odkBCExportPrev.csv"))
     #     shutil.rmtree(
-    #         os.path.join(dirOpenVA, runDate),
+    #         os.path.join(dirOpenVA, staticRunDate),
     #         ignore_errors = True
     #     )
 
@@ -672,15 +678,15 @@ class Check_3_getCOD(unittest.TestCase):
     #     self.conn.rollback()
     #     dirOpenVA = os.path.join(settingsPipeline.workingDirectory, "OpenVAFiles")
     #     dirODK = os.path.join(settingsPipeline.workingDirectory, "ODKFiles")
-    #     runDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-    #               strftime("%Y_%m_%d_%H:%M:%S")
-    #     rOutFile = os.path.join(dirOpenVA, runDate,
-    #                             "Rscript_" + runDate + ".Rout")
+    #     staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+    #                     strftime("%Y_%m_%d_%H:%M:%S")
+    #     rOutFile = os.path.join(dirOpenVA, staticRunDate,
+    #                             "Rscript_" + staticRunDate + ".Rout")
 
     #     rOpenVA = OpenVA(vaArgs = settingsInterVA,
     #                      pipelineArgs = settingsPipeline,
     #                      odkID = settingsODK.odkID,
-    #                      runDate = runDate)
+    #                      runDate = staticRunDate)
 
     #     if os.path.isfile(dirODK + "/odkBCExportNew.csv"):
     #         os.remove(dirODK + "/odkBCExportNew.csv")

@@ -11,7 +11,7 @@
 import subprocess
 import os
 import shutil
-from pipeline import PipelineError
+from transferDB import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 class ODK:
@@ -54,7 +54,7 @@ class ODK:
         self.odkLastRun = odkSettings.odkLastRun
         self.odkLastRunDate = odkSettings.odkLastRunDate
         self.odkLastRunDatePrev = odkSettings.odkLastRunDatePrev
-        self.odkLastRunResult = odkSettings.odkLastRunResult
+        # self.odkLastRunResult = odkSettings.odkLastRunResult
         bcDir = os.path.abspath(os.path.dirname(__file__))
         self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.10.1.jar")
         odkPath = os.path.join(workingDirectory, "ODKFiles")

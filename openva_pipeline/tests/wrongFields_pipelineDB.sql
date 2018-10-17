@@ -38,13 +38,12 @@ CREATE TABLE ODK_Conf
   c char(50),
   d char(50),
   e char(50),
-  f date,
-  g char(7)
+  f date
 );
 
 INSERT INTO ODK_Conf
-  (b, c, d, e, f, g)
-  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "PHMRC_Shortened_Instrument_8_20_2015", "1900-01-01_00:00:01", "fail");
+  (b, c, d, e, f)
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_2016_11_03_v1_4_1", "1900-01-01_00:00:01");
 
 -- openVA Configuration: algorithm-specific tables
 ---- InterVA

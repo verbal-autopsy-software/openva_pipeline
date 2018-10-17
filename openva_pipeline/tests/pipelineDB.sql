@@ -38,13 +38,12 @@ CREATE TABLE ODK_Conf
   odkUser          char(50),
   odkPassword      char(50),
   odkFormID        char(50),
-  odkLastRun       date,
-  odkLastRunResult char(7) NOT NULL CHECK (odkLastRunResult IN ("fail", "success"))
+  odkLastRun       date
 );
 
 INSERT INTO ODK_Conf
-  (odkURL, odkUser, odkPassword, odkFormID, odkLastRun, odkLastRunResult)
-  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "PHMRC_Shortened_Instrument_8_20_2015", "1900-01-01_00:00:01", "fail");
+  (odkURL, odkUser, odkPassword, odkFormID, odkLastRun)
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_2016_11_03_v1_4_1", "1900-01-01_00:00:01");
 
 -- openVA Configuration: algorithm-specific tables
 ---- InterVA

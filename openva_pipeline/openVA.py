@@ -12,7 +12,7 @@
 import subprocess
 import shutil
 import os
-from pipeline import PipelineError
+from transferDB import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 class OpenVA:
@@ -108,9 +108,6 @@ class OpenVA:
                 shutil.copy(exportFile_new, openVAInputFile)
 
         return(zeroRecords)
-
-    def checkDuplicates(self):
-        pass
 
     def rScript(self):
         """Create an R script for running openVA and assigning CODs."""

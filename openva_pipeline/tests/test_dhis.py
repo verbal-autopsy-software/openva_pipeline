@@ -37,10 +37,12 @@ class Check_DHIS(unittest.TestCase):
     wrong_dbKey = "wrongKey"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsDHIS = xferDB.configDHIS(conn, "InSilicoVA")
 

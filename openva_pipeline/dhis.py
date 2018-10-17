@@ -12,7 +12,7 @@ import datetime
 import json
 import sqlite3
 import re
-from pipeline import PipelineError
+from transferDB import PipelineError
 
 class API(object):
     """This class provides methods for interacting with the DHIS2 API.
@@ -240,7 +240,7 @@ class DHIS():
         self.dhisOrgUnit = dhisArgs[0].dhisOrgUnit
         # self.dhisCODCodes = dhisArgs.dhisCODCodes
         self.dhisCODCodes = dhisArgs[1]
-        self.dirDHIS = os.path.join(workingDirectory, "DHIS2")
+        self.dirDHIS = os.path.join(workingDirectory, "DHIS")
         self.dirOpenVA = os.path.join(workingDirectory, "OpenVAFiles")
         self.vaProgramUID = None
         self.nPostedRecords = 0
@@ -296,8 +296,8 @@ class DHIS():
         events = []
         export = {}
 
-        dfDHIS2 = read_csv(evaPath)
-        grouped = dfDHIS2.groupby(["ID"])
+        dfDHIS = read_csv(evaPath)
+        grouped = dfDHIS.groupby(["ID"])
         dfRecordStorage = read_csv(recordStoragePath)
 
         with open(newStoragePath, "w", newline="") as csvOut:

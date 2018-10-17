@@ -11,6 +11,7 @@ import unittest
 import os
 import sqlite3
 import shutil
+import datetime
 from pandas import read_csv
 from context import pipeline
 from context import transferDB
@@ -28,10 +29,12 @@ class Check_1_Connection(unittest.TestCase):
     wrong_dbKey = "wrongKey"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     c = conn.cursor()
     sqlTestConnection = "SELECT name FROM SQLITE_MASTER where type = 'table';"
@@ -44,14 +47,16 @@ class Check_1_Connection(unittest.TestCase):
         badPath = "/invalid/path/to/pipelineDB"
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = badPath,
-                            dbKey = self.dbKey)
+                            dbKey = self.dbKey,
+                            plRunDate = self.pipelineRunDate)
         self.assertRaises(transferDB.DatabaseConnectionError, xferDB.connectDB)
 
     def test_1_connection_1_wrongKey(self):
         """Pipeline should raise an error when the wrong key is used."""
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,
-                            dbKey = self.wrong_dbKey)
+                            dbKey = self.wrong_dbKey,
+                            plRunDate = self.pipelineRunDate)
         self.assertRaises(transferDB.DatabaseConnectionError, xferDB.connectDB)
 
     def test_1_connection_2_connection(self):
@@ -119,10 +124,12 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     c = conn.cursor()
     c.execute("SELECT dhisCode from Algorithm_Metadata_Options;")
@@ -131,14 +138,16 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     # parameters for connecting to DB with wrong Tables
     wrongTables_dbFileName = "wrongTables_Pipeline.db"
     wrongTables_xferDB = TransferDB(dbFileName = wrongTables_dbFileName,
                                     dbDirectory = dbDirectory,
-                                    dbKey = dbKey)
+                                    dbKey = dbKey,
+                                    plRunDate = pipelineRunDate)
     wrongTables_conn = wrongTables_xferDB.connectDB()
     wrongTables_c = wrongTables_conn.cursor()
 
@@ -146,7 +155,8 @@ class Check_2_Pipeline_Conf(unittest.TestCase):
     wrongFields_dbFileName = "wrongFields_Pipeline.db"
     wrongFields_xferDB = TransferDB(dbFileName = wrongFields_dbFileName,
                                     dbDirectory = dbDirectory,
-                                    dbKey = dbKey)
+                                    dbKey = dbKey,
+                                    plRunDate = pipelineRunDate)
     wrongFields_conn = wrongFields_xferDB.connectDB()
 
     def test_2_pipelineConf_Exception_noTable(self):
@@ -239,16 +249,19 @@ class Check_3_ODK_Conf(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsODK = xferDB.configODK(conn)
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     def test_3_odkConf_odkURL(self):
@@ -276,7 +289,7 @@ class Check_3_ODK_Conf(unittest.TestCase):
 
     def test_3_odkConf_odkFormID(self):
         """Test ODK_Conf table has valid odkFormID"""
-        self.assertEqual(self.settingsODK.odkFormID, "PHMRC_Shortened_Instrument_8_20_2015")
+        self.assertEqual(self.settingsODK.odkFormID, "va_who_2016_11_03_v1_4_1")
 
     def test_3_odkConf_odkLastRun(self):
         """Test ODK_Conf table has valid odkLastRun"""
@@ -290,18 +303,18 @@ class Check_3_ODK_Conf(unittest.TestCase):
         """Test ODK_Conf table has valid odkLastRunDatePrev"""
         self.assertEqual(self.settingsODK.odkLastRunDatePrev, "1899/12/31")
 
-    def test_3_odkConf_odkLastRunResult(self):
-        """Test ODK_Conf table has valid odkLastRunResult"""
-        self.assertIn(self.settingsODK.odkLastRunResult, ("success","fail"))
-    def test_3_odkConf_odkLastRunResult_Exception(self):
-        """configODK should fail with invalid odkLastRunResult."""
-        c = self.copy_conn.cursor()
-        sql = "UPDATE ODK_Conf SET odkLastRunResult = ?"
-        par = ("wrong",)
-        c.execute(sql, par)
-        self.assertRaises(transferDB.ODKConfigurationError,
-                          self.copy_xferDB.configODK, self.copy_conn)
-        self.copy_conn.rollback()
+    # def test_3_odkConf_odkLastRunResult(self):
+    #     """Test ODK_Conf table has valid odkLastRunResult"""
+    #     self.assertIn(self.settingsODK.odkLastRunResult, ("success","fail"))
+    # def test_3_odkConf_odkLastRunResult_Exception(self):
+    #     """configODK should fail with invalid odkLastRunResult."""
+    #     c = self.copy_conn.cursor()
+    #     sql = "UPDATE ODK_Conf SET odkLastRunResult = ?"
+    #     par = ("wrong",)
+    #     c.execute(sql, par)
+    #     self.assertRaises(transferDB.ODKConfigurationError,
+    #                       self.copy_xferDB.configODK, self.copy_conn)
+    #     self.copy_conn.rollback()    
 
 # Test InterVA Configuration
 class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
@@ -310,10 +323,12 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsPipeline = xferDB.configPipeline(conn)
     settingsOpenVA = xferDB.configOpenVA(conn,
@@ -322,7 +337,8 @@ class Check_4_OpenVA_Conf_InterVA(unittest.TestCase):
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     def test_4_openvaConf_InterVA_Version(self):
@@ -479,10 +495,12 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsPipeline = xferDB.configPipeline(conn)
     settingsOpenVA = xferDB.configOpenVA(conn,
@@ -491,7 +509,8 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     def test_5_openvaConf_InSilicoVA_data_type(self):
@@ -980,10 +999,12 @@ class Check_5_SmartVA_Conf(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsPipeline = xferDB.configPipeline(conn)
     settingsSmartva = xferDB.configOpenVA(conn,
@@ -992,7 +1013,8 @@ class Check_5_SmartVA_Conf(unittest.TestCase):
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     def test_5_smartvaConf_country(self):
@@ -1107,17 +1129,20 @@ class Check_6_DHIS_Conf(unittest.TestCase):
     dbKey = "enilepiP"
     # dbDirectory = os.path.abspath(os.path.dirname(__file__))
     dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
     algorithm = "InterVA"
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     settingsDHIS = xferDB.configDHIS(conn, algorithm)
 
     copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
                              dbDirectory = dbDirectory,
-                             dbKey = dbKey)
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
     copy_conn = copy_xferDB.connectDB()
 
     def test_6_dhisConf_dhisURL(self):
@@ -1185,12 +1210,14 @@ class Check_7_DHIS_storeVA(unittest.TestCase):
 
     dbFileName = "Pipeline.db"
     dbKey = "enilepiP"
+    pipelineRunDate = datetime.datetime.now()
     wrong_dbKey = "wrongKey"
     dbDirectory = "."
 
     xferDB = TransferDB(dbFileName = dbFileName,
                         dbDirectory = dbDirectory,
-                        dbKey = dbKey)
+                        dbKey = dbKey,
+                        plRunDate = pipelineRunDate)
     conn = xferDB.connectDB()
     xferDB.configPipeline(conn)
 
@@ -1208,6 +1235,39 @@ class Check_7_DHIS_storeVA(unittest.TestCase):
         s2 = set(dfNewStorageID)
         self.assertTrue(s2.issubset(s1))
 
+class Check_8_updateODKLastRun(unittest.TestCase):
+    """Test methods that updates ODK_Conf.odkLastRun"""
+    dbFileName = "Pipeline.db"
+    dbKey = "enilepiP"
+    # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+    dbDirectory = "."
+    pipelineRunDate = datetime.datetime.now()
+    algorithm = "InterVA"
+
+    copy_xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
+                             dbDirectory = dbDirectory,
+                             dbKey = dbKey,
+                             plRunDate = pipelineRunDate)
+    copy_conn = copy_xferDB.connectDB()
+    settingsODK = copy_xferDB.configODK(copy_conn)
+    newRunDate = "3000-01-01_00:00:01"
+
+    def test_8_method(self):
+        """updateODKLastRun should change the date."""
+
+        oldRunDate = self.settingsODK.odkLastRun
+
+        self.copy_xferDB.updateODKLastRun(self.copy_conn, self.newRunDate)
+        c = self.copy_conn.cursor()
+        sql = "SELECT odkLastRun FROM ODK_Conf"
+        c.execute(sql)
+        sqlQuery = c.fetchall()
+        for i in sqlQuery:
+            updatedRunDate = i[0]
+        self.assertEqual(updatedRunDate, self.newRunDate)
+        self.copy_xferDB.updateODKLastRun(self.copy_conn, oldRunDate)
+
+# Test for checkDuplicates
 # Test EventLog Configuration
 
 # Test Cleanup

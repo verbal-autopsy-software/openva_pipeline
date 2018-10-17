@@ -6,7 +6,7 @@
 # -- exceptions appear at end of file
 # 
 # (1) This class should have a methods: connect; configODK, configOpenVA,
-#     configDHIS2, storeVA, storeBlob, logDB, & logFile
+#     configDHIS, storeVA, storeBlob, logDB, & logFile
 #
 #  you could use connect as a context (and thus close it every time)
 #  but this might be a waste of resources to open and close everytime?
@@ -19,7 +19,6 @@ import datetime
 import sqlite3
 from pickle import dumps
 from pandas import read_csv
-from pipeline import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 class TransferDB:
@@ -38,6 +37,8 @@ class TransferDB:
         Path of folder containing the Transfer database.
     dbKey : str
         Encryption key for the Transfer database.
+    plRunDate : date
+        Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss).
 
     Methods
     -------
@@ -60,6 +61,8 @@ class TransferDB:
         settings for connecting to DHIS2 server.
     storeVA(self)
         Deposits VA objects to the Transfer DB.
+    makePipelineDirs(self)
+        Returns SQLite Connection object to Transfer database.
     cleanODK(self)
         Remove ODK Briefcase Export files.
     cleanOpenVA(self)
@@ -69,13 +72,14 @@ class TransferDB:
     """
 
 
-    def __init__(self, dbFileName, dbDirectory, dbKey):
+    def __init__(self, dbFileName, dbDirectory, dbKey, plRunDate):
 
         self.dbFileName = dbFileName
         self.dbDirectory = dbDirectory
         self.dbKey = dbKey
         self.dbPath = os.path.join(dbDirectory, dbFileName)
         self.workingDir = None
+        self.plRunDate = plRunDate
 
     def connectDB(self):
         """Connect to Transfer database.
@@ -206,7 +210,7 @@ class TransferDB:
         """
         c = conn.cursor()
         sqlODK = "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, \
-          odkLastRun, odkLastRunResult FROM ODK_Conf;"
+          odkLastRun FROM ODK_Conf;"
         try:
             queryODK = c.execute(sqlODK).fetchall()
         except (sqlcipher.OperationalError) as e:
@@ -223,10 +227,10 @@ class TransferDB:
         odkPassword = queryODK[0][3]
         odkFormID = queryODK[0][4]
         odkLastRun = queryODK[0][5]
-        odkLastRunResult = queryODK[0][6]
-        if not odkLastRunResult in ("success", "fail"):
-            raise ODKConfigurationError \
-                ("Problem in database: ODK_Conf.odkLastRunResult")
+        # odkLastRunResult = queryODK[0][6]
+        # if not odkLastRunResult in ("success", "fail"):
+        #     raise ODKConfigurationError \
+        #         ("Problem in database: ODK_Conf.odkLastRunResult")
         odkLastRunDate = datetime.datetime.strptime(odkLastRun,
                                                     "%Y-%m-%d_%H:%M:%S"
                                                    ).strftime("%Y/%m/%d")
@@ -241,7 +245,7 @@ class TransferDB:
                                         "odkPassword",
                                         "odkFormID",
                                         "odkLastRun",
-                                        "odkLastRunResult",
+                                        # "odkLastRunResult",
                                         "odkLastRunDate",
                                         "odkLastRunDatePrev"]
         )
@@ -251,11 +255,28 @@ class TransferDB:
                             odkPassword,
                             odkFormID,
                             odkLastRun,
-                            odkLastRunResult,
+                            # odkLastRunResult,
                             odkLastRunDate,
                             odkLastRunDatePrev)
 
         return(settingsODK)
+
+    def updateODKLastRun(self, conn, plRunDate):
+        """Update Transfer Database table ODK_Conf.odkLastRun
+
+        Parameters
+        ----------
+        conn : sqlite3 Connection object
+        plRunDate : date
+          Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)
+
+        """
+        
+        c = conn.cursor()
+        sql = "UPDATE ODK_Conf SET odkLastRun = ?"
+        par = (plRunDate,)
+        c.execute(sql, par)
+        conn.commit()
 
     def checkDuplicates(self, conn):
         """Search for duplicate VA records.
@@ -1031,6 +1052,42 @@ class TransferDB:
             raise DatabaseConnectionError\
                 ("Problem storing VA record to Transfer DB.")
 
+    def makePipelineDirs(self):
+        """Create directories for storing files (if they don't exist).
+
+        The method creates the following folders in the working directory (as
+        set in the Transfer database table Pipeline_Conf): (1) ODKFiles for
+        files containing verbal autopsy records from the ODK Aggregate server; (2)
+        OpenVAFiles containing R scripts and results from the cause assignment
+        algorithms; and (3) DHIS for holding blobs that will be stored in a
+        data repository (DHIS2 server and/or the local Transfer database).
+
+        Raises
+        ------
+        PipelinError
+
+        """
+
+        odkPath = os.path.join(self.workingDir, "ODKFiles")
+        openVAPath = os.path.join(self.workingDir, "OpenVAFiles")
+        dhisPath = os.path.join(self.workingDir, "DHIS")
+        
+        if not os.path.isdir(odkPath):
+            try:
+                os.makedirs(odkPath)
+            except OSError as e:
+                raise PipelineError("Unable to create directory " + odkPath)
+        if not os.path.isdir(openVAPath):
+            try:
+                os.makedirs(openVAPath)
+            except OSError as e:
+                raise PipelineError("Unable to create directory " + openVAPath)
+        if not os.path.isdir(dhisPath):
+            try:
+                os.makedirs(dhisPath)
+            except OSError as e:
+                raise PipelineError("Unable to create directory " + dhisPath)
+
     def cleanODK(self):
         """Remove ODK Briefcase Export files."""
         if self.workingDirectory == None:
@@ -1083,6 +1140,9 @@ class TransferDB:
 #------------------------------------------------------------------------------#
 # Exceptions
 #------------------------------------------------------------------------------#
+class PipelineError(Exception):
+    '''Base class for exceptions in the openva_pipeline module.'''
+    pass
 class DatabaseConnectionError(PipelineError): pass
 class PipelineConfigurationError(PipelineError): pass
 class ODKConfigurationError(PipelineError): pass
