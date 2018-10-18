@@ -67,24 +67,58 @@ class Pipeline:
             settingsDHIS = xferDB.configDHIS(conn,
                                              settingsPipeline.algorithm)
             settings["dhis"] = settingsDHIS
+        conn.close()
         return(settings)
 
-    def runODK(self):
+    def runODK(self, argsODK, workingDir):
         """Run check duplicates, copy file, and briefcase."""
+        # xferDB = TransferDB(dbFileName = self.dbFileName,
+        #                     dbDirectory = self.dbDirectory,
+        #                     dbKey = self.dbKey,
+        #                     plRunDate = self.pipelineRunDate)
+        # conn = xferDB.connectDB()
+        pipelineODK = ODK(argsODK, workingDir)
+        pipelineODK.mergeToPrevExport()
+        odkBC = pipelineODK.briefcase()
+        # HERE -- check duplictes
+        return(odkBC)
+
+    def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
+        """Create & run script or run smartva."""
+
+        pipelineOpenVA = OpenVA(vaArgs = argsOpenVA,
+                                pipelineArgs = argsPipeline,
+                                odkID = odkID,
+                                runDate = runDate)
+        zeroRecords = pipelineOpenVA.copyVA()
+        rOut = {"zeroRecords": zeroRecords}
+        if not zeroRecords:
+            pipelineOpenVA.rScript()
+            completed = pipelineOpenVA.getCOD()
+            rOut["completed"] = completed
+        return(rOut)
+
+    def runDHIS(self, argsDHIS, workingDir):
+        """Connect to API and post events."""
+        pipelineDHIS = DHIS(argsDHIS, workingDir)
+        apiDHIS = pipelineDHIS.connect()
+        postLog = pipelineDHIS.postVA(apiDHIS)
+        pipelineDHIS.verifyPost(postLog, apiDHIS)
+
+        dhisOut = {"vaProgramUID": pipelineDHIS.vaProgramUID,
+                   "postLog": postLog,
+                   "nPostedRecords": pipelineDHIS.nPostedRecords}
+        return(dhisOut)
+
+    def depositResults(self):
+        """StoreVA (not sure if this is needed)."""
+        # xferDB = TransferDB(dbFileName = self.dbFileName,
+        #                     dbDirectory = self.dbDirectory,
+        #                     dbKey = self.dbKey,
+        #                     plRunDate = self.pipelineRunDate)
+        # conn = xferDB.connectDB()
         pass
 
-    # def runOpenVA(self):
-    #     """Run create R script & run script."""
-    #     pass
-
-    # def runDHIS(self):
-    #     """Connect to API and post events."""
-    #     pass
-
-    # def depositResults(self):
-    #     """StoreVA (not sure if this is needed)."""
-    #     pass
-
-    # def closePipeline(self):
-    #     """Run updateODKLastRun and clean up files."""
-    #     pass
+    def closePipeline(self, conn):
+        """Run updateODKLastRun and clean up files (close conn?)."""
+        pass

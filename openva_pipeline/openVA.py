@@ -82,42 +82,43 @@ class OpenVA:
 
         zeroRecords = False
 
-        if isExportFile_prev and isExportFile_new:
+        if isExportFile_new and not isExportFile_prev:
             with open(exportFile_new, "r", newline = "") as fNew:
                 fNewLines = fNew.readlines()
-            with open(exportFile_prev, "r", newline = "") as fPrev:
-                fPrevLines = fPrev.readlines()
-
-        if len(fNewLines) == 1 and len(fPrevLines) == 1:
-            zeroRecords = True
-            return(zeroRecords)
-
-        if isExportFile_prev and isExportFile_new:
-            shutil.copy(exportFile_new, openVAInputFile)
-            with open(openVAInputFile, "a", newline = "") as fCombined:
-                for line in fPrevLines:
-                    if line not in fNewLines:
-                        fCombined.write(line)
-
-        if isExportFile_new and not isExportFile_prev:
-
             if len(fNewLines) == 1:
                 zeroRecords = True
                 return(zeroRecords)
             else:
                 shutil.copy(exportFile_new, openVAInputFile)
 
-        return(zeroRecords)
+        if isExportFile_new and isExportFile_prev:
+            with open(exportFile_new, "r", newline = "") as fNew:
+                fNewLines = fNew.readlines()
+            with open(exportFile_prev, "r", newline = "") as fPrev:
+                fPrevLines = fPrev.readlines()
+
+            if len(fNewLines) == 1 and len(fPrevLines) == 1:
+                zeroRecords = True
+                return(zeroRecords)
+
+            else:
+                shutil.copy(exportFile_new, openVAInputFile)
+                with open(openVAInputFile, "a", newline = "") as fCombined:
+                    for line in fPrevLines:
+                        if line not in fNewLines:
+                            fCombined.write(line)
+                return(zeroRecords)
 
     def rScript(self):
         """Create an R script for running openVA and assigning CODs."""
 
-        try:
-            os.makedirs(
-                os.path.join(self.dirOpenVA, self.runDate)
+        if not self.pipelineArgs.algorithm == "SmartVA":
+            try:
+                os.makedirs(
+                    os.path.join(self.dirOpenVA, self.runDate)
                 )
-        except PermissionError as e:
-            raise OpenVAError("Unable to create openVA dir" + str(e))
+            except PermissionError as e:
+                raise OpenVAError("Unable to create openVA dir" + str(e))
         
         if self.pipelineArgs.algorithm == "InSilicoVA":
             self._rScript_insilicoVA()

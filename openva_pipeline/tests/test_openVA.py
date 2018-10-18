@@ -184,7 +184,7 @@ class Check_2_rScript(unittest.TestCase):
 
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -295,7 +295,7 @@ class Check_3_getCOD(unittest.TestCase):
         """Check that getCOD() executes R script for insilico"""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -341,7 +341,7 @@ class Check_3_getCOD(unittest.TestCase):
         """getCOD() raises exception with faulty R script for InSilicoVA."""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        par = ("InSilicoVA", "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -386,7 +386,7 @@ class Check_3_getCOD(unittest.TestCase):
         """Check that getCOD() executes R script for interva"""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -432,7 +432,7 @@ class Check_3_getCOD(unittest.TestCase):
         """getCOD() should raise an exception with problematic interva R script."""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+        par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -477,7 +477,7 @@ class Check_3_getCOD(unittest.TestCase):
         """Check that getCOD() executes smartva cli"""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1");
+        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -525,7 +525,7 @@ class Check_3_getCOD(unittest.TestCase):
         """getCOD() should raise an exception with faulty args for smartva cli"""
         c = self.conn.cursor()
         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1");
+        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1")
         c.execute(sql, par)
         settingsPipeline = self.xferDB.configPipeline(self.conn)
         settingsODK = self.xferDB.configODK(self.conn)
@@ -580,7 +580,7 @@ class Check_3_getCOD(unittest.TestCase):
     #     """Check that rmODKExport clears ODK Export after successful run"""
     #     c = self.conn.cursor()
     #     sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
     #     c.execute(sql, par)
     #     settingsPipeline = self.xferDB.configPipeline(self.conn)
     #     settingsODK = self.xferDB.configODK(self.conn)
@@ -624,7 +624,7 @@ class Check_3_getCOD(unittest.TestCase):
     #     """Check that rmODKExport clears ODK Export after successful run"""
     #     c = self.conn.cursor()
     #     sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
     #     c.execute(sql, par)
     #     settingsPipeline = self.xferDB.configPipeline(self.conn)
     #     settingsODK = self.xferDB.configODK(self.conn)
@@ -668,7 +668,7 @@ class Check_3_getCOD(unittest.TestCase):
     #     """Check that rmODKExport raises exception on unsuccessful run"""
     #     c = self.conn.cursor()
     #     sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1");
+    #     par = ("InterVA", "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
     #     c.execute(sql, par)
     #     settingsPipeline = self.xferDB.configPipeline(self.conn)
     #     settingsODK = self.xferDB.configODK(self.conn)
