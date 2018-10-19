@@ -79,7 +79,7 @@ class TransferDB:
         self.dbDirectory = dbDirectory
         self.dbKey = dbKey
         self.dbPath = os.path.join(dbDirectory, dbFileName)
-        self.workingDir = None
+        self.workingDirectory = None
         self.plRunDate = plRunDate
 
     def connectDB(self):

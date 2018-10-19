@@ -81,17 +81,19 @@ class Pipeline:
         conn.close()
         return(settings)
 
-    def runODK(self, argsODK, workingDir):
+    def runODK(self, argsODK, argsPipeline):
         """Run check duplicates, copy file, and briefcase."""
-        # xferDB = TransferDB(dbFileName = self.dbFileName,
-        #                     dbDirectory = self.dbDirectory,
-        #                     dbKey = self.dbKey,
-        #                     plRunDate = self.pipelineRunDate)
-        # conn = xferDB.connectDB()
-        pipelineODK = ODK(argsODK, workingDir)
+        xferDB = TransferDB(dbFileName = self.dbFileName,
+                            dbDirectory = self.dbDirectory,
+                            dbKey = self.dbKey,
+                            plRunDate = self.pipelineRunDate)
+        conn = xferDB.connectDB()
+        xferDB.configPipeline(conn)
+        pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
         odkBC = pipelineODK.briefcase()
-        # HERE -- check duplictes
+        xferDB.checkDuplicates(conn)
+        conn.close
         return(odkBC)
 
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
@@ -109,9 +111,9 @@ class Pipeline:
             rOut["completed"] = completed
         return(rOut)
 
-    def runDHIS(self, argsDHIS, workingDir):
+    def runDHIS(self, argsDHIS, argsPipeline):
         """Connect to API and post events."""
-        pipelineDHIS = DHIS(argsDHIS, workingDir)
+        pipelineDHIS = DHIS(argsDHIS, argsPipeline.workingDirectory)
         apiDHIS = pipelineDHIS.connect()
         postLog = pipelineDHIS.postVA(apiDHIS)
         pipelineDHIS.verifyPost(postLog, apiDHIS)
