@@ -4,6 +4,7 @@
 
 import os
 import datetime
+from pandas import read_csv
 from transferDB import TransferDB
 from odk import ODK
 from openVA import OpenVA
@@ -34,6 +35,16 @@ class Pipeline:
     config(self)
         Returns dictionary with the configuration settings for the classes
         Pipeline, ODK, OpenVA, and DHIS.
+    runODK(slef, argsODK, workingDir)
+        Run check duplicates, copy file, and briefcase.
+    runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate)
+        Create & run script or run smartva.
+    runDHIS(self, argsDHIS, workingDir)
+        Connect to API and post verbal autopsy records to DHIS server.
+    storeResultsDB(self)
+        Store VA results in Transfer database.
+    closePipeline(self, conn)
+        Update ODK_Conf ODKLastRun in Transfer DB and clean up files.
 
     """
 
@@ -110,15 +121,27 @@ class Pipeline:
                    "nPostedRecords": pipelineDHIS.nPostedRecords}
         return(dhisOut)
 
-    def depositResults(self):
-        """StoreVA (not sure if this is needed)."""
-        # xferDB = TransferDB(dbFileName = self.dbFileName,
-        #                     dbDirectory = self.dbDirectory,
-        #                     dbKey = self.dbKey,
-        #                     plRunDate = self.pipelineRunDate)
-        # conn = xferDB.connectDB()
-        pass
+    def storeResultsDB(self):
+        """Store VA results in Transfer database."""
+        xferDB = TransferDB(dbFileName = self.dbFileName,
+                            dbDirectory = self.dbDirectory,
+                            dbKey = self.dbKey,
+                            plRunDate = self.pipelineRunDate)
+        conn = xferDB.connectDB()
+        xferDB.configPipeline(conn)
+        xferDB.storeVA(conn)
+        conn.close()
 
-    def closePipeline(self, conn):
-        """Run updateODKLastRun and clean up files (close conn?)."""
-        pass
+    def closePipeline(self):
+        """Update ODK_Conf ODKLastRun in Transfer DB and clean up files."""
+        xferDB = TransferDB(dbFileName = self.dbFileName,
+                            dbDirectory = self.dbDirectory,
+                            dbKey = self.dbKey,
+                            plRunDate = self.pipelineRunDate)
+        conn = xferDB.connectDB()
+        xferDB.configPipeline(conn)
+        xferDB.cleanODK()
+        xferDB.cleanOpenVA()
+        xferDB.cleanDHIS()
+        xferDB.updateODKLastRun(conn, self.pipelineRunDate)
+        conn.close()

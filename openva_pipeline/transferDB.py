@@ -14,6 +14,7 @@
 #------------------------------------------------------------------------------#
 
 import os
+import shutil
 import collections
 import datetime
 import sqlite3
@@ -1134,7 +1135,7 @@ class TransferDB:
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         shutil.rmtree(
-            os.path.join(self.workingDireactory, "DHIS", "blobs")
+            os.path.join(self.workingDirectory, "DHIS", "blobs")
         )
 
 #------------------------------------------------------------------------------#

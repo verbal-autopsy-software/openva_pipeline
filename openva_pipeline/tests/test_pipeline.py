@@ -494,7 +494,7 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InSilico_3(self):
-        """Check that runOpenVA() creates resuls file for for InSilicoVA script."""
+        """Check that runOpenVA() creates resuls file for InSilicoVA script."""
         rScriptFile = os.path.join(self.dirOpenVA,
                                    self.pl.pipelineRunDate,
                                    "Rscript_" + self.pl.pipelineRunDate + ".R")
@@ -561,7 +561,7 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InterVA_3(self):
-        """Check that runOpenVA() creates resuls file for for InterVA script."""
+        """Check that runOpenVA() creates resuls file for InterVA script."""
         rScriptFile = os.path.join(self.dirOpenVA,
                                    self.pl.pipelineRunDate,
                                    "Rscript_" + self.pl.pipelineRunDate + ".R")
@@ -715,39 +715,39 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
 
 class Check_Pipeline_depositResults(unittest.TestCase):
 
-    shutil.copy("OpenVAFiles/sample_newStorage.csv",
-                "OpenVAFiles/newStorage.csv")
-
-    dbFileName = "Pipeline.db"
-    dbDirectory = "."
-    dbKey = "enilepiP"
-    useDHIS = True
-    nowDate = datetime.datetime.now()
-    pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
-    xferDB = TransferDB(dbFileName = dbFileName,
-                        dbDirectory = dbDirectory,
-                        dbKey = dbKey,
-                        plRunDate = pipelineRunDate)
-    conn = xferDB.connectDB()
-    c = conn.cursor()
-    c.execute("DELETE FROM VA_Storage;")
-    conn.commit()
-    conn.close()
-
-    pl = Pipeline(dbFileName, dbDirectory, dbKey, useDHIS)
-    settings = pl.config()
-    settingsPipeline = settings["pipeline"]
-    settingsODK = settings["odk"]
-    settingsOpenVA = settings["openVA"]
-    settingsDHIS = settings["dhis"]
-
     def test_storeVA(self):
         """Check that depositResults() stores VA records in Transfer DB."""
-        self.pl.storeVA()
-        xferDB = TransferDB(dbFileName = self.dbFileName,
-                            dbDirectory = self.dbDirectory,
-                            dbKey = self.dbKey,
-                            plRunDate = self.pipelineRunDate)
+        shutil.copy("OpenVAFiles/sample_newStorage.csv",
+                    "OpenVAFiles/newStorage.csv")
+
+        dbFileName = "Pipeline.db"
+        dbDirectory = "."
+        dbKey = "enilepiP"
+        useDHIS = True
+        nowDate = datetime.datetime.now()
+        pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        xferDB = TransferDB(dbFileName = dbFileName,
+                            dbDirectory = dbDirectory,
+                            dbKey = dbKey,
+                            plRunDate = pipelineRunDate)
+        conn = xferDB.connectDB()
+        c = conn.cursor()
+        c.execute("DELETE FROM VA_Storage;")
+        conn.commit()
+        conn.close()
+
+        pl = Pipeline(dbFileName, dbDirectory, dbKey, useDHIS)
+        settings = pl.config()
+        settingsPipeline = settings["pipeline"]
+        settingsODK = settings["odk"]
+        settingsOpenVA = settings["openVA"]
+        settingsDHIS = settings["dhis"]
+
+        pl.storeResultsDB()
+        xferDB = TransferDB(dbFileName = dbFileName,
+                            dbDirectory = dbDirectory,
+                            dbKey = dbKey,
+                            plRunDate = pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = "SELECT id FROM VA_Storage"
@@ -756,10 +756,93 @@ class Check_Pipeline_depositResults(unittest.TestCase):
         conn.close()
         vaIDsList = [j for i in vaIDs for j in i]
         s1 = set(vaIDsList)
-        dfNewStorage = read_csv("OpenVAFiles/newStorage.csv")
+        dfNewStorage = pd.read_csv("OpenVAFiles/newStorage.csv")
         dfNewStorageID = dfNewStorage["odkMetaInstanceID"]
         s2 = set(dfNewStorageID)
         self.assertTrue(s2.issubset(s1))
+
+class Check_Pipeline_closePipeline(unittest.TestCase):
+
+    def test_DHIS_cleanPipeline_rmFiles(self):
+        """Test file removal."""
+        if not os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            shutil.copy("ODKFiles/previous_bc_export.csv",
+                        "ODKFiles/odkBCExportPrev.csv")
+        if not os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            shutil.copy("ODKFiles/another_bc_export.csv",
+                        "ODKFiles/odkBCExportNew.csv")
+
+        if not os.path.isfile("OpenVAFiles/openVA_input.csv"):
+            shutil.copy("OpenVAFiles/sample_openVA_input.csv",
+                        "OpenVAFiles/openVA_input.csv")
+        if not os.path.isfile("OpenVAFiles/entityAttributeValue.csv"):
+            shutil.copy("OpenVAFiles/sampleEAV.csv",
+                        "OpenVAFiles/entityAttributeValue.csv")
+        if not os.path.isfile("OpenVAFiles/recordStorage.csv"):
+            shutil.copy("OpenVAFiles/sample_recordStorage.csv",
+                        "OpenVAFiles/recordStorage.csv")
+        if not os.path.isfile("OpenVAFiles/newStorage.csv"):
+            shutil.copy("OpenVAFiles/sample_newStorage.csv",
+                        "OpenVAFiles/newStorage.csv")
+
+        os.makedirs("DHIS/blobs/", exist_ok = True)
+        shutil.copy("OpenVAFiles/sample_newStorage.csv",
+                    "DHIS/blobs/001-002-003.db")
+
+        dbFileName = "Pipeline.db"
+        dbDirectory = "."
+        dbKey = "enilepiP"
+        useDHIS = True
+        nowDate = datetime.datetime.now()
+        pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        pl = Pipeline(dbFileName, dbDirectory, dbKey, useDHIS)
+        pl.closePipeline()
+        fileExist = False
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            fileExist = True
+        if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
+            fileExist = True
+        if os.path.isfile("ODKFiles/odkBCExportNew.csv"):
+            fileExist = True
+        if os.path.isfile("OpenVAFiles/openVA_input.csv"):
+            fileExist = True
+        if os.path.isfile("OpenVAFiles/entityAttributeValue.csv"):
+            fileExist = True
+        if os.path.isfile("OpenVAFiles/recordStorage.csv"):
+            fileExist = True
+        if os.path.isfile("OpenVAFiles/newStorage.csv"):
+            fileExist = True
+        if os.path.isfile("DHIS/blobs/001-002-003.db"):
+            fileExist = True
+        self.assertFalse(fileExist)
+
+    def test_DHIS_cleanPipeline_odkLastRun(self):
+        """Test update of ODK_Conf.odkLastRun."""
+
+        os.makedirs("DHIS/blobs/", exist_ok = True)
+        dbFileName = "Pipeline.db"
+        dbDirectory = "."
+        dbKey = "enilepiP"
+        useDHIS = True
+        pl = Pipeline(dbFileName, dbDirectory,
+                      dbKey, useDHIS)
+        pl.closePipeline()
+
+        nowDate = datetime.datetime.now()
+        pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        xferDB = TransferDB(dbFileName = dbFileName,
+                            dbDirectory = dbDirectory,
+                            dbKey = dbKey,
+                            plRunDate = pipelineRunDate)
+        conn = xferDB.connectDB()
+        c = conn.cursor()
+        c.execute("SELECT odkLastRun FROM ODK_Conf;")
+        sqlQuery = c.fetchone()
+        results = [i for i in sqlQuery]
+        self.assertEqual(results[0], pipelineRunDate)
+        c.execute("UPDATE ODK_Conf SET odkLastRun = ?;")
+        conn.commit()
+        conn.close()
 
 if __name__ == "__main__":
     unittest.main()
