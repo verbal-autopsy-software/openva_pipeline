@@ -961,7 +961,7 @@ class TransferDB:
             raise PipelineConfigurationError \
                 ("Problem in database table DHIS_Conf..." + str(e))
 
-        if algorithm == "Tariff":
+        if algorithm == "SmartVA":
             sqlCODCodes = "SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = 'Tariff'"
         else:
             sqlCODCodes = "SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = 'WHO'"

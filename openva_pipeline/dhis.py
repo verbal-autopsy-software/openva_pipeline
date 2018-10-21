@@ -312,7 +312,7 @@ class DHIS():
             for i in dfRecordStorage.itertuples(index = False):
                 row = list(i)
 
-                if row[5]!="MISSING":
+                if row[5] != "MISSING" and row[5] != None:
 
                     vaID = str(row[0])
                     blobFile = "{}.db".format(

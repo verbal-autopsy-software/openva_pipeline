@@ -260,8 +260,10 @@ class Check_Pipeline_runODK(unittest.TestCase):
             os.remove("ODKFiles/odkBCExportNew.csv")
         if os.path.isfile("ODKFiles/odkBCExportPrev.csv"):
             os.remove("ODKFiles/odkBCExportPrev.csv")
+        if os.path.isfile("OpenVAFiles/openVA_input.csv"):
+            os.remove("OpenVAFiles/openVA_input.csv")
 
-        dbFileName = "Pipeline.db"
+        dbFileName = "copy_Pipeline.db"
         dbDirectory = "."
         dbKey = "enilepiP"
         useDHIS = True
@@ -273,7 +275,10 @@ class Check_Pipeline_runODK(unittest.TestCase):
                             plRunDate = pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
-        conn.execute("DELETE FROM EventLog;")
+        c.execute("DELETE FROM EventLog;")
+        conn.commit()
+        c.execute("DELETE FROM VA_Storage;")
+        conn.commit()
         conn.close()
         pl = Pipeline(dbFileName, dbDirectory, dbKey, useDHIS)
         settings = pl.config()
@@ -283,8 +288,10 @@ class Check_Pipeline_runODK(unittest.TestCase):
         settingsDHIS = settings["dhis"]
         odkBC = pl.runODK(settingsODK,
                           settingsPipeline)
-        with open("ODKFiles/odkBCExportNew.csv") as f:
-            nVA = sum(1 for line in f)
+        # with open("ODKFiles/odkBCExportNew.csv") as f:
+        #     nVA = sum(1 for line in f) - 1
+        vaRecords = pd.read_csv("ODKFiles/odkBCExportNew.csv")
+        nVA = vaRecords.shape[0]
         rOut = pl.runOpenVA(settingsOpenVA,
                             settingsPipeline,
                             settingsODK.odkID,
@@ -293,6 +300,7 @@ class Check_Pipeline_runODK(unittest.TestCase):
                                   settingsPipeline)
         pl.storeResultsDB()
         os.remove("ODKFiles/odkBCExportNew.csv")
+        os.remove("OpenVAFiles/openVA_input.csv")
         odkBC2 = pl.runODK(settingsODK,
                            settingsPipeline)
         xferDB = TransferDB(dbFileName = dbFileName,
@@ -307,6 +315,9 @@ class Check_Pipeline_runODK(unittest.TestCase):
         self.assertEqual(len(nDuplicates), nVA)
         shutil.rmtree("OpenVAFiles/" + pl.pipelineRunDate)
         shutil.rmtree("DHIS/blobs/")
+        os.remove("OpenVAFiles/newStorage.csv")
+        os.remove("OpenVAFiles/recordStorage.csv")
+        os.remove("OpenVAFiles/entityAttributeValue.csv")
 
 # class Check_Pipeline_runOpenVA(unittest.TestCase):
 #     """Check runOpenVA method sets up files correctly"""
@@ -637,23 +648,12 @@ class Check_Pipeline_runODK(unittest.TestCase):
 #         shutil.copy("ODKFiles/odkExport_phmrc-2.csv",
 #                     "ODKFiles/odkBCExportNew.csv")
 
-#         dbFileName = "copy_Pipeline.db"
+#         dbFileName = "copy_smartVA_Pipeline.db"
 #         dbKey = "enilepiP"
 #         dbDirectory = "."
 #         nowDate = datetime.datetime.now()
 #         pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
 
-#         xferDB = TransferDB(dbFileName = "copy_Pipeline.db",
-#                             dbDirectory = dbDirectory,
-#                             dbKey = dbKey,
-#                             plRunDate = pipelineRunDate)
-#         conn = xferDB.connectDB()
-#         c = conn.cursor()
-#         sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-#         par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1")
-#         c.execute(sql, par)
-#         conn.commit()
-#         conn.close()
 #         pl = Pipeline(dbFileName,
 #                       dbDirectory,
 #                       dbKey,

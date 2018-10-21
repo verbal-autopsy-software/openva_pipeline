@@ -14,6 +14,8 @@ import shutil
 import os
 from transferDB import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
+import pandas as pd
+import numpy as np
 
 class OpenVA:
     """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.
@@ -286,8 +288,59 @@ class OpenVA:
         except:
             raise OpenVAError("Problem writing R script for InterVA.")
 
+    def smartVA_to_csv(self):
+        """Write two CSV files: (1) Entity Value Attribute blob pushed to DHIS2 (entityAttributeValue.csv)
+                                (2) table for transfer database (recordStorage.csv)
+
+           Both CSV files are stored in the OpenVA folder."""
+
+        inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
+        outDir = os.path.join(self.dirOpenVA, self.runDate)
+        dfData    = pd.read_csv(inFile)
+        dfResults = pd.read_csv(outDir +
+                    "/1-individual-cause-of-death/individual-cause-of-death.csv")
+        codeDF    = pd.DataFrame(
+            np.repeat(self.pipelineArgs.algorithmMetadataCode,
+                      dfResults.shape[0]), columns=["metadataCode"]
+        )
+        dfResults = pd.concat([dfResults, codeDF], axis=1)
+        colsKeep = ["sex", "birth_date", "death_date",
+                    "age", "cause34", "metadataCode", "sid"]
+        dfRecordStorage = pd.merge(left=dfResults[colsKeep],
+                                   left_on="sid",
+                                   right=dfData,
+                                   right_on="Generalmodule-sid",
+                                   how="right")
+        dfRecordStorage.rename(columns =
+                               {"meta-instanceID": "odkMetaInstanceID"},
+                               inplace = True
+        )
+        dfRecordStorage.drop(columns="sid", inplace = True)
+        dfRecordStorage.insert(loc=0, column="ID",
+                               value=dfRecordStorage["odkMetaInstanceID"])
+        dfRecordStorage.to_csv(self.dirOpenVA + "/recordStorage.csv", index = False)
+
+        colsKeep = ["sid", "cause34", "metadataCode"]
+        dfTemp   = pd.merge(left=dfResults[colsKeep],
+                            left_on="sid",
+                            right=dfData,
+                            right_on="Generalmodule-sid",
+                            how="right")
+        dfTemp.dropna(subset=["cause34"])
+        dfTemp.drop(columns="sid", inplace=True)
+        dfTemp.rename(columns = {"meta-instanceID": "odkMetaInstanceID"},
+                      inplace = True
+        )
+        dfTemp["ID"] = dfTemp["odkMetaInstanceID"]
+        dfEVA = dfTemp.melt(id_vars=["ID"],
+                            var_name="Attribute",
+                            value_name="Value")
+        dfEVA.sort_values(by=["ID"], inplace=True)
+        dfEVA.to_csv(self.dirOpenVA + "/entityAttributeValue.csv", index=False)
+
     def getCOD(self):
         """Create and execute R script to assign a COD with openVA; or call the SmartVA CLI to assign COD."""
+
         if self.pipelineArgs.algorithm in ["InSilicoVA", "InterVA"]:
             rScriptIn = os.path.join(self.dirOpenVA, self.runDate,
                                      "Rscript_" + self.runDate + ".R")
@@ -330,7 +383,8 @@ class OpenVA:
                                        stdin  = subprocess.PIPE,
                                        stdout = subprocess.PIPE,
                                        stderr = subprocess.PIPE)
-            
+            self.smartVA_to_csv()
+
             if completed.returncode == 2:
                 self.successfulRun = False
                 raise SmartVAError \
