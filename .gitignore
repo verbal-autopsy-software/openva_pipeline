@@ -2,6 +2,7 @@ Pipfile
 Pipfile.lock
 __pycache__/**
 openva_pipeline/tests/.Rhistory
+openva_pipeline/tests/fontsconfig/**
 openva_pipeline/.Rhistory
 openva_pipeline/tests/ODKFiles/ODK Briefcase Storage/**
 openva_pipeline/tests/ODKFiles/odkBCExportNew.csv
