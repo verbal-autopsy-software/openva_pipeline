@@ -3,8 +3,7 @@ Pipfile.lock
 __pycache__/**
 openva_pipeline/tests/.Rhistory
 openva_pipeline/.Rhistory
-openva_pipeline/tests/ODKFiles/ODK Briefcase Storage/cache.ser
-openva_pipeline/tests/ODKFiles/ODK Briefcase Storage/forms/**
+openva_pipeline/tests/ODKFiles/ODK Briefcase Storage/**
 openva_pipeline/tests/ODKFiles/odkBCExportNew.csv
 openva_pipeline/tests/ODKFiles/odkBCExportPrev.csv
 openva_pipeline/tests/OpenVAFiles/openVA_input.csv
