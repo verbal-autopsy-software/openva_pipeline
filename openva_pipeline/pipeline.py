@@ -3,9 +3,11 @@
 #------------------------------------------------------------------------------#
 
 import os
+import csv
 import datetime
 from pandas import read_csv
 from transferDB import TransferDB
+from transferDB import DatabaseConnectionError
 from odk import ODK
 from openVA import OpenVA
 from dhis import DHIS
@@ -32,6 +34,8 @@ class Pipeline:
 
     Methods
     -------
+    logEvent(self, eventDesc, eventType)
+        Inserts a message into the EventLog table of the Transfer database.
     config(self)
         Returns dictionary with the configuration settings for the classes
         Pipeline, ODK, OpenVA, and DHIS.
@@ -58,6 +62,45 @@ class Pipeline:
         self.pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
         self.useDHIS = useDHIS
 
+    def logEvent(self, eventDesc, eventType):
+        """Commit event or error message to transfer database."""
+
+        errorFile = os.path.join(self.dbDirectory, "dbErrorLog.csv")
+        timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        if os.path.isfile(errorFile) == False:
+            try:
+                with open(errorFile, "w", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["Date"] + 
+                                    ["Description"] + 
+                                    ["Additional Information"]
+                    )
+            except (OSError) as e:
+                print(str(e) + "...Can't create dbErrorLog.csv")
+                sys.exit(1)
+        try:
+            xferDB = TransferDB(dbFileName = self.dbFileName,
+                                dbDirectory = self.dbDirectory,
+                                dbKey = self.dbKey,
+                                plRunDate = self.pipelineRunDate)
+            conn = xferDB.connectDB()
+            c = conn.cursor()
+            sql = "INSERT INTO EventLog \
+                   (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
+            par = (eventDesc, eventType, timeFMT)
+            c.execute(sql, par)
+            conn.commit()
+            conn.close()
+        except (DatabaseConnectionError) as e:
+            errorMsg = [timeFMT, str(e), "Committed by Pipeline.logEvent"]
+            try:
+                with open(errorFile, "a", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerow(errorMsg)
+            except:
+                print("Can't write to dbErrorLog.csv")
+                print(errorMsg)
+
     def config(self):
         """Return dictionary with configuration settings for pipeline steps."""
 
@@ -78,22 +121,14 @@ class Pipeline:
             settingsDHIS = xferDB.configDHIS(conn,
                                              settingsPipeline.algorithm)
             settings["dhis"] = settingsDHIS
-        conn.close()
-        return(settings)
+            conn.close()
+            return(settings)
 
     def runODK(self, argsODK, argsPipeline):
         """Run check duplicates, copy file, and briefcase."""
-        xferDB = TransferDB(dbFileName = self.dbFileName,
-                            dbDirectory = self.dbDirectory,
-                            dbKey = self.dbKey,
-                            plRunDate = self.pipelineRunDate)
-        conn = xferDB.connectDB()
-        xferDB.configPipeline(conn)
         pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
         odkBC = pipelineODK.briefcase()
-        xferDB.checkDuplicates(conn)
-        conn.close
         return(odkBC)
 
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):

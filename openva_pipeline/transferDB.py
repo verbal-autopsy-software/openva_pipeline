@@ -272,7 +272,7 @@ class TransferDB:
           Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)
 
         """
-        
+
         c = conn.cursor()
         sql = "UPDATE ODK_Conf SET odkLastRun = ?"
         par = (plRunDate,)

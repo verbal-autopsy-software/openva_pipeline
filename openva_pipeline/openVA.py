@@ -383,8 +383,6 @@ class OpenVA:
                                        stdin  = subprocess.PIPE,
                                        stdout = subprocess.PIPE,
                                        stderr = subprocess.PIPE)
-            self.smartVA_to_csv()
-
             if completed.returncode == 2:
                 self.successfulRun = False
                 raise SmartVAError \
@@ -394,6 +392,7 @@ class OpenVA:
                 self.successfulRun = False
                 raise SmartVAError("Problem with SmartVA country code")
 
+            self.smartVA_to_csv()
             self.successfulRun = True
             return(completed)
 
