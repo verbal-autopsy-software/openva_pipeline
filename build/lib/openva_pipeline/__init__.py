@@ -1,1 +1,0 @@
-name = "openva_pipeline"
