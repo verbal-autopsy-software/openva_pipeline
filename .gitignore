@@ -1,15 +1,22 @@
 tests/.Rhistory
-tests/fontsconfig/**
-openva_pipeline/.Rhistory
+tests/fontsconfig/
+tests/__pycache__/
+tests/*.pyc
 tests/ODKFiles/ODK Briefcase Storage/**
 tests/ODKFiles/odkBCExportNew.csv
 tests/ODKFiles/odkBCExportPrev.csv
 tests/OpenVAFiles/openVA_input.csv
-tests/DHIS/*
+tests/DHIS/
+
+openva_pipeline/.Rhistory
 # Compiled python modules.
-**.pyc
-__pycache__/**
+openva_pipeline/*.pyc
+openva_pipeline/__pycache__/
+
 # Setuptools distribution folder.
-/dists/
+dist/
+
 # Python egg metadata, regenerated from source files by setuptools.
-/*.egg-inf
+openva_pipeline.egg-info/
+
+build/
