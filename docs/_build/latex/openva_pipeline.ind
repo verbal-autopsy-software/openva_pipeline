@@ -1,0 +1,94 @@
+\begin{sphinxtheindex}
+\def\bigletter#1{{\Large\sffamily#1}\nopagebreak\vspace{1mm}}
+
+  \bigletter A
+  \item API (class in dhis), \hyperpage{18}
+
+  \indexspace
+  \bigletter B
+  \item briefcase() (odk.ODK method), \hyperpage{17}
+
+  \indexspace
+  \bigletter C
+  \item checkDuplicates() (transferDB.TransferDB method), \hyperpage{14}
+  \item cleanDHIS() (transferDB.TransferDB method), \hyperpage{14}
+  \item cleanODK() (transferDB.TransferDB method), \hyperpage{14}
+  \item cleanOpenVA() (transferDB.TransferDB method), \hyperpage{14}
+  \item configDHIS() (transferDB.TransferDB method), \hyperpage{14}
+  \item configODK() (transferDB.TransferDB method), \hyperpage{15}
+  \item configOpenVA() (transferDB.TransferDB method), \hyperpage{15}
+  \item configPipeline() (transferDB.TransferDB method), \hyperpage{15}
+  \item connect() (dhis.DHIS method), \hyperpage{18}
+  \item connectDB() (transferDB.TransferDB method), \hyperpage{16}
+  \item copyVA() (openVA.OpenVA method), \hyperpage{17}
+  \item create\_db() (in module dhis), \hyperpage{19}
+
+  \indexspace
+  \bigletter D
+  \item DatabaseConnectionError, \hyperpage{19}
+  \item DHIS (class in dhis), \hyperpage{18}
+  \item dhis (module), \hyperpage{13}
+  \item DHISConfigurationError, \hyperpage{20}
+
+  \indexspace
+  \bigletter F
+  \item findKeyValue() (in module dhis), \hyperpage{19}
+  \item format\_to\_dhis2() (dhis.VerbalAutopsyEvent method), \hyperpage{19}
+
+  \indexspace
+  \bigletter G
+  \item get() (dhis.API method), \hyperpage{19}
+  \item getCOD() (openVA.OpenVA method), \hyperpage{18}
+  \item getCODCode() (in module dhis), \hyperpage{19}
+
+  \indexspace
+  \bigletter M
+  \item makePipelineDirs() (transferDB.TransferDB method), \hyperpage{16}
+  \item mergeToPrevExport() (odk.ODK method), \hyperpage{17}
+
+  \indexspace
+  \bigletter O
+  \item ODK (class in odk), \hyperpage{16}
+  \item odk (module), \hyperpage{13}
+  \item ODKConfigurationError, \hyperpage{19}
+  \item ODKError, \hyperpage{20}
+  \item OpenVA (class in openVA), \hyperpage{17}
+  \item openVA (module), \hyperpage{13}
+  \item OpenVAConfigurationError, \hyperpage{20}
+  \item OpenVAError, \hyperpage{20}
+
+  \indexspace
+  \bigletter P
+  \item pipeline (module), \hyperpage{13}
+  \item PipelineError, \hyperpage{19}
+  \item post() (dhis.API method), \hyperpage{19}
+  \item post\_blob() (dhis.API method), \hyperpage{19}
+  \item postVA() (dhis.DHIS method), \hyperpage{18}
+
+  \indexspace
+  \bigletter R
+  \item rScript() (openVA.OpenVA method), \hyperpage{18}
+  \item runPipeline (module), \hyperpage{13}
+  \item runPipeline() (in module runPipeline), \hyperpage{13}
+
+  \indexspace
+  \bigletter S
+  \item smartVA\_to\_csv() (openVA.OpenVA method), \hyperpage{18}
+  \item SmartVAError, \hyperpage{20}
+  \item storeVA() (transferDB.TransferDB method), \hyperpage{16}
+
+  \indexspace
+  \bigletter T
+  \item TransferDB (class in transferDB), \hyperpage{13}
+  \item transferDB (module), \hyperpage{13}
+
+  \indexspace
+  \bigletter U
+  \item updateODKLastRun() (transferDB.TransferDB method), \hyperpage{16}
+
+  \indexspace
+  \bigletter V
+  \item VerbalAutopsyEvent (class in dhis), \hyperpage{19}
+  \item verifyPost() (dhis.DHIS method), \hyperpage{18}
+
+\end{sphinxtheindex}

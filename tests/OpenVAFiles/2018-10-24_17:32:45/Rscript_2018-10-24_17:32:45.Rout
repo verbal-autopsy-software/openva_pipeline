@@ -1,0 +1,358 @@
+
+R version 3.5.1 (2018-07-02) -- "Feather Spray"
+Copyright (C) 2018 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+  Natural language support but running in an English locale
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> date() 
+[1] "Wed Oct 24 17:32:57 2018"
+> library(openVA); library(CrossVA) 
+────────────────────── Attaching packages for openVA 1.0.7 ─────────────────────
+✔ InSilicoVA 1.2.6
+✔ InterVA4   1.7.5
+✔ InterVA5   1.0.2
+✔ Tariff     1.0.4
+── Optional packages (require manual installation if not attached) ─────────────
+× nbc4va     
+If you need to use these methods, you may need to load or install the packages: nbc4va.
+You can run in your R terminal:
+library('nbc4va')
+
+> getwd() 
+[1] "/home/method/GitHub/openva_pipeline/openva_pipeline"
+> records <- read.csv('tests/OpenVAFiles/openVA_input.csv') 
+> data <- map_records_insilicova(records) 
+> names(data) <- tolower(names(data)) 
+> odkMetaInstanceID <- as.character(records$meta.instanceID) 
+> data$id <- odkMetaInstanceID 
+> results <- insilico(data = data, 
++ 	 data.type = 'WHO2012', 
++ 	 isNumeric = FALSE, 
++ 	 updateCondProb = TRUE, 
++ 	 keepProbbase.level = TRUE, 
++ 	 CondProb = NULL, 
++ 	 CondProbNum = NULL, 
++ 	 datacheck = TRUE, 
++ 	 datacheck.missing = TRUE, 
++ 	 warning.write = TRUE, 
++ 	 directory = 'tests/OpenVAFiles/2018-10-24_17:32:45', 
++ 	 external.sep = TRUE, 
++ 	 Nsim = 4000, 
++ 	 thin = 10, 
++ 	 burnin = 2000, 
++ 	 auto.length = TRUE, 
++ 	 conv.csmf = 0.02, 
++ 	 jump.scale = 0.1, 
++ 	 levels.prior = NULL, 
++ 	 levels.strength = 1, 
++ 	 trunc.min = 0.0001, 
++ 	 trunc.max = 0.9999, 
++ 	 subpop = NULL, 
++ 	 java_option = '-Xmx1g', 
++ 	 seed = 1, 
++ 	 phy.code = NULL, 
++ 	 phy.cat = NULL, 
++ 	 phy.unknown = NULL, 
++ 	 phy.external = NULL, 
++ 	 phy.debias = NULL, 
++ 	 exclude.impossible.cause = 'subset', 
++ 	 no.is.missing = FALSE, 
++ 	 indiv.CI = NULL, 
++ 	 groupcode = FALSE) 
+Performing data consistency check...
+
+Data check finished.
+
+Warning: 71 symptom missing completely and added to missing list 
+List of missing symptoms: 
+ elder, midage, adult, under5, infant, magegp2, magegp3, died_d1, acute, copd, dement, depress, men_con, mencon3, herpes, swe_breast, paral_one, eye_sunk, bl_orif, vb_bet, vb_men, vb_after, diff_sw, first_p, more4, cs_prev, multip, lab_24, died_lab, death_24, baby_al, breast_fd, del_fac, del_home, del_else, prof_ass, del_norm, del_ass, del_cs, baby_pos, mon_early, hyster, bpr_preg, fit_preg, vis_bl, bleed, e_bleed, s_bleed, d_bleed, p_bleed, placent_r, disch_sm, term_att, abort, born_3437, no_life, mushy, unw_d1, unw_d2, devel, mlf_bk, mlf_lh, mlf_sh, b_assist, b_caes, b_bhome, b_bway, injury, traffic, o_trans, suicide
+InSilico Sampler initiated, 4000 iterations to sample
+.....................
+Iteration: 200 
+Sub-population 0 acceptance ratio: 0.73 
+0.01min elapsed, 0.13min remaining 
+....................
+Iteration: 400 
+Sub-population 0 acceptance ratio: 0.76 
+0.01min elapsed, 0.10min remaining 
+....................
+Iteration: 600 
+Sub-population 0 acceptance ratio: 0.77 
+0.01min elapsed, 0.08min remaining 
+....................
+Iteration: 800 
+Sub-population 0 acceptance ratio: 0.77 
+0.02min elapsed, 0.06min remaining 
+....................
+Iteration: 1000 
+Sub-population 0 acceptance ratio: 0.77 
+0.02min elapsed, 0.05min remaining 
+....................
+Iteration: 1200 
+Sub-population 0 acceptance ratio: 0.78 
+0.02min elapsed, 0.05min remaining 
+....................
+Iteration: 1400 
+Sub-population 0 acceptance ratio: 0.78 
+0.02min elapsed, 0.04min remaining 
+....................
+Iteration: 1600 
+Sub-population 0 acceptance ratio: 0.78 
+0.02min elapsed, 0.04min remaining 
+....................
+Iteration: 1800 
+Sub-population 0 acceptance ratio: 0.78 
+0.03min elapsed, 0.03min remaining 
+....................
+Iteration: 2000 
+Sub-population 0 acceptance ratio: 0.78 
+0.03min elapsed, 0.03min remaining 
+....................
+Iteration: 2200 
+Sub-population 0 acceptance ratio: 0.79 
+0.03min elapsed, 0.02min remaining 
+....................
+Iteration: 2400 
+Sub-population 0 acceptance ratio: 0.80 
+0.03min elapsed, 0.02min remaining 
+....................
+Iteration: 2600 
+Sub-population 0 acceptance ratio: 0.80 
+0.03min elapsed, 0.02min remaining 
+....................
+Iteration: 2800 
+Sub-population 0 acceptance ratio: 0.80 
+0.04min elapsed, 0.02min remaining 
+....................
+Iteration: 3000 
+Sub-population 0 acceptance ratio: 0.80 
+0.04min elapsed, 0.01min remaining 
+....................
+Iteration: 3200 
+Sub-population 0 acceptance ratio: 0.80 
+0.04min elapsed, 0.01min remaining 
+....................
+Iteration: 3400 
+Sub-population 0 acceptance ratio: 0.79 
+0.04min elapsed, 0.01min remaining 
+....................
+Iteration: 3600 
+Sub-population 0 acceptance ratio: 0.79 
+0.04min elapsed, 0.00min remaining 
+....................
+Iteration: 3800 
+Sub-population 0 acceptance ratio: 0.79 
+0.05min elapsed, 0.00min remaining 
+...................
+Overall acceptance ratio
+Sub-population 0 : 0.7855 
+Organizing output, might take a moment...
+Not all causes with CSMF > 0.02 are convergent.
+
+Increase chain length with another 4000 iterations
+
+InSilico Sampler initiated, 4000 iterations to sample
+.....................
+Iteration: 200 
+Sub-population 0 acceptance ratio: 0.70 
+0.00min elapsed, 0.05min remaining 
+....................
+Iteration: 400 
+Sub-population 0 acceptance ratio: 0.73 
+0.00min elapsed, 0.04min remaining 
+....................
+Iteration: 600 
+Sub-population 0 acceptance ratio: 0.75 
+0.01min elapsed, 0.04min remaining 
+....................
+Iteration: 800 
+Sub-population 0 acceptance ratio: 0.76 
+0.01min elapsed, 0.04min remaining 
+....................
+Iteration: 1000 
+Sub-population 0 acceptance ratio: 0.78 
+0.01min elapsed, 0.03min remaining 
+....................
+Iteration: 1200 
+Sub-population 0 acceptance ratio: 0.78 
+0.01min elapsed, 0.03min remaining 
+....................
+Iteration: 1400 
+Sub-population 0 acceptance ratio: 0.79 
+0.02min elapsed, 0.03min remaining 
+....................
+Iteration: 1600 
+Sub-population 0 acceptance ratio: 0.78 
+0.02min elapsed, 0.03min remaining 
+....................
+Iteration: 1800 
+Sub-population 0 acceptance ratio: 0.79 
+0.02min elapsed, 0.02min remaining 
+....................
+Iteration: 2000 
+Sub-population 0 acceptance ratio: 0.80 
+0.02min elapsed, 0.02min remaining 
+....................
+Iteration: 2200 
+Sub-population 0 acceptance ratio: 0.80 
+0.02min elapsed, 0.02min remaining 
+....................
+Iteration: 2400 
+Sub-population 0 acceptance ratio: 0.81 
+0.02min elapsed, 0.02min remaining 
+....................
+Iteration: 2600 
+Sub-population 0 acceptance ratio: 0.81 
+0.03min elapsed, 0.01min remaining 
+....................
+Iteration: 2800 
+Sub-population 0 acceptance ratio: 0.81 
+0.03min elapsed, 0.01min remaining 
+....................
+Iteration: 3000 
+Sub-population 0 acceptance ratio: 0.82 
+0.03min elapsed, 0.01min remaining 
+....................
+Iteration: 3200 
+Sub-population 0 acceptance ratio: 0.81 
+0.03min elapsed, 0.01min remaining 
+....................
+Iteration: 3400 
+Sub-population 0 acceptance ratio: 0.81 
+0.03min elapsed, 0.01min remaining 
+....................
+Iteration: 3600 
+Sub-population 0 acceptance ratio: 0.81 
+0.04min elapsed, 0.00min remaining 
+....................
+Iteration: 3800 
+Sub-population 0 acceptance ratio: 0.82 
+0.04min elapsed, 0.00min remaining 
+...................
+Overall acceptance ratio
+Sub-population 0 : 0.8158 
+Organizing output, might take a moment...
+Not all causes with CSMF > 0.02 are convergent.
+
+Increase chain length with another 8000 iterations
+
+InSilico Sampler initiated, 8000 iterations to sample
+.........................................
+Iteration: 400 
+Sub-population 0 acceptance ratio: 0.80 
+0.00min elapsed, 0.09min remaining 
+........................................
+Iteration: 800 
+Sub-population 0 acceptance ratio: 0.80 
+0.01min elapsed, 0.08min remaining 
+........................................
+Iteration: 1200 
+Sub-population 0 acceptance ratio: 0.82 
+0.01min elapsed, 0.07min remaining 
+........................................
+Iteration: 1600 
+Sub-population 0 acceptance ratio: 0.82 
+0.02min elapsed, 0.06min remaining 
+........................................
+Iteration: 2000 
+Sub-population 0 acceptance ratio: 0.84 
+0.02min elapsed, 0.06min remaining 
+........................................
+Iteration: 2400 
+Sub-population 0 acceptance ratio: 0.85 
+0.02min elapsed, 0.05min remaining 
+........................................
+Iteration: 2800 
+Sub-population 0 acceptance ratio: 0.85 
+0.03min elapsed, 0.05min remaining 
+........................................
+Iteration: 3200 
+Sub-population 0 acceptance ratio: 0.85 
+0.03min elapsed, 0.05min remaining 
+........................................
+Iteration: 3600 
+Sub-population 0 acceptance ratio: 0.85 
+0.03min elapsed, 0.04min remaining 
+........................................
+Iteration: 4000 
+Sub-population 0 acceptance ratio: 0.85 
+0.04min elapsed, 0.04min remaining 
+........................................
+Iteration: 4400 
+Sub-population 0 acceptance ratio: 0.84 
+0.04min elapsed, 0.03min remaining 
+........................................
+Iteration: 4800 
+Sub-population 0 acceptance ratio: 0.84 
+0.05min elapsed, 0.03min remaining 
+........................................
+Iteration: 5200 
+Sub-population 0 acceptance ratio: 0.84 
+0.05min elapsed, 0.03min remaining 
+........................................
+Iteration: 5600 
+Sub-population 0 acceptance ratio: 0.85 
+0.05min elapsed, 0.02min remaining 
+........................................
+Iteration: 6000 
+Sub-population 0 acceptance ratio: 0.85 
+0.06min elapsed, 0.02min remaining 
+........................................
+Iteration: 6400 
+Sub-population 0 acceptance ratio: 0.85 
+0.06min elapsed, 0.01min remaining 
+........................................
+Iteration: 6800 
+Sub-population 0 acceptance ratio: 0.85 
+0.06min elapsed, 0.01min remaining 
+........................................
+Iteration: 7200 
+Sub-population 0 acceptance ratio: 0.85 
+0.07min elapsed, 0.01min remaining 
+........................................
+Iteration: 7600 
+Sub-population 0 acceptance ratio: 0.85 
+0.07min elapsed, 0.00min remaining 
+.......................................
+Overall acceptance ratio
+Sub-population 0 : 0.8514 
+Organizing output, might take a moment...
+Not all causes with CSMF > 0.02 are convergent.
+ Please check using csmf.diag() for more information.
+
+> sex <- ifelse(tolower(data$male)=='y', 'Male', 'Female') 
+> cod <- getTopCOD(results) 
+> hasCOD <- as.character(data$id) %in% as.character(levels(cod$ID)) 
+> dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') 
+> dod <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10023), '%b %d, %Y') 
+> age <- floor(records$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) 
+> ## create matrices for DHIS2 blob (data2) and transfer database (data3) 
+> ## first column must be ID 
+> metadataCode <- 'InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1'
+> cod2 <- rep('MISSING', nrow(data)); cod2[hasCOD] <- as.character(cod[,2]) 
+> data2 <- cbind(data[,-1], cod2, metadataCode) 
+> names(data2) <- c(names(data[,-1]), 'Cause of Death', 'Metadata') 
+> evaBlob <- cbind(rep(as.character(data[,1]), each=ncol(data2)), rep(names(data2)), c(apply(data2, 1, c))) 
+> colnames(evaBlob) <- c('ID', 'Attribute', 'Value') 
+> write.csv(evaBlob, file='tests/OpenVAFiles/entityAttributeValue.csv', row.names=FALSE, na='') 
+> 
+> data3 <- cbind(as.character(data[,1]), sex, dob, dod, age, cod2, metadataCode, odkMetaInstanceID, data[,-1]) 
+> names(data3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(data[,-1])) 
+> write.csv(data3, file='tests/OpenVAFiles/recordStorage.csv', row.names=FALSE, na='') 
+> 
+> proc.time()
+   user  system elapsed 
+ 18.121   0.294  12.675 
