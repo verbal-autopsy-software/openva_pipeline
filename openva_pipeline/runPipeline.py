@@ -98,8 +98,7 @@ def runPipeline(database_file_name,
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
-
-if __name__ == "__main__":
-    runPipeline(database_file_name= "run_Pipeline.db", 
-                database_directory = "tests",
-                database_key = "enilepiP")
+# if __name__ == "__main__":
+#     runPipeline(database_file_name= "run_Pipeline.db", 
+#                 database_directory = "tests",
+#                 database_key = "enilepiP")

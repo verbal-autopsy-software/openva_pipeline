@@ -12,11 +12,19 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/verbal-autopsy-software/openva_pipeline",
+    license="GPLv3",
     packages=setuptools.find_packages(),
+    include_package_data=True,
+    install_requires=[
+        'pandas',
+        'pysqlcipher3',
+        'requests',
+        ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GPLv3 License",
-        "Operating System :: Linux",
+        "Programming Language :: Python :: 3.5",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: POSIX :: Linux",
     ],
 )
 
