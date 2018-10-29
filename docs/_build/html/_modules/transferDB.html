@@ -4,12 +4,20 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>transferDB &#8212; openva_pipeline 0.0.0.9000 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.0.9000',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -18,34 +26,24 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head><body>
+  </head>
+  <body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for transferDB</h1><div class="highlight"><pre>
-<span></span><span class="c1">#------------------------------------------------------------------------------#</span>
-<span class="c1"># transferDB.py</span>
-<span class="c1">#</span>
-<span class="c1"># Notes</span>
-<span class="c1">#</span>
-<span class="c1"># -- exceptions appear at end of file</span>
-<span class="c1"># </span>
-<span class="c1"># (1) This class should have a methods: connect; configODK, configOpenVA,</span>
-<span class="c1">#     configDHIS, storeVA, storeBlob, logDB, &amp; logFile</span>
-<span class="c1">#</span>
-<span class="c1">#  you could use connect as a context (and thus close it every time)</span>
-<span class="c1">#  but this might be a waste of resources to open and close everytime?</span>
-<span class="c1"># </span>
-<span class="c1">#------------------------------------------------------------------------------#</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">openva.transferDB</span>
+<span class="sd">-----------------</span>
+
+<span class="sd">This module handles interactions with the Transfer database.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
@@ -55,6 +53,14 @@
 <span class="kn">from</span> <span class="nn">pickle</span> <span class="k">import</span> <span class="n">dumps</span>
 <span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">read_csv</span>
 <span class="kn">from</span> <span class="nn">pysqlcipher3</span> <span class="k">import</span> <span class="n">dbapi2</span> <span class="k">as</span> <span class="n">sqlcipher</span>
+
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">PipelineConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">ODKConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">PipelineError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">OpenVAConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DHISConfigurationError</span>
 
 <div class="viewcode-block" id="TransferDB"><a class="viewcode-back" href="../help.html#transferDB.TransferDB">[docs]</a><span class="k">class</span> <span class="nc">TransferDB</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;This class handles interactions with the Transfer database.</span>
@@ -249,7 +255,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">queryODK</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlODK</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
         <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+            <span class="k">raise</span> <span class="n">ODKConfigurationError</span> \
                 <span class="p">(</span><span class="s2">&quot;Problem in database table ODK_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
         <span class="n">odkID</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">odkURL</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
@@ -984,7 +990,6 @@
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        DHISConfigurationError</span>
-
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1003,7 +1008,7 @@
             <span class="n">queryCODCodes</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlCODCodes</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
             <span class="n">dhisCODCodes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">queryCODCodes</span><span class="p">)</span>
         <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
                 <span class="p">(</span><span class="s2">&quot;Problem in database table COD_Codes_DHIS...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
         <span class="n">dhisURL</span> <span class="o">=</span> <span class="n">queryDHIS</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -1172,44 +1177,13 @@
             <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span> <span class="s2">&quot;DHIS&quot;</span><span class="p">,</span> <span class="s2">&quot;blobs&quot;</span><span class="p">)</span>
         <span class="p">)</span></div></div>
 
-<span class="c1">#------------------------------------------------------------------------------#</span>
-<span class="c1"># Exceptions</span>
-<span class="c1">#------------------------------------------------------------------------------#</span>
-<div class="viewcode-block" id="PipelineError"><a class="viewcode-back" href="../help.html#transferDB.PipelineError">[docs]</a><span class="k">class</span> <span class="nc">PipelineError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;Base class for exceptions in the openva_pipeline module.&#39;&#39;&#39;</span>
-    <span class="k">pass</span></div>
-<div class="viewcode-block" id="DatabaseConnectionError"><a class="viewcode-back" href="../help.html#transferDB.DatabaseConnectionError">[docs]</a><span class="k">class</span> <span class="nc">DatabaseConnectionError</span><span class="p">(</span><span class="n">PipelineError</span><span class="p">):</span> <span class="k">pass</span></div>
-<span class="k">class</span> <span class="nc">PipelineConfigurationError</span><span class="p">(</span><span class="n">PipelineError</span><span class="p">):</span> <span class="k">pass</span>
-<div class="viewcode-block" id="ODKConfigurationError"><a class="viewcode-back" href="../help.html#transferDB.ODKConfigurationError">[docs]</a><span class="k">class</span> <span class="nc">ODKConfigurationError</span><span class="p">(</span><span class="n">PipelineError</span><span class="p">):</span> <span class="k">pass</span></div>
-<div class="viewcode-block" id="OpenVAConfigurationError"><a class="viewcode-back" href="../help.html#transferDB.OpenVAConfigurationError">[docs]</a><span class="k">class</span> <span class="nc">OpenVAConfigurationError</span><span class="p">(</span><span class="n">PipelineError</span><span class="p">):</span> <span class="k">pass</span></div>
-<div class="viewcode-block" id="DHISConfigurationError"><a class="viewcode-back" href="../help.html#transferDB.DHISConfigurationError">[docs]</a><span class="k">class</span> <span class="nc">DHISConfigurationError</span><span class="p">(</span><span class="n">PipelineError</span><span class="p">):</span> <span class="k">pass</span></div>
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">openva_pipeline</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../software.html">Software Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config.html">Pipeline Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help.html">Documentation for classes, functions, and methods</a></li>
-</ul>
-
-<div class="relations">
+        <div class="sphinxsidebarwrapper"><div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
@@ -1220,24 +1194,14 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -1246,8 +1210,8 @@
       &copy;2018, Jason Thomas, Samuel J. Clark, and Martin Bratschi.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 

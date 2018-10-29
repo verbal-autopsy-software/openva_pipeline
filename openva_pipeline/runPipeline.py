@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------#
-#    Copyright (C) 2018  Jason Thomas
+#    Copyright (C) 2018  Jason Thomas, Samuel J. Clark, & Martin Bratschi
 #
 #    This program is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU General Public License as published by
@@ -16,17 +16,54 @@
 #------------------------------------------------------------------------------#
 
 import sys
-from pipeline import Pipeline
-from transferDB import PipelineError
-from transferDB import DatabaseConnectionError
-from transferDB import PipelineConfigurationError
-from transferDB import ODKConfigurationError
-from transferDB import OpenVAConfigurationError
-from transferDB import DHISConfigurationError
-from odk import ODKError
-from openVA import OpenVAError
-from openVA import SmartVAError
-from dhis import DHISError
+import os
+from pysqlcipher3 import dbapi2 as sqlcipher
+
+from openva_pipeline.pipeline import Pipeline
+from openva_pipeline.exceptions import PipelineError
+from openva_pipeline.exceptions import DatabaseConnectionError
+from openva_pipeline.exceptions import PipelineConfigurationError
+from openva_pipeline.exceptions import ODKConfigurationError
+from openva_pipeline.exceptions import OpenVAConfigurationError
+from openva_pipeline.exceptions import DHISConfigurationError
+from openva_pipeline.exceptions import ODKError
+from openva_pipeline.exceptions import OpenVAError
+from openva_pipeline.exceptions import SmartVAError
+from openva_pipeline.exceptions import DHISError
+
+def createTransferDB(database_file_name,
+                     database_directory,
+                     database_key):
+    """Create the (SQLite encrypted) Transfer Database.
+
+    :param database_file_name: File name for the Transfer Database.
+    :param database_directory: Path of the Transfer Database.
+    :param datatbase_key: Encryption key for the Transfer Database
+    :param export_to_DHIS: Indicator for posting VA records to a DHIS2 server.
+    """
+
+    dbPath = os.path.join(database_directory, database_file_name)
+
+    sqlPath = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "sql/pipelineDB.sql")
+    )
+    try:
+        conn = sqlcipher.connect(dbPath)
+    except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
+        raise DatabaseConnectionError("Unable to create database..." + str(e))
+    try:
+        parSetKey = "\"" + database_key + "\""
+        conn.execute("PRAGMA key = " + parSetKey)
+        # c = conn.cursor()
+    except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
+        raise DatabaseConnectionError("Unable to set encryption key..." + str(e))
+    try:
+        with open(sqlPath, "r", newline = "\n") as sqlScript:
+            # c.executescript(sqlScript.read())
+            conn.executescript(sqlScript.read())
+    except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
+        raise DatabaseConnectionError \
+            ("Problem running script (pipelineDB.sql)..." + str(e))
 
 def runPipeline(database_file_name,
                 database_directory,

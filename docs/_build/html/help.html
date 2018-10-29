@@ -4,12 +4,20 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Documentation for classes, functions, and methods &#8212; openva_pipeline 0.0.0.9000 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.0.0.9000',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
@@ -19,22 +27,20 @@
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head><body>
+  </head>
+  <body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <div class="section" id="module-runPipeline">
 <span id="documentation-for-classes-functions-and-methods"></span><h1>Documentation for classes, functions, and methods<a class="headerlink" href="#module-runPipeline" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-pipeline"></span><span class="target" id="module-transferDB"></span><span class="target" id="module-odk"></span><span class="target" id="module-openVA"></span><span class="target" id="module-dhis"></span><div class="section" id="main-interface">
+<span class="target" id="module-pipeline"></span><span class="target" id="module-transferDB"></span><span class="target" id="module-odk"></span><span class="target" id="module-openVA"></span><span class="target" id="module-dhis"></span><span class="target" id="module-exceptions"></span><div class="section" id="main-interface">
 <h2>Main Interface<a class="headerlink" href="#main-interface" title="Permalink to this headline">¶</a></h2>
 <p>The OpenVA Pipeline is run using the following function</p>
 <dl class="function">
@@ -501,82 +507,86 @@ openVA to assign CODs.</dd>
 <div class="section" id="excetptions">
 <h2>Excetptions<a class="headerlink" href="#excetptions" title="Permalink to this headline">¶</a></h2>
 <dl class="exception">
-<dt id="transferDB.PipelineError">
-<em class="property">exception </em><code class="descclassname">transferDB.</code><code class="descname">PipelineError</code><a class="reference internal" href="_modules/transferDB.html#PipelineError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.PipelineError" title="Permalink to this definition">¶</a></dt>
+<dt id="exceptions.PipelineError">
+<em class="property">exception </em><code class="descname">PipelineError</code><a class="reference internal" href="_modules/exceptions.html#PipelineError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.PipelineError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for exceptions in the openva_pipeline module.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="transferDB.DatabaseConnectionError">
-<em class="property">exception </em><code class="descclassname">transferDB.</code><code class="descname">DatabaseConnectionError</code><a class="reference internal" href="_modules/transferDB.html#DatabaseConnectionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.DatabaseConnectionError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.DatabaseConnectionError">
+<em class="property">exception </em><code class="descname">DatabaseConnectionError</code><a class="reference internal" href="_modules/exceptions.html#DatabaseConnectionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.DatabaseConnectionError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred connecting to the Transfer database.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="transferDB.ODKConfigurationError">
-<em class="property">exception </em><code class="descclassname">transferDB.</code><code class="descname">ODKConfigurationError</code><a class="reference internal" href="_modules/transferDB.html#ODKConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.ODKConfigurationError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.PipelineConfigurationError">
+<em class="property">exception </em><code class="descname">PipelineConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#PipelineConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.PipelineConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred accessing the Pipeline_Conf table in the DB.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="transferDB.OpenVAConfigurationError">
-<em class="property">exception </em><code class="descclassname">transferDB.</code><code class="descname">OpenVAConfigurationError</code><a class="reference internal" href="_modules/transferDB.html#OpenVAConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.OpenVAConfigurationError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.ODKConfigurationError">
+<em class="property">exception </em><code class="descname">ODKConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#ODKConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.ODKConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred accessing the ODK_Conf table in the DB.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="transferDB.DHISConfigurationError">
-<em class="property">exception </em><code class="descclassname">transferDB.</code><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/transferDB.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.DHISConfigurationError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.OpenVAConfigurationError">
+<em class="property">exception </em><code class="descname">OpenVAConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#OpenVAConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.OpenVAConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred accessing the OpenVA_Conf table in the DB.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="odk.ODKError">
-<em class="property">exception </em><code class="descclassname">odk.</code><code class="descname">ODKError</code><a class="reference internal" href="_modules/odk.html#ODKError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odk.ODKError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.DHISConfigurationError">
+<em class="property">exception </em><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.DHISConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred accessing the DHIS_Conf table in the DB.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="openVA.OpenVAError">
-<em class="property">exception </em><code class="descclassname">openVA.</code><code class="descname">OpenVAError</code><a class="reference internal" href="_modules/openVA.html#OpenVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVAError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.ODKError">
+<em class="property">exception </em><code class="descname">ODKError</code><a class="reference internal" href="_modules/exceptions.html#ODKError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.ODKError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred with the odk module.</p>
+</dd></dl>
 
 <dl class="exception">
-<dt id="openVA.SmartVAError">
-<em class="property">exception </em><code class="descclassname">openVA.</code><code class="descname">SmartVAError</code><a class="reference internal" href="_modules/openVA.html#SmartVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.SmartVAError" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="exceptions.OpenVAError">
+<em class="property">exception </em><code class="descname">OpenVAError</code><a class="reference internal" href="_modules/exceptions.html#OpenVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.OpenVAError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred with the openVA module.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="exceptions.SmartVAError">
+<em class="property">exception </em><code class="descname">SmartVAError</code><a class="reference internal" href="_modules/exceptions.html#SmartVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.SmartVAError" title="Permalink to this definition">¶</a></dt>
+<dd><p>An error occurred with the openVA module.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt>
+<em class="property">exception </em><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a></dt>
+<dd><p>An error occurred accessing the DHIS_Conf table in the DB.</p>
+</dd></dl>
 
 </div>
 </div>
 
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="index.html">openva_pipeline</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="software.html">Software Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="install.html">Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="config.html">Pipeline Configuration</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation for classes, functions, and methods</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#main-interface">Main Interface</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#api-for-transfer-database">API for Transfer Database</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#api-for-odk-briefcase">API for ODK Briefcase</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#api-for-openva">API for OpenVA</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#api-for-dhis2">API for DHIS2</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#excetptions">Excetptions</a></li>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Documentation for classes, functions, and methods</a><ul>
+<li><a class="reference internal" href="#main-interface">Main Interface</a></li>
+<li><a class="reference internal" href="#api-for-transfer-database">API for Transfer Database</a></li>
+<li><a class="reference internal" href="#api-for-odk-briefcase">API for ODK Briefcase</a></li>
+<li><a class="reference internal" href="#api-for-openva">API for OpenVA</a></li>
+<li><a class="reference internal" href="#api-for-dhis2">API for DHIS2</a></li>
+<li><a class="reference internal" href="#excetptions">Excetptions</a></li>
 </ul>
 </li>
 </ul>
-
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
@@ -585,26 +595,23 @@ openVA to assign CODs.</dd>
   </ul></li>
 </ul>
 </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/help.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -613,8 +620,8 @@ openVA to assign CODs.</dd>
       &copy;2018, Jason Thomas, Samuel J. Clark, and Martin Bratschi.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
       |
       <a href="_sources/help.rst.txt"

@@ -1,17 +1,9 @@
-#------------------------------------------------------------------------------#
-# transferDB.py
-#
-# Notes
-#
-# -- exceptions appear at end of file
-# 
-# (1) This class should have a methods: connect; configODK, configOpenVA,
-#     configDHIS, storeVA, storeBlob, logDB, & logFile
-#
-#  you could use connect as a context (and thus close it every time)
-#  but this might be a waste of resources to open and close everytime?
-# 
-#------------------------------------------------------------------------------#
+"""
+openva.transferDB
+-----------------
+
+This module handles interactions with the Transfer database.
+"""
 
 import os
 import shutil
@@ -21,6 +13,14 @@ import sqlite3
 from pickle import dumps
 from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
+
+from openva_pipeline.exceptions import DatabaseConnectionError
+from openva_pipeline.exceptions import PipelineConfigurationError
+from openva_pipeline.exceptions import ODKConfigurationError
+from openva_pipeline.exceptions import DatabaseConnectionError
+from openva_pipeline.exceptions import PipelineError
+from openva_pipeline.exceptions import OpenVAConfigurationError
+from openva_pipeline.exceptions import DHISConfigurationError
 
 class TransferDB:
     """This class handles interactions with the Transfer database.
@@ -215,7 +215,7 @@ class TransferDB:
         try:
             queryODK = c.execute(sqlODK).fetchall()
         except (sqlcipher.OperationalError) as e:
-            raise PipelineConfigurationError \
+            raise ODKConfigurationError \
                 ("Problem in database table ODK_Conf..." + str(e))
         odkID = queryODK[0][0]
         odkURL = queryODK[0][1]
@@ -950,7 +950,6 @@ class TransferDB:
         Raises
         ------
         DHISConfigurationError
-
         """
         c = conn.cursor()
         try:
@@ -969,7 +968,7 @@ class TransferDB:
             queryCODCodes = c.execute(sqlCODCodes).fetchall()
             dhisCODCodes = dict(queryCODCodes)
         except (sqlcipher.OperationalError) as e:
-            raise PipelineConfigurationError \
+            raise DHISConfigurationError \
                 ("Problem in database table COD_Codes_DHIS..." + str(e))
 
         dhisURL = queryDHIS[0][0]
@@ -1138,14 +1137,3 @@ class TransferDB:
             os.path.join(self.workingDirectory, "DHIS", "blobs")
         )
 
-#------------------------------------------------------------------------------#
-# Exceptions
-#------------------------------------------------------------------------------#
-class PipelineError(Exception):
-    '''Base class for exceptions in the openva_pipeline module.'''
-    pass
-class DatabaseConnectionError(PipelineError): pass
-class PipelineConfigurationError(PipelineError): pass
-class ODKConfigurationError(PipelineError): pass
-class OpenVAConfigurationError(PipelineError): pass
-class DHISConfigurationError(PipelineError): pass

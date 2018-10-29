@@ -1,18 +1,17 @@
-#------------------------------------------------------------------------------#
-# odk.py
-#
-# Notes
-#
-# (1) Need to start logging information
-# (2) Class should have attribute indicating # of records retrieved
-# (3) add verbose mode that prints a ton of messages to the console
-#
-#-----------------------------------------------------------------------------#
+"""
+openva_pipeline.odk
+-------------------
+
+This module uses ODK Briefcase to pull VA records from an ODK Aggregate server.
+"""
+
 import subprocess
 import os
 import shutil
-from transferDB import PipelineError
 from pysqlcipher3 import dbapi2 as sqlcipher
+
+from openva_pipeline.exceptions import PipelineError
+from openva_pipeline.exceptions import ODKError
 
 class ODK:
     """Manages Pipeline's interaction with ODK Aggregate.
@@ -125,8 +124,3 @@ class ODK:
         if completed.returncode == 1:
             raise ODKError(completed.stderr)
         return(completed)
-
-#------------------------------------------------------------------------------#
-# Exceptions
-#------------------------------------------------------------------------------#
-class ODKError(PipelineError): pass

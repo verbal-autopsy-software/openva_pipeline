@@ -1,6 +1,10 @@
-#------------------------------------------------------------------------------#
-# dhis.py
-#-----------------------------------------------------------------------------#
+"""
+openva_pipeline.dhis
+--------------------
+
+This module posts VA records with assigned causes of death to a DHIS server.
+"""
+
 from pysqlcipher3 import dbapi2 as sqlcipher
 import requests
 from pandas import read_csv, groupby
@@ -12,7 +16,9 @@ import datetime
 import json
 import sqlite3
 import re
-from transferDB import PipelineError
+
+from openva_pipeline.exceptions import PipelineError
+from openva_pipeline.exceptions import DHISError
 
 class API(object):
     """This class provides methods for interacting with the DHIS2 API.
@@ -398,7 +404,3 @@ class DHIS():
             raise DHISError\
                 ("Problem with DHIS.postVA...couldn't verify posted records.")
 
-#------------------------------------------------------------------------------#
-# Exceptions
-#------------------------------------------------------------------------------#
-class DHISError(PipelineError): pass

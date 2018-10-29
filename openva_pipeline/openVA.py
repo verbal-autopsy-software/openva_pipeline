@@ -1,21 +1,20 @@
-#------------------------------------------------------------------------------#
-# openVA.py
-#
-# Notes
-#
-# (1) maybe you should remove ODKBCExportFile once it has been analyzed by
-#     openVA(); or perhaps when records are stored in DHIS2.  Alternatively,
-#     write a new class/method that checks if the records from the last
-#     briefcase export have been given a COD and checked in to DB. 
-#
-#-----------------------------------------------------------------------------#
+"""
+openva_pipeline.openVA
+----------------------
+
+This module runs openVA and smartVA to assign causes of death to VA records.
+"""
+
 import subprocess
 import shutil
 import os
-from transferDB import PipelineError
-from pysqlcipher3 import dbapi2 as sqlcipher
 import pandas as pd
 import numpy as np
+from pysqlcipher3 import dbapi2 as sqlcipher
+
+from openva_pipeline.exceptions import PipelineError
+from openva_pipeline.exceptions import OpenVAError
+from openva_pipeline.exceptions import SmartVAError
 
 class OpenVA:
     """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.
@@ -399,5 +398,4 @@ class OpenVA:
 #------------------------------------------------------------------------------#
 # Exceptions
 #------------------------------------------------------------------------------#
-class OpenVAError(PipelineError): pass
-class SmartVAError(PipelineError): pass
+

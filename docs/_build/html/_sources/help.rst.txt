@@ -7,6 +7,7 @@ Documentation for classes, functions, and methods
 .. module:: odk
 .. module:: openVA
 .. module:: dhis
+.. module:: exceptions
 
 Main Interface
 --------------
@@ -39,19 +40,19 @@ API for DHIS2
    :inherited-members:
 .. autoclass:: dhis.VerbalAutopsyEvent
    :inherited-members:
-.. autofunction:: create_db
-.. autofunction:: getCODCode
-.. autofunction:: findKeyValue
+.. autofunction:: dhis.create_db
+.. autofunction:: dhis.getCODCode
+.. autofunction:: dhis.findKeyValue
 
 Excetptions
 -----------
-.. autoexception:: transferDB.PipelineError
-.. autoexception:: transferDB.DatabaseConnectionError
-.. autoexception:: transferDB.PipelineConfigureationError
-.. autoexception:: transferDB.ODKConfigurationError
-.. autoexception:: transferDB.OpenVAConfigurationError
-.. autoexception:: transferDB.DHISConfigurationError
-.. autoexception:: odk.ODKError
-.. autoexception:: openVA.OpenVAError
-.. autoexception:: openVA.SmartVAError
-.. autoexception:: dhis.DHISConfigurationError
+.. autoexception:: exceptions.PipelineError
+.. autoexception:: exceptions.DatabaseConnectionError
+.. autoexception:: exceptions.PipelineConfigurationError
+.. autoexception:: exceptions.ODKConfigurationError
+.. autoexception:: exceptions.OpenVAConfigurationError
+.. autoexception:: exceptions.DHISConfigurationError
+.. autoexception:: exceptions.ODKError
+.. autoexception:: exceptions.OpenVAError
+.. autoexception:: exceptions.SmartVAError
+.. autoexception:: exceptions.DHISConfigurationError

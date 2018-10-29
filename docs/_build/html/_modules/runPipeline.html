@@ -4,12 +4,20 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>runPipeline &#8212; openva_pipeline 0.0.0.9000 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.0.0.9000',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
@@ -18,36 +26,81 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
-  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
-  </head><body>
+  </head>
+  <body>
   
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
-          
-
           <div class="body" role="main">
             
   <h1>Source code for runPipeline</h1><div class="highlight"><pre>
 <span></span><span class="c1">#------------------------------------------------------------------------------#</span>
-<span class="c1"># runPipeline.py</span>
+<span class="c1">#    Copyright (C) 2018  Jason Thomas, Samuel J. Clark, &amp; Martin Bratschi</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is free software: you can redistribute it and/or modify</span>
+<span class="c1">#    it under the terms of the GNU General Public License as published by</span>
+<span class="c1">#    the Free Software Foundation, either version 3 of the License, or</span>
+<span class="c1">#    (at your option) any later version.</span>
+<span class="c1">#</span>
+<span class="c1">#    This program is distributed in the hope that it will be useful,</span>
+<span class="c1">#    but WITHOUT ANY WARRANTY; without even the implied warranty of</span>
+<span class="c1">#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the</span>
+<span class="c1">#    GNU General Public License for more details.</span>
+<span class="c1">#</span>
+<span class="c1">#    You should have received a copy of the GNU General Public License</span>
+<span class="c1">#    along with this program.  If not, see &lt;http://www.gnu.org/licenses/&gt;.</span>
 <span class="c1">#------------------------------------------------------------------------------#</span>
 
 <span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">pysqlcipher3</span> <span class="k">import</span> <span class="n">dbapi2</span> <span class="k">as</span> <span class="n">sqlcipher</span>
 <span class="kn">from</span> <span class="nn">pipeline</span> <span class="k">import</span> <span class="n">Pipeline</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">PipelineError</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">PipelineConfigurationError</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">ODKConfigurationError</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">OpenVAConfigurationError</span>
-<span class="kn">from</span> <span class="nn">transferDB</span> <span class="k">import</span> <span class="n">DHISConfigurationError</span>
-<span class="kn">from</span> <span class="nn">odk</span> <span class="k">import</span> <span class="n">ODKError</span>
-<span class="kn">from</span> <span class="nn">openVA</span> <span class="k">import</span> <span class="n">OpenVAError</span>
-<span class="kn">from</span> <span class="nn">openVA</span> <span class="k">import</span> <span class="n">SmartVAError</span>
-<span class="kn">from</span> <span class="nn">dhis</span> <span class="k">import</span> <span class="n">DHISError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">PipelineError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">PipelineConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">ODKConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">OpenVAConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DHISConfigurationError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">ODKError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">OpenVAError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">SmartVAError</span>
+<span class="kn">from</span> <span class="nn">exceptions</span> <span class="k">import</span> <span class="n">DHISError</span>
+
+<span class="k">def</span> <span class="nf">createTransferDB</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">,</span>
+                     <span class="n">database_directory</span><span class="p">,</span>
+                     <span class="n">database_key</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create the (SQLite encrypted) Transfer Database.</span>
+
+<span class="sd">    :param database_file_name: File name for the Transfer Database.</span>
+<span class="sd">    :param database_directory: Path of the Transfer Database.</span>
+<span class="sd">    :param datatbase_key: Encryption key for the Transfer Database</span>
+<span class="sd">    :param export_to_DHIS: Indicator for posting VA records to a DHIS2 server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dbPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">database_directory</span><span class="p">,</span> <span class="n">database_file_name</span><span class="p">)</span>
+
+    <span class="n">sqlPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;sql/pipelineDB.sql&quot;</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlcipher</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">dbPath</span><span class="p">)</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">,</span> <span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DatabaseConnectionError</span><span class="p">(</span><span class="s2">&quot;Unable to create database...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">parSetKey</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="n">database_key</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;PRAGMA key = &quot;</span> <span class="o">+</span> <span class="n">parSetKey</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">,</span> <span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DatabaseConnectionError</span><span class="p">(</span><span class="s2">&quot;Unable to set encryption key...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">sqlPath</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">newline</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">sqlScript</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">executescript</span><span class="p">(</span><span class="n">sqlScript</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">,</span> <span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">DatabaseConnectionError</span> \
+            <span class="p">(</span><span class="s2">&quot;Problem running script (pipelineDB.sql)...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
 
 <div class="viewcode-block" id="runPipeline"><a class="viewcode-back" href="../help.html#runPipeline.runPipeline">[docs]</a><span class="k">def</span> <span class="nf">runPipeline</span><span class="p">(</span><span class="n">database_file_name</span><span class="p">,</span>
                 <span class="n">database_directory</span><span class="p">,</span>
@@ -119,38 +172,17 @@
         <span class="n">pl</span><span class="o">.</span><span class="n">logEvent</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;Error&quot;</span><span class="p">)</span>
         <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
 
-
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-    <span class="n">runPipeline</span><span class="p">(</span><span class="n">database_file_name</span><span class="o">=</span> <span class="s2">&quot;run_Pipeline.db&quot;</span><span class="p">,</span> 
-                <span class="n">database_directory</span> <span class="o">=</span> <span class="s2">&quot;tests&quot;</span><span class="p">,</span>
-                <span class="n">database_key</span> <span class="o">=</span> <span class="s2">&quot;enilepiP&quot;</span><span class="p">)</span>
+<span class="c1"># if __name__ == &quot;__main__&quot;:</span>
+<span class="c1">#     runPipeline(database_file_name= &quot;run_Pipeline.db&quot;, </span>
+<span class="c1">#                 database_directory = &quot;tests&quot;,</span>
+<span class="c1">#                 database_key = &quot;enilepiP&quot;)</span>
 </pre></div>
 
           </div>
-          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-<h1 class="logo"><a href="../index.html">openva_pipeline</a></h1>
-
-
-
-
-
-
-
-
-<h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../software.html">Software Requirements</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation Guide</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../config.html">Pipeline Configuration</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../help.html">Documentation for classes, functions, and methods</a></li>
-</ul>
-
-<div class="relations">
+        <div class="sphinxsidebarwrapper"><div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
@@ -161,24 +193,14 @@
 </div>
 <div id="searchbox" style="display: none" role="search">
   <h3>Quick search</h3>
-    <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
     </form>
-    </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
-
-
-
-
-
-
-
-
         </div>
       </div>
       <div class="clearer"></div>
@@ -187,8 +209,8 @@
       &copy;2018, Jason Thomas, Samuel J. Clark, and Martin Bratschi.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.9</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
       
     </div>
 
