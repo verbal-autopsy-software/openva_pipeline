@@ -41,6 +41,7 @@ class Check_1_Connection(unittest.TestCase):
                         dbDirectory = dbDirectory,
                         dbKey = dbKey,
                         plRunDate = pipelineRunDate)
+    print(os.path.isfile("Pipeline.db"))
     conn = xferDB.connectDB()
     c = conn.cursor()
     sqlTestConnection = "SELECT name FROM SQLITE_MASTER where type = 'table';"

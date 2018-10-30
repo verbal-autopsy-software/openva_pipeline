@@ -1,8 +1,10 @@
 language: python
 python:
   - "3.5"
+env:
+  - DB=sqlite3
 before_install:
-  - sudo apt-get install -y python-dev python3-dev openjdk-8-jdk libsqlite3-dev sqlcipher libsqlcipher-dev
+  - sudo apt-get install -y python-dev python3-dev libsqlite3-dev sqlcipher libsqlcipher-dev
 install:
   - pip install -r requirements.txt
 script: python tests/test_transferDB.py
