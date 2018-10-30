@@ -2,7 +2,7 @@ tests/.Rhistory
 tests/fontsconfig/
 tests/__pycache__/
 tests/*.pyc
-tests/ODKFiles/ODK Briefcase Storage/
+tests/ODKFiles/ODK Briefcase Storage/*
 tests/ODKFiles/odkBCExportNew.csv
 tests/ODKFiles/odkBCExportPrev.csv
 tests/OpenVAFiles/openVA_input.csv
