@@ -7,11 +7,11 @@ import csv
 import datetime
 from pandas import read_csv
 
-from openva_pipeline.transferDB import TransferDB
-from openva_pipeline.transferDB import DatabaseConnectionError
-from openva_pipeline.odk import ODK
-from openva_pipeline.openVA import OpenVA
-from openva_pipeline.dhis import DHIS
+from .transferDB import TransferDB
+from .transferDB import DatabaseConnectionError
+from .odk import ODK
+from .openVA import OpenVA
+from .dhis import DHIS
 
 class Pipeline:
     """Primary API for the openVA pipeline.
@@ -130,11 +130,18 @@ class Pipeline:
         pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
         odkBC = pipelineODK.briefcase()
+        xferDB = TransferDB(dbFileName = self.dbFileName,
+                            dbDirectory = self.dbDirectory,
+                            dbKey = self.dbKey,
+                            plRunDate = self.pipelineRunDate)
+        conn = xferDB.connectDB()
+        xferDB.configPipeline(conn)
+        xferDB.checkDuplicates(conn)
+        conn.close()
         return(odkBC)
 
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
         """Create & run script or run smartva."""
-
         pipelineOpenVA = OpenVA(vaArgs = argsOpenVA,
                                 pipelineArgs = argsPipeline,
                                 odkID = odkID,

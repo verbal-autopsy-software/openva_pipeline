@@ -9,13 +9,11 @@ import os
 import unittest
 import collections
 import pandas as pd
-from context import dhis
-from dhis import DHIS
-from dhis import API
-from dhis import VerbalAutopsyEvent
-from context import transferDB
-from transferDB import TransferDB
 from pysqlcipher3 import dbapi2 as sqlcipher
+
+import context
+from openva_pipeline import dhis
+from openva_pipeline.transferDB import TransferDB
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -23,6 +21,10 @@ class Check_DHIS(unittest.TestCase):
     """Check the everything works as it should."""
 
     shutil.rmtree("DHIS2/blobs/", ignore_errors = True)
+    shutil.copy("OpenVAFiles/sampleEAV.csv",
+                "OpenVAFiles/entityAttributeValue.csv")
+    shutil.copy("OpenVAFiles/sample_recordStorage.csv",
+                "OpenVAFiles/recordStorage.csv")
     # Define valid parameters for SwissTPH DHIS2 Server.
     dirOpenVA = "OpenVAFiles"
     dhisURL = "https://va30se.swisstph-mis.ch"

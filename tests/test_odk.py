@@ -9,12 +9,13 @@
 
 import datetime
 import subprocess
-from context import odk
-from odk import ODK
 import shutil
 import os
 import unittest
 import collections
+
+import context
+from openva_pipeline import odk
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 

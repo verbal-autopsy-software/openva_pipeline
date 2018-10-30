@@ -12,9 +12,9 @@ import pandas as pd
 import numpy as np
 from pysqlcipher3 import dbapi2 as sqlcipher
 
-from openva_pipeline.exceptions import PipelineError
-from openva_pipeline.exceptions import OpenVAError
-from openva_pipeline.exceptions import SmartVAError
+from .exceptions import PipelineError
+from .exceptions import OpenVAError
+from .exceptions import SmartVAError
 
 class OpenVA:
     """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.

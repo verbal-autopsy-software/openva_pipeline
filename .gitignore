@@ -2,10 +2,13 @@ tests/.Rhistory
 tests/fontsconfig/
 tests/__pycache__/
 tests/*.pyc
-tests/ODKFiles/ODK Briefcase Storage/**
+tests/ODKFiles/ODK Briefcase Storage/
 tests/ODKFiles/odkBCExportNew.csv
 tests/ODKFiles/odkBCExportPrev.csv
 tests/OpenVAFiles/openVA_input.csv
+tests/OpenVAFiles/2*
+tests/OpenVAFiles/entityAttributeValue.csv
+tests/OpenVAFiles/recordStorage.csv
 tests/DHIS/
 
 openva_pipeline/.Rhistory

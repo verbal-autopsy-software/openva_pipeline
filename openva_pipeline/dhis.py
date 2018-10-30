@@ -17,8 +17,8 @@ import json
 import sqlite3
 import re
 
-from openva_pipeline.exceptions import PipelineError
-from openva_pipeline.exceptions import DHISError
+from .exceptions import PipelineError
+from .exceptions import DHISError
 
 class API(object):
     """This class provides methods for interacting with the DHIS2 API.

@@ -14,13 +14,13 @@ from pickle import dumps
 from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
-from openva_pipeline.exceptions import DatabaseConnectionError
-from openva_pipeline.exceptions import PipelineConfigurationError
-from openva_pipeline.exceptions import ODKConfigurationError
-from openva_pipeline.exceptions import DatabaseConnectionError
-from openva_pipeline.exceptions import PipelineError
-from openva_pipeline.exceptions import OpenVAConfigurationError
-from openva_pipeline.exceptions import DHISConfigurationError
+from .exceptions import DatabaseConnectionError
+from .exceptions import PipelineConfigurationError
+from .exceptions import ODKConfigurationError
+from .exceptions import DatabaseConnectionError
+from .exceptions import PipelineError
+from .exceptions import OpenVAConfigurationError
+from .exceptions import DHISConfigurationError
 
 class TransferDB:
     """This class handles interactions with the Transfer database.

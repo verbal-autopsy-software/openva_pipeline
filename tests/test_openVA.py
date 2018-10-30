@@ -6,13 +6,14 @@ import unittest
 import os
 import shutil
 import collections
-from context import pipeline
-from context import transferDB
-from transferDB import TransferDB
-from context import openVA
-from openVA import OpenVA
 from pysqlcipher3 import dbapi2 as sqlcipher
 import datetime
+
+import context
+from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.openVA import OpenVA
+from openva_pipeline.exceptions import OpenVAError
+from openva_pipeline.exceptions import SmartVAError
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -376,7 +377,7 @@ class Check_3_getCOD(unittest.TestCase):
         zeroRecords = rOpenVA.copyVA()
         rOpenVA.rScript()
 
-        self.assertRaises(openVA.OpenVAError, rOpenVA.getCOD)
+        self.assertRaises(OpenVAError, rOpenVA.getCOD)
         shutil.rmtree(
             os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
@@ -467,7 +468,7 @@ class Check_3_getCOD(unittest.TestCase):
         zeroRecords = rOpenVA.copyVA()
         rOpenVA.rScript()
 
-        self.assertRaises(openVA.OpenVAError, rOpenVA.getCOD)
+        self.assertRaises(OpenVAError, rOpenVA.getCOD)
         shutil.rmtree(
             os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
@@ -570,7 +571,7 @@ class Check_3_getCOD(unittest.TestCase):
 
         zeroRecords = cliSmartVA.copyVA()
 
-        self.assertRaises(openVA.SmartVAError, cliSmartVA.getCOD)
+        self.assertRaises(SmartVAError, cliSmartVA.getCOD)
         shutil.rmtree(
             os.path.join(dirOpenVA, staticRunDate),
             ignore_errors = True
@@ -698,7 +699,7 @@ class Check_3_getCOD(unittest.TestCase):
     #                 dirODK + "/odkBCExportNew.csv")
 
     #     zeroRecords = rOpenVA.copyVA()
-    #     self.assertRaises(openVA.OpenVAError, rOpenVA.rmODKExport)
+    #     self.assertRaises(OpenVAError, rOpenVA.rmODKExport)
 
 
 if __name__ == "__main__":

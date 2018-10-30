@@ -11,13 +11,12 @@ import collections
 import pandas as pd
 from pysqlcipher3 import dbapi2 as sqlcipher
 
-from context import dhis
-from dhis import DHIS
-from dhis import API
-from dhis import VerbalAutopsyEvent
-from context import transferDB
-from transferDB import TransferDB
-from pipeline import Pipeline
+import context
+from openva_pipeline.dhis import DHIS
+from openva_pipeline.dhis import API
+from openva_pipeline.dhis import VerbalAutopsyEvent
+from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.pipeline import Pipeline
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -288,8 +287,6 @@ class Check_Pipeline_runODK(unittest.TestCase):
         settingsDHIS = settings["dhis"]
         odkBC = pl.runODK(settingsODK,
                           settingsPipeline)
-        # with open("ODKFiles/odkBCExportNew.csv") as f:
-        #     nVA = sum(1 for line in f) - 1
         vaRecords = pd.read_csv("ODKFiles/odkBCExportNew.csv")
         nVA = vaRecords.shape[0]
         rOut = pl.runOpenVA(settingsOpenVA,

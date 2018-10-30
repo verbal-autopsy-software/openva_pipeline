@@ -10,8 +10,8 @@ import os
 import shutil
 from pysqlcipher3 import dbapi2 as sqlcipher
 
-from openva_pipeline.exceptions import PipelineError
-from openva_pipeline.exceptions import ODKError
+from .exceptions import PipelineError
+from .exceptions import ODKError
 
 class ODK:
     """Manages Pipeline's interaction with ODK Aggregate.
