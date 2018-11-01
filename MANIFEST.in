@@ -1,5 +1,6 @@
 include README.md
 include LICENSE
+include ODK_Briefcase_LICENSE
 include Pipfile
 include Pipfile.lock
 include openva_pipeline/libs/*
