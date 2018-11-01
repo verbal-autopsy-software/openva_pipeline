@@ -2,7 +2,7 @@
 
 # Install necessary software
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
-echo "deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/" >> /etc/apt/sources.list
+sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' >> /etc/apt/sources.list"
 
 sudo apt update
 sudo apt-get install -y python3-pip python-dev python3-dev openjdk-8-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git
@@ -20,16 +20,11 @@ pip3 install requests pysqlcipher3 pandas --user
 
 # Configure Java with R, write an R script to install packages, then run and remove script
 sudo R CMD javareconf JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/bin/jar
-mkdir -p R/x86_64-pc-linux-gnu-library/3.2/
-echo "install.packages(c('openVA', 'CrossVA'), lib='R/x86_64-pc-linux-gnu-library/3.2/', repos='https://cloud.r-project.org/')
+echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/')
 q('no')" > packages.r
 
 Rscript packages.r
 rm packages.r
-
-# Download ODK Briefcase v1.10.1
-wget -nd https://github.com/opendatakit/briefcase/releases/download/v1.10.1/ODK-Briefcase-v1.10.1.jar
-chmod u+x ./ODK-Briefcase-v1.10.1.jar
 
 # optional (but recommended) step for installing DB Browser for SQLite (useful for configuring pipeline)
 sudo apt install -y build-essential cmake libsqlite3-dev qt5-default qttools5-dev-tools
