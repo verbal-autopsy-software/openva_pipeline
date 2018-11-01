@@ -20,7 +20,8 @@ pip3 install requests pysqlcipher3 pandas --user
 
 # Configure Java with R, write an R script to install packages, then run and remove script
 sudo R CMD javareconf JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/bin/jar
-echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/')
+ mkdir -p R/x86_64-pc-linux-gnu-library/3.5/ 
+echo "install.packages(c('openVA', 'CrossVA'), lib = '~/R/x86_64-pc-linux-gnu-library/3.5/', repos='https://cloud.r-project.org/')
 q('no')" > packages.r
 
 Rscript packages.r
