@@ -5,13 +5,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Documentation for classes, functions, and methods &#8212; openva_pipeline 0.0.0.9000 documentation</title>
+    <title>Documentation for classes, functions, and methods &#8212; openva_pipeline 0.0.0.9007 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    './',
-        VERSION:     '0.0.0.9000',
+        VERSION:     '0.0.0.9007',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true,
@@ -38,14 +38,14 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="module-runPipeline">
-<span id="documentation-for-classes-functions-and-methods"></span><h1>Documentation for classes, functions, and methods<a class="headerlink" href="#module-runPipeline" title="Permalink to this headline">¶</a></h1>
-<span class="target" id="module-pipeline"></span><span class="target" id="module-transferDB"></span><span class="target" id="module-odk"></span><span class="target" id="module-openVA"></span><span class="target" id="module-dhis"></span><span class="target" id="module-exceptions"></span><div class="section" id="main-interface">
+  <div class="section" id="module-openva_pipeline">
+<span id="documentation-for-classes-functions-and-methods"></span><h1>Documentation for classes, functions, and methods<a class="headerlink" href="#module-openva_pipeline" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="main-interface">
 <h2>Main Interface<a class="headerlink" href="#main-interface" title="Permalink to this headline">¶</a></h2>
 <p>The OpenVA Pipeline is run using the following function</p>
 <dl class="function">
-<dt id="runPipeline.runPipeline">
-<code class="descclassname">runPipeline.</code><code class="descname">runPipeline</code><span class="sig-paren">(</span><em>database_file_name</em>, <em>database_directory</em>, <em>database_key</em>, <em>export_to_DHIS=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/runPipeline.html#runPipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#runPipeline.runPipeline" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.runPipeline.runPipeline">
+<code class="descclassname">openva_pipeline.runPipeline.</code><code class="descname">runPipeline</code><span class="sig-paren">(</span><em>database_file_name</em>, <em>database_directory</em>, <em>database_key</em>, <em>export_to_DHIS=True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/runPipeline.html#runPipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.runPipeline.runPipeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs through all steps of the OpenVA Pipeline.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -67,13 +67,14 @@
 <div class="section" id="api-for-transfer-database">
 <h2>API for Transfer Database<a class="headerlink" href="#api-for-transfer-database" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="transferDB.TransferDB">
-<em class="property">class </em><code class="descclassname">transferDB.</code><code class="descname">TransferDB</code><span class="sig-paren">(</span><em>dbFileName</em>, <em>dbDirectory</em>, <em>dbKey</em>, <em>plRunDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB">
+<em class="property">class </em><code class="descclassname">openva_pipeline.transferDB.</code><code class="descname">TransferDB</code><span class="sig-paren">(</span><em>dbFileName</em>, <em>dbDirectory</em>, <em>dbKey</em>, <em>plRunDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class handles interactions with the Transfer database.</p>
 <p>The Pipeline accesses configuration information from the Transfer database,
 and also stores log messages and verbal autopsy records in the DB.  The
 Transfer database is encrypted using sqlcipher3 (and the pysqlcipher3
 module is imported to establish DB connection).</p>
+<p>Parameters</p>
 <dl class="docutils">
 <dt>dbFileName <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>File name of the Tranfser database.</dd>
@@ -84,6 +85,7 @@ module is imported to establish DB connection).</p>
 <dt>plRunDate <span class="classifier-delimiter">:</span> <span class="classifier">date</span></dt>
 <dd>Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss).</dd>
 </dl>
+<p>Methods</p>
 <dl class="docutils">
 <dt>connectDB(self)</dt>
 <dd>Returns SQLite Connection object to Transfer database.</dd>
@@ -114,38 +116,40 @@ settings for connecting to DHIS2 server.</dd>
 <dd>Remove DHIS2 blob files.</dd>
 </dl>
 <dl class="method">
-<dt id="transferDB.TransferDB.checkDuplicates">
-<code class="descname">checkDuplicates</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.checkDuplicates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.checkDuplicates" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.checkDuplicates">
+<code class="descname">checkDuplicates</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.checkDuplicates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.checkDuplicates" title="Permalink to this definition">¶</a></dt>
 <dd><p>Search for duplicate VA records.</p>
 <p>This method searches for duplicate VA records in ODK Briefcase export
 file and the Tranfser DB.  If duplicates are found, a warning message
 is logged to the EventLog table in the Transfer database.</p>
+<p>Parameters</p>
 <p>conn : sqlite3 Connection object</p>
+<p>Raises</p>
 <p>DatabaseConnectionError
 PipelineError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.cleanDHIS">
-<code class="descname">cleanDHIS</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.cleanDHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.cleanDHIS" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.cleanDHIS">
+<code class="descname">cleanDHIS</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.cleanDHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.cleanDHIS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove DHIS2 blob files.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.cleanODK">
-<code class="descname">cleanODK</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.cleanODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.cleanODK" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.cleanODK">
+<code class="descname">cleanODK</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.cleanODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.cleanODK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove ODK Briefcase Export files.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.cleanOpenVA">
-<code class="descname">cleanOpenVA</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.cleanOpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.cleanOpenVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.cleanOpenVA">
+<code class="descname">cleanOpenVA</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.cleanOpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.cleanOpenVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove openVA files with COD results.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.configDHIS">
-<code class="descname">configDHIS</code><span class="sig-paren">(</span><em>conn</em>, <em>algorithm</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.configDHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.configDHIS" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.configDHIS">
+<code class="descname">configDHIS</code><span class="sig-paren">(</span><em>conn</em>, <em>algorithm</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.configDHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.configDHIS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query DHIS configuration settings from database.</p>
 <p>This method is intended to be used in conjunction with (1)
 TransferDB.connectDB(), which establishes a connection to a database
@@ -154,21 +158,22 @@ establishes a connection to a DHIS server.  Thus,
 TransferDB.configDHIS() gets its input from TransferDB.connectDB() and
 the output from TransferDB.config() is a valid argument for
 DHIS.config().</p>
-<dl class="docutils">
-<dt>conn <span class="classifier-delimiter">:</span> <span class="classifier">sqlite3 Connection object (e.g., the object returned from</span></dt>
-<dd>TransferDB.connectDB())</dd>
-</dl>
-<p>algorithm : VA algorithm used by R package openVA</p>
+<p>Parameters</p>
+<p>conn : sqlite3 Connection object (e.g., the object returned from
+TransferDB.connectDB())
+algorithm : VA algorithm used by R package openVA</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>tuple</dt>
 <dd>Contains all parameters for DHIS.connect().</dd>
 </dl>
+<p>Raises</p>
 <p>DHISConfigurationError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.configODK">
-<code class="descname">configODK</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.configODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.configODK" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.configODK">
+<code class="descname">configODK</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.configODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.configODK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query ODK configuration settings from database.</p>
 <p>This method is intended to be used in conjunction with (1)
 TransferDB.connectDB(), which establishes a connection to a database
@@ -176,19 +181,22 @@ with the Pipeline configuration settings; and (2) ODK.briefcase(), which
 establishes a connection to an ODK Aggregate server.  Thus,
 TransferDB.configODK() gets its input from TransferDB.connectDB() and
 the output from TransferDB.configODK() is a valid argument for ODK.config().</p>
+<p>Parameters</p>
 <p>conn : sqlite3 Connection object</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>tuple</dt>
 <dd>Contains all parameters for ODK.briefcase().</dd>
 </dl>
+<p>Raises</p>
 <p>ODKConfigurationError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.configOpenVA">
-<code class="descname">configOpenVA</code><span class="sig-paren">(</span><em>conn</em>, <em>algorithm</em>, <em>pipelineDir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.configOpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.configOpenVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.configOpenVA">
+<code class="descname">configOpenVA</code><span class="sig-paren">(</span><em>conn</em>, <em>algorithm</em>, <em>pipelineDir</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.configOpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.configOpenVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Query OpenVA configuration settings from database.</p>
-<p>This method is intended to receive its input (a Connection object) 
+<p>This method is intended to receive its input (a Connection object)
 from TransferDB.connectDB(), which establishes a connection to a
 database with the Pipeline configuration settings.  It sets up the
 configuration for all of the VA algorithms included in the R package
@@ -197,23 +205,27 @@ method OpenVA.setAlgorithmParameters().  This is a wrapper function
 that calls __configInterVA__, __configInSilicoVA__, and
 __configSmartVA__ to actually pull configuration settings from the
 database.</p>
+<p>Parameters</p>
 <p>conn : sqlite3 Connection object
 algorithm : VA algorithm used by R package openVA
 pipelineDir : Working directory for the Pipeline</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>tuple</dt>
 <dd>Contains all parameters needed for OpenVA.setAlgorithmParameters().</dd>
 </dl>
+<p>Raises</p>
 <p>OpenVAConfigurationError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.configPipeline">
-<code class="descname">configPipeline</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.configPipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.configPipeline" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.configPipeline">
+<code class="descname">configPipeline</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.configPipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.configPipeline" title="Permalink to this definition">¶</a></dt>
 <dd><p>Grabs Pipline configuration settings.</p>
 <p>This method queries the Pipeline_Conf table in Transfer database and
 returns a tuple with attributes (1) algorithmMetadataCode; (2)
 codSource; (3) algorithm; and (4) workingDirectory.</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>tuple</dt>
 <dd>alogrithmMetadataCode - attribute describing VA data
@@ -221,25 +233,28 @@ codSource - attribute detailing the source of the Cause of Death list
 algorithm - attribute indicating which VA algorithm to use
 workingDirectory - attribute indicating the working directory</dd>
 </dl>
+<p>Raises</p>
 <p>PipelineConfigurationError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.connectDB">
-<code class="descname">connectDB</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.connectDB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.connectDB" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.connectDB">
+<code class="descname">connectDB</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.connectDB"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.connectDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>Connect to Transfer database.</p>
 <p>Uses parameters supplied to the parent class, TransferDB, to connect to
 the (encrypted) Transfer database.</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>SQLite database connection object</dt>
 <dd>Used to query (encrypted) SQLite database.</dd>
 </dl>
+<p>Raises</p>
 <p>DatabaseConnectionError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.makePipelineDirs">
-<code class="descname">makePipelineDirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.makePipelineDirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.makePipelineDirs" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.makePipelineDirs">
+<code class="descname">makePipelineDirs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.makePipelineDirs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.makePipelineDirs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create directories for storing files (if they don’t exist).</p>
 <p>The method creates the following folders in the working directory (as
 set in the Transfer database table Pipeline_Conf): (1) ODKFiles for
@@ -247,25 +262,29 @@ files containing verbal autopsy records from the ODK Aggregate server; (2)
 OpenVAFiles containing R scripts and results from the cause assignment
 algorithms; and (3) DHIS for holding blobs that will be stored in a
 data repository (DHIS2 server and/or the local Transfer database).</p>
+<p>Raises</p>
 <p>PipelinError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.storeVA">
-<code class="descname">storeVA</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.storeVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.storeVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.storeVA">
+<code class="descname">storeVA</code><span class="sig-paren">(</span><em>conn</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.storeVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.storeVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store VA records in Transfer database.</p>
 <p>This method is intended to be used in conjunction with the DHIS module,
 which prepares the records into the proper format for storage in the
 Transfer database.</p>
+<p>Parameters</p>
 <p>conn : sqlite3 Connection object</p>
+<p>Raises</p>
 <p>PipelineError
 DatabaseConnectionError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="transferDB.TransferDB.updateODKLastRun">
-<code class="descname">updateODKLastRun</code><span class="sig-paren">(</span><em>conn</em>, <em>plRunDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/transferDB.html#TransferDB.updateODKLastRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#transferDB.TransferDB.updateODKLastRun" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.transferDB.TransferDB.updateODKLastRun">
+<code class="descname">updateODKLastRun</code><span class="sig-paren">(</span><em>conn</em>, <em>plRunDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/transferDB.html#TransferDB.updateODKLastRun"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.transferDB.TransferDB.updateODKLastRun" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update Transfer Database table ODK_Conf.odkLastRun</p>
+<p>Parameters</p>
 <p>conn : sqlite3 Connection object
 plRunDate : date
 Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)</p>
@@ -277,41 +296,44 @@ Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)</p>
 <div class="section" id="api-for-odk-briefcase">
 <h2>API for ODK Briefcase<a class="headerlink" href="#api-for-odk-briefcase" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="odk.ODK">
-<em class="property">class </em><code class="descclassname">odk.</code><code class="descname">ODK</code><span class="sig-paren">(</span><em>odkSettings</em>, <em>workingDirectory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/odk.html#ODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odk.ODK" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.odk.ODK">
+<em class="property">class </em><code class="descclassname">openva_pipeline.odk.</code><code class="descname">ODK</code><span class="sig-paren">(</span><em>odkSettings</em>, <em>workingDirectory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/odk.html#ODK"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.odk.ODK" title="Permalink to this definition">¶</a></dt>
 <dd><p>Manages Pipeline’s interaction with ODK Aggregate.</p>
 <p>This class handles the segment of the pipeline related to ODK.  The
 ODK.connect() method calls ODK Briefcase to connect with an ODK Aggregate
 server and export VA records.  It also checks for previously exported files
 and updates them as needed.  Finally, it logs messages and errors to the
 pipeline database.</p>
-<dl class="docutils">
-<dt>odkSettings <span class="classifier-delimiter">:</span> <span class="classifier">(named) tuple with all of configuration settings as</span></dt>
-<dd>attributes.</dd>
-</dl>
-<p>workingDirectory : Directory where openVA Pipeline should create files.</p>
+<p>Parameters</p>
+<p>odkSettings : (named) tuple with all of configuration settings as
+attributes.
+workingDirectory : Directory where openVA Pipeline should create files.</p>
+<p>Methods</p>
 <dl class="docutils">
 <dt>briefcase(self)</dt>
 <dd>Uses ODK Briefcase to export VA records from ODK Aggregate server.</dd>
 <dt>mergePrevExport(self)</dt>
 <dd>Merge ODK Briefcase export files (if they exist).</dd>
 </dl>
+<p>Raises</p>
 <p>ODKBriefcaseError</p>
 <dl class="method">
-<dt id="odk.ODK.briefcase">
-<code class="descname">briefcase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/odk.html#ODK.briefcase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odk.ODK.briefcase" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.odk.ODK.briefcase">
+<code class="descname">briefcase</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/odk.html#ODK.briefcase"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.odk.ODK.briefcase" title="Permalink to this definition">¶</a></dt>
 <dd><p>Export records from ODK Aggregate server using ODK Briefcase.</p>
 <p>Longer description here.</p>
+<p>Returns</p>
 <dl class="docutils">
 <dt>Connection object</dt>
 <dd>SQL connection object for querying config settings</dd>
 </dl>
+<p>Raises</p>
 <p>ODKError</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="odk.ODK.mergeToPrevExport">
-<code class="descname">mergeToPrevExport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/odk.html#ODK.mergeToPrevExport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#odk.ODK.mergeToPrevExport" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.odk.ODK.mergeToPrevExport">
+<code class="descname">mergeToPrevExport</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/odk.html#ODK.mergeToPrevExport"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.odk.ODK.mergeToPrevExport" title="Permalink to this definition">¶</a></dt>
 <dd><p>Merge previous ODK Briefcase export files.</p>
 </dd></dl>
 
@@ -321,16 +343,18 @@ pipeline database.</p>
 <div class="section" id="api-for-openva">
 <h2>API for OpenVA<a class="headerlink" href="#api-for-openva" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="openVA.OpenVA">
-<em class="property">class </em><code class="descclassname">openVA.</code><code class="descname">OpenVA</code><span class="sig-paren">(</span><em>vaArgs</em>, <em>pipelineArgs</em>, <em>odkID</em>, <em>runDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openVA.html#OpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.openVA.OpenVA">
+<em class="property">class </em><code class="descclassname">openva_pipeline.openVA.</code><code class="descname">OpenVA</code><span class="sig-paren">(</span><em>vaArgs</em>, <em>pipelineArgs</em>, <em>odkID</em>, <em>runDate</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/openVA.html#OpenVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.openVA.OpenVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign cause of death (COD) to verbal autopsies (VA) R package openVA.</p>
 <p>This class creates and executes an R script that copies (and merges) ODK Briefcase
 exports, runs openVA to assign CODs, and creates outputs for depositing in
 the Transfers DB and to a DHIS server.</p>
+<p>Parameters</p>
 <dl class="docutils">
 <dt>algorithm <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>Which VA algorithm should be used to assign COD.</dd>
 </dl>
+<p>Methods</p>
 <dl class="docutils">
 <dt>copyVA(self)</dt>
 <dd>Create data file for openVA by merging ODK export files.</dd>
@@ -344,28 +368,29 @@ openVA to assign CODs.</dd>
 <dt>getCOD(self)</dt>
 <dd>Run R as subprocess and run the script for assigning CODs.</dd>
 </dl>
+<p>Raises</p>
 <p>OpenVAError</p>
 <dl class="method">
-<dt id="openVA.OpenVA.copyVA">
-<code class="descname">copyVA</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openVA.html#OpenVA.copyVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVA.copyVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.openVA.OpenVA.copyVA">
+<code class="descname">copyVA</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/openVA.html#OpenVA.copyVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.openVA.OpenVA.copyVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create data file for openVA by merging ODK export files.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="openVA.OpenVA.getCOD">
-<code class="descname">getCOD</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openVA.html#OpenVA.getCOD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVA.getCOD" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.openVA.OpenVA.getCOD">
+<code class="descname">getCOD</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/openVA.html#OpenVA.getCOD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.openVA.OpenVA.getCOD" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create and execute R script to assign a COD with openVA; or call the SmartVA CLI to assign COD.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="openVA.OpenVA.rScript">
-<code class="descname">rScript</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openVA.html#OpenVA.rScript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVA.rScript" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.openVA.OpenVA.rScript">
+<code class="descname">rScript</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/openVA.html#OpenVA.rScript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.openVA.OpenVA.rScript" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create an R script for running openVA and assigning CODs.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="openVA.OpenVA.smartVA_to_csv">
-<code class="descname">smartVA_to_csv</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openVA.html#OpenVA.smartVA_to_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openVA.OpenVA.smartVA_to_csv" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.openVA.OpenVA.smartVA_to_csv">
+<code class="descname">smartVA_to_csv</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/openVA.html#OpenVA.smartVA_to_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.openVA.OpenVA.smartVA_to_csv" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Write two CSV files: (1) Entity Value Attribute blob pushed to DHIS2 (entityAttributeValue.csv)</dt>
 <dd><ol class="first last arabic simple" start="2">
@@ -382,18 +407,20 @@ openVA to assign CODs.</dd>
 <div class="section" id="api-for-dhis2">
 <h2>API for DHIS2<a class="headerlink" href="#api-for-dhis2" title="Permalink to this headline">¶</a></h2>
 <dl class="class">
-<dt id="dhis.DHIS">
-<em class="property">class </em><code class="descclassname">dhis.</code><code class="descname">DHIS</code><span class="sig-paren">(</span><em>dhisArgs</em>, <em>workingDirectory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#DHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.DHIS" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.DHIS">
+<em class="property">class </em><code class="descclassname">openva_pipeline.dhis.</code><code class="descname">DHIS</code><span class="sig-paren">(</span><em>dhisArgs</em>, <em>workingDirectory</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#DHIS"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.DHIS" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for transfering VA records (with assigned CODs) to the DHIf2S server.</p>
 <p>This class includes methods for importing VA results (i.e. assigned causes of
 death from openVA or SmartVA) as CSV files, connecting to a DHIS2 server
 with the Verbal Autopsy Program, and posting the results to the DHIS2
 server and/or the local Transfer database.</p>
+<p>Parameters</p>
 <dl class="docutils">
 <dt>dhisArgs <span class="classifier-delimiter">:</span> <span class="classifier">(named) tuple</span></dt>
 <dd>Contains parameter values for connected to DHIS2, as returned by
 transferDB.configDHIS().</dd>
 </dl>
+<p>Methods</p>
 <dl class="docutils">
 <dt>connect(self)</dt>
 <dd>Wrapper for algorithm-specific methods that create an R script to use
@@ -405,31 +432,33 @@ openVA to assign CODs.</dd>
 <dt>CheckDuplicates(self)</dt>
 <dd>Checks the DHIS2 server for duplicate records.</dd>
 </dl>
+<p>Raises</p>
 <p>DHISError</p>
 <dl class="method">
-<dt id="dhis.DHIS.connect">
-<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#DHIS.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.DHIS.connect" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.DHIS.connect">
+<code class="descname">connect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#DHIS.connect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.DHIS.connect" title="Permalink to this definition">¶</a></dt>
 <dd><p>Run get method to retrieve VA program ID and Org Unit.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="dhis.DHIS.postVA">
-<code class="descname">postVA</code><span class="sig-paren">(</span><em>apiDHIS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#DHIS.postVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.DHIS.postVA" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.DHIS.postVA">
+<code class="descname">postVA</code><span class="sig-paren">(</span><em>apiDHIS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#DHIS.postVA"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.DHIS.postVA" title="Permalink to this definition">¶</a></dt>
 <dd><p>Post VA records to DHIS.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="dhis.DHIS.verifyPost">
-<code class="descname">verifyPost</code><span class="sig-paren">(</span><em>postLog</em>, <em>apiDHIS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#DHIS.verifyPost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.DHIS.verifyPost" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.DHIS.verifyPost">
+<code class="descname">verifyPost</code><span class="sig-paren">(</span><em>postLog</em>, <em>apiDHIS</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#DHIS.verifyPost"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.DHIS.verifyPost" title="Permalink to this definition">¶</a></dt>
 <dd><p>Verify that VA records were posted to DHIS2 server.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="dhis.API">
-<em class="property">class </em><code class="descclassname">dhis.</code><code class="descname">API</code><span class="sig-paren">(</span><em>dhisURL</em>, <em>dhisUser</em>, <em>dhisPass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#API"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.API" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.API">
+<em class="property">class </em><code class="descclassname">openva_pipeline.dhis.</code><code class="descname">API</code><span class="sig-paren">(</span><em>dhisURL</em>, <em>dhisUser</em>, <em>dhisPass</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#API"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.API" title="Permalink to this definition">¶</a></dt>
 <dd><p>This class provides methods for interacting with the DHIS2 API.</p>
+<p>Parameters</p>
 <dl class="docutils">
 <dt>dhisURL <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>Web address for DHIS2 server (e.g., “play.dhis2.org/demo”).</dd>
@@ -438,6 +467,7 @@ openVA to assign CODs.</dd>
 <dt>dhisPassword <span class="classifier-delimiter">:</span> <span class="classifier">str</span></dt>
 <dd>Password for DHIS2 account.</dd>
 </dl>
+<p>Methods</p>
 <dl class="docutils">
 <dt>get(self, endpoint, params)</dt>
 <dd>GET method for DHIS2 API.</dd>
@@ -446,24 +476,25 @@ openVA to assign CODs.</dd>
 <dt>post_blob(self, f) </dt>
 <dd>Post file to DHIS2 and return created UID for that file.</dd>
 </dl>
+<p>Raises</p>
 <p>DHISError</p>
 <dl class="method">
-<dt id="dhis.API.get">
-<code class="descname">get</code><span class="sig-paren">(</span><em>endpoint</em>, <em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#API.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.API.get" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.API.get">
+<code class="descname">get</code><span class="sig-paren">(</span><em>endpoint</em>, <em>params=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#API.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.API.get" title="Permalink to this definition">¶</a></dt>
 <dd><p>GET method for DHIS2 API.
 :rtype: dict</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="dhis.API.post">
-<code class="descname">post</code><span class="sig-paren">(</span><em>endpoint</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#API.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.API.post" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.API.post">
+<code class="descname">post</code><span class="sig-paren">(</span><em>endpoint</em>, <em>data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#API.post"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.API.post" title="Permalink to this definition">¶</a></dt>
 <dd><p>POST  method for DHIS2 API.
 :rtype: dict</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="dhis.API.post_blob">
-<code class="descname">post_blob</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#API.post_blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.API.post_blob" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.API.post_blob">
+<code class="descname">post_blob</code><span class="sig-paren">(</span><em>f</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#API.post_blob"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.API.post_blob" title="Permalink to this definition">¶</a></dt>
 <dd><p>Post file to DHIS2 and return created UID for that file
 :rtype: str</p>
 </dd></dl>
@@ -471,12 +502,12 @@ openVA to assign CODs.</dd>
 </dd></dl>
 
 <dl class="class">
-<dt id="dhis.VerbalAutopsyEvent">
-<em class="property">class </em><code class="descclassname">dhis.</code><code class="descname">VerbalAutopsyEvent</code><span class="sig-paren">(</span><em>va_id</em>, <em>program</em>, <em>dhis_orgunit</em>, <em>event_date</em>, <em>sex</em>, <em>dob</em>, <em>age</em>, <em>cod_code</em>, <em>algorithm_metadata</em>, <em>odk_id</em>, <em>file_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#VerbalAutopsyEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.VerbalAutopsyEvent" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.VerbalAutopsyEvent">
+<em class="property">class </em><code class="descclassname">openva_pipeline.dhis.</code><code class="descname">VerbalAutopsyEvent</code><span class="sig-paren">(</span><em>va_id</em>, <em>program</em>, <em>dhis_orgunit</em>, <em>event_date</em>, <em>sex</em>, <em>dob</em>, <em>age</em>, <em>cod_code</em>, <em>algorithm_metadata</em>, <em>odk_id</em>, <em>file_id</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#VerbalAutopsyEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.VerbalAutopsyEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>DHIS2 event + a BLOB file resource</p>
 <dl class="method">
-<dt id="dhis.VerbalAutopsyEvent.format_to_dhis2">
-<code class="descname">format_to_dhis2</code><span class="sig-paren">(</span><em>dhisUser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#VerbalAutopsyEvent.format_to_dhis2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.VerbalAutopsyEvent.format_to_dhis2" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.VerbalAutopsyEvent.format_to_dhis2">
+<code class="descname">format_to_dhis2</code><span class="sig-paren">(</span><em>dhisUser</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#VerbalAutopsyEvent.format_to_dhis2"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.VerbalAutopsyEvent.format_to_dhis2" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format object to DHIS2 compatible event for DHIS2 API
 :rtype: dict</p>
 </dd></dl>
@@ -484,85 +515,85 @@ openVA to assign CODs.</dd>
 </dd></dl>
 
 <dl class="function">
-<dt id="dhis.create_db">
-<code class="descclassname">dhis.</code><code class="descname">create_db</code><span class="sig-paren">(</span><em>fName</em>, <em>evaList</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#create_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.create_db" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.create_db">
+<code class="descclassname">openva_pipeline.dhis.</code><code class="descname">create_db</code><span class="sig-paren">(</span><em>fName</em>, <em>evaList</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#create_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.create_db" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a SQLite database with VA data + COD
 :rtype: None</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="dhis.getCODCode">
-<code class="descclassname">dhis.</code><code class="descname">getCODCode</code><span class="sig-paren">(</span><em>myDict</em>, <em>searchFor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#getCODCode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.getCODCode" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.getCODCode">
+<code class="descclassname">openva_pipeline.dhis.</code><code class="descname">getCODCode</code><span class="sig-paren">(</span><em>myDict</em>, <em>searchFor</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#getCODCode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.getCODCode" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return COD label expected by DHIS2.
 :rtype: str</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="dhis.findKeyValue">
-<code class="descclassname">dhis.</code><code class="descname">findKeyValue</code><span class="sig-paren">(</span><em>key</em>, <em>d</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/dhis.html#findKeyValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#dhis.findKeyValue" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.dhis.findKeyValue">
+<code class="descclassname">openva_pipeline.dhis.</code><code class="descname">findKeyValue</code><span class="sig-paren">(</span><em>key</em>, <em>d</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/openva_pipeline/dhis.html#findKeyValue"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.dhis.findKeyValue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a key’s value in a nested dictionary.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="excetptions">
-<h2>Excetptions<a class="headerlink" href="#excetptions" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="Permalink to this headline">¶</a></h2>
 <dl class="exception">
-<dt id="exceptions.PipelineError">
-<em class="property">exception </em><code class="descname">PipelineError</code><a class="reference internal" href="_modules/exceptions.html#PipelineError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.PipelineError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.PipelineError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">PipelineError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#PipelineError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.PipelineError" title="Permalink to this definition">¶</a></dt>
 <dd><p>Base class for exceptions in the openva_pipeline module.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.DatabaseConnectionError">
-<em class="property">exception </em><code class="descname">DatabaseConnectionError</code><a class="reference internal" href="_modules/exceptions.html#DatabaseConnectionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.DatabaseConnectionError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.DatabaseConnectionError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">DatabaseConnectionError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#DatabaseConnectionError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.DatabaseConnectionError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred connecting to the Transfer database.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.PipelineConfigurationError">
-<em class="property">exception </em><code class="descname">PipelineConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#PipelineConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.PipelineConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.PipelineConfigurationError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">PipelineConfigurationError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#PipelineConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.PipelineConfigurationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred accessing the Pipeline_Conf table in the DB.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.ODKConfigurationError">
-<em class="property">exception </em><code class="descname">ODKConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#ODKConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.ODKConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.ODKConfigurationError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">ODKConfigurationError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#ODKConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.ODKConfigurationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred accessing the ODK_Conf table in the DB.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.OpenVAConfigurationError">
-<em class="property">exception </em><code class="descname">OpenVAConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#OpenVAConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.OpenVAConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.OpenVAConfigurationError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">OpenVAConfigurationError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#OpenVAConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.OpenVAConfigurationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred accessing the OpenVA_Conf table in the DB.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.DHISConfigurationError">
-<em class="property">exception </em><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.DHISConfigurationError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.DHISConfigurationError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.DHISConfigurationError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred accessing the DHIS_Conf table in the DB.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.ODKError">
-<em class="property">exception </em><code class="descname">ODKError</code><a class="reference internal" href="_modules/exceptions.html#ODKError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.ODKError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.ODKError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">ODKError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#ODKError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.ODKError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred with the odk module.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.OpenVAError">
-<em class="property">exception </em><code class="descname">OpenVAError</code><a class="reference internal" href="_modules/exceptions.html#OpenVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.OpenVAError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.OpenVAError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">OpenVAError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#OpenVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.OpenVAError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred with the openVA module.</p>
 </dd></dl>
 
 <dl class="exception">
-<dt id="exceptions.SmartVAError">
-<em class="property">exception </em><code class="descname">SmartVAError</code><a class="reference internal" href="_modules/exceptions.html#SmartVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#exceptions.SmartVAError" title="Permalink to this definition">¶</a></dt>
+<dt id="openva_pipeline.exceptions.SmartVAError">
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">SmartVAError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#SmartVAError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#openva_pipeline.exceptions.SmartVAError" title="Permalink to this definition">¶</a></dt>
 <dd><p>An error occurred with the openVA module.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt>
-<em class="property">exception </em><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a></dt>
+<em class="property">exception </em><code class="descclassname">openva_pipeline.exceptions.</code><code class="descname">DHISConfigurationError</code><a class="reference internal" href="_modules/openva_pipeline/exceptions.html#DHISConfigurationError"><span class="viewcode-link">[source]</span></a></dt>
 <dd><p>An error occurred accessing the DHIS_Conf table in the DB.</p>
 </dd></dl>
 
@@ -583,7 +614,7 @@ openVA to assign CODs.</dd>
 <li><a class="reference internal" href="#api-for-odk-briefcase">API for ODK Briefcase</a></li>
 <li><a class="reference internal" href="#api-for-openva">API for OpenVA</a></li>
 <li><a class="reference internal" href="#api-for-dhis2">API for DHIS2</a></li>
-<li><a class="reference internal" href="#excetptions">Excetptions</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 </ul>
 </li>
 </ul>

@@ -24,12 +24,12 @@ class OpenVA:
     the Transfers DB and to a DHIS server.
 
     Parameters
-    ----------
+
     algorithm : str
         Which VA algorithm should be used to assign COD.
 
     Methods
-    -------
+
     copyVA(self)
         Create data file for openVA by merging ODK export files.
     rScript(self)
@@ -43,7 +43,7 @@ class OpenVA:
         Run R as subprocess and run the script for assigning CODs.
 
     Raises
-    ------
+
     OpenVAError
 
     """

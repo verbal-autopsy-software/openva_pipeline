@@ -14,8 +14,7 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../openva_pipeline'))
-
+sys.path.append(os.path.join(os.path.dirname(__name__), '..'))
 
 # -- Project information -----------------------------------------------------
 
@@ -26,7 +25,7 @@ author = 'Jason Thomas, Samuel J. Clark, and Martin Bratschi'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.0.9000'
+release = '0.0.0.9007'
 
 
 # -- General configuration ---------------------------------------------------

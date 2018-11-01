@@ -1,0 +1,1222 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>openva_pipeline.transferDB &#8212; openva_pipeline 0.0.0.9007 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.0.0.9007',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for openva_pipeline.transferDB</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">openva.transferDB</span>
+<span class="sd">-----------------</span>
+
+<span class="sd">This module handles interactions with the Transfer database.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">from</span> <span class="nn">pickle</span> <span class="k">import</span> <span class="n">dumps</span>
+<span class="kn">from</span> <span class="nn">pandas</span> <span class="k">import</span> <span class="n">read_csv</span>
+<span class="kn">from</span> <span class="nn">pysqlcipher3</span> <span class="k">import</span> <span class="n">dbapi2</span> <span class="k">as</span> <span class="n">sqlcipher</span>
+
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">PipelineConfigurationError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">ODKConfigurationError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">DatabaseConnectionError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">PipelineError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">OpenVAConfigurationError</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">DHISConfigurationError</span>
+
+<div class="viewcode-block" id="TransferDB"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB">[docs]</a><span class="k">class</span> <span class="nc">TransferDB</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;This class handles interactions with the Transfer database.</span>
+
+<span class="sd">    The Pipeline accesses configuration information from the Transfer database,</span>
+<span class="sd">    and also stores log messages and verbal autopsy records in the DB.  The</span>
+<span class="sd">    Transfer database is encrypted using sqlcipher3 (and the pysqlcipher3</span>
+<span class="sd">    module is imported to establish DB connection).</span>
+
+<span class="sd">    Parameters</span>
+
+<span class="sd">    dbFileName : str</span>
+<span class="sd">        File name of the Tranfser database.</span>
+<span class="sd">    dbDirectory : str</span>
+<span class="sd">        Path of folder containing the Transfer database.</span>
+<span class="sd">    dbKey : str</span>
+<span class="sd">        Encryption key for the Transfer database.</span>
+<span class="sd">    plRunDate : date</span>
+<span class="sd">        Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss).</span>
+
+<span class="sd">    Methods</span>
+
+<span class="sd">    connectDB(self)</span>
+<span class="sd">        Returns SQLite Connection object to Transfer database.</span>
+<span class="sd">    configPipeline(self, conn)</span>
+<span class="sd">        Accepts SQLite Connection object and returns tuple with configuration</span>
+<span class="sd">        settings for the Pipeline.</span>
+<span class="sd">    configODK(self, conn)</span>
+<span class="sd">        Accepts SQLite Connection object and returns tuple with configuration</span>
+<span class="sd">        settings for connecting to ODK Aggregate server.</span>
+<span class="sd">    configOpenVA(self, conn)</span>
+<span class="sd">        Accepts SQLite Connection object and returns tuple with configuration</span>
+<span class="sd">        settings for R package openVA.</span>
+<span class="sd">    checkDuplicates(self)</span>
+<span class="sd">        Search for duplicate VA records in ODK Briefcase export file and the</span>
+<span class="sd">        tranfser DB.</span>
+<span class="sd">    configDHIS(self, conn)</span>
+<span class="sd">        Accepts SQLite Connection object and returns tuple with configuration</span>
+<span class="sd">        settings for connecting to DHIS2 server.</span>
+<span class="sd">    storeVA(self)</span>
+<span class="sd">        Deposits VA objects to the Transfer DB.</span>
+<span class="sd">    makePipelineDirs(self)</span>
+<span class="sd">        Returns SQLite Connection object to Transfer database.</span>
+<span class="sd">    cleanODK(self)</span>
+<span class="sd">        Remove ODK Briefcase Export files.</span>
+<span class="sd">    cleanOpenVA(self)</span>
+<span class="sd">        Remove openVA files with COD results.</span>
+<span class="sd">    cleanDHIS(self)</span>
+<span class="sd">        Remove DHIS2 blob files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dbFileName</span><span class="p">,</span> <span class="n">dbDirectory</span><span class="p">,</span> <span class="n">dbKey</span><span class="p">,</span> <span class="n">plRunDate</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbFileName</span> <span class="o">=</span> <span class="n">dbFileName</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbDirectory</span> <span class="o">=</span> <span class="n">dbDirectory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbKey</span> <span class="o">=</span> <span class="n">dbKey</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dbPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dbDirectory</span><span class="p">,</span> <span class="n">dbFileName</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plRunDate</span> <span class="o">=</span> <span class="n">plRunDate</span>
+
+<div class="viewcode-block" id="TransferDB.connectDB"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.connectDB">[docs]</a>    <span class="k">def</span> <span class="nf">connectDB</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Connect to Transfer database.</span>
+
+<span class="sd">        Uses parameters supplied to the parent class, TransferDB, to connect to</span>
+<span class="sd">        the (encrypted) Transfer database.</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        SQLite database connection object</span>
+<span class="sd">            Used to query (encrypted) SQLite database.</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        DatabaseConnectionError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dbFilePresent</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">dbFilePresent</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DatabaseConnectionError</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlcipher</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbPath</span><span class="p">)</span>
+        <span class="n">parSetKey</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbKey</span> <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;PRAGMA key = &quot;</span> <span class="o">+</span> <span class="n">parSetKey</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlTestConnection</span> <span class="o">=</span> <span class="s2">&quot;SELECT name FROM SQLITE_MASTER </span><span class="se">\</span>
+<span class="s2">              where type = &#39;table&#39;;&quot;</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlTestConnection</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">DatabaseError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DatabaseConnectionError</span><span class="p">(</span><span class="s2">&quot;Database password error...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.configPipeline"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.configPipeline">[docs]</a>    <span class="k">def</span> <span class="nf">configPipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Grabs Pipline configuration settings.</span>
+
+<span class="sd">        This method queries the Pipeline_Conf table in Transfer database and</span>
+<span class="sd">        returns a tuple with attributes (1) algorithmMetadataCode; (2)</span>
+<span class="sd">        codSource; (3) algorithm; and (4) workingDirectory.</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            alogrithmMetadataCode - attribute describing VA data</span>
+<span class="sd">            codSource - attribute detailing the source of the Cause of Death list</span>
+<span class="sd">            algorithm - attribute indicating which VA algorithm to use</span>
+<span class="sd">            workingDirectory - attribute indicating the working directory</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        PipelineConfigurationError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT dhisCode from Algorithm_Metadata_Options;&quot;</span><span class="p">)</span>
+            <span class="n">metadataQuery</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table Algorithm_Metadata_Options...&quot;</span> <span class="o">+</span>
+                 <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlPipeline</span> <span class="o">=</span> <span class="s2">&quot;SELECT algorithmMetadataCode, codSource, algorithm, </span><span class="se">\</span>
+<span class="s2">              workingDirectory FROM Pipeline_Conf;&quot;</span>
+            <span class="n">queryPipeline</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlPipeline</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table Pipeline_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">algorithmMetadataCode</span> <span class="o">=</span> <span class="n">queryPipeline</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">algorithmMetadataCode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">metadataQuery</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Pipeline_Conf.algorithmMetadataCode&quot;</span><span class="p">)</span>
+        <span class="n">codSource</span> <span class="o">=</span> <span class="n">queryPipeline</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">codSource</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ICD10&quot;</span><span class="p">,</span> <span class="s2">&quot;WHO&quot;</span><span class="p">,</span> <span class="s2">&quot;Tariff&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Pipeline_Conf.codSource&quot;</span><span class="p">)</span>
+        <span class="n">algorithm</span> <span class="o">=</span> <span class="n">queryPipeline</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">algorithm</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;InterVA&quot;</span><span class="p">,</span> <span class="s2">&quot;InSilicoVA&quot;</span><span class="p">,</span> <span class="s2">&quot;SmartVA&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Pipeline_Conf.algorithm&quot;</span><span class="p">)</span>
+        <span class="n">workingDirectory</span> <span class="o">=</span> <span class="n">queryPipeline</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">workingDirectory</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Pipeline_Conf.workingDirectory&quot;</span><span class="p">)</span>
+
+        <span class="n">ntPipeline</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntPipeline&quot;</span><span class="p">,</span>
+                                            <span class="p">[</span><span class="s2">&quot;algorithmMetadataCode&quot;</span><span class="p">,</span>
+                                             <span class="s2">&quot;codSource&quot;</span><span class="p">,</span>
+                                             <span class="s2">&quot;algorithm&quot;</span><span class="p">,</span>
+                                             <span class="s2">&quot;workingDirectory&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsPipeline</span> <span class="o">=</span> <span class="n">ntPipeline</span><span class="p">(</span><span class="n">algorithmMetadataCode</span><span class="p">,</span>
+                                      <span class="n">codSource</span><span class="p">,</span>
+                                      <span class="n">algorithm</span><span class="p">,</span>
+                                      <span class="n">workingDirectory</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">=</span> <span class="n">workingDirectory</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">settingsPipeline</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.configODK"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.configODK">[docs]</a>    <span class="k">def</span> <span class="nf">configODK</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query ODK configuration settings from database.</span>
+
+<span class="sd">        This method is intended to be used in conjunction with (1)</span>
+<span class="sd">        TransferDB.connectDB(), which establishes a connection to a database</span>
+<span class="sd">        with the Pipeline configuration settings; and (2) ODK.briefcase(), which</span>
+<span class="sd">        establishes a connection to an ODK Aggregate server.  Thus,</span>
+<span class="sd">        TransferDB.configODK() gets its input from TransferDB.connectDB() and</span>
+<span class="sd">        the output from TransferDB.configODK() is a valid argument for ODK.config().</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters for ODK.briefcase().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        ODKConfigurationError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">sqlODK</span> <span class="o">=</span> <span class="s2">&quot;SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, </span><span class="se">\</span>
+<span class="s2">          odkLastRun FROM ODK_Conf;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">queryODK</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlODK</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">ODKConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table ODK_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">odkID</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">odkURL</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">startHTML</span> <span class="o">=</span> <span class="n">odkURL</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">startHTMLS</span> <span class="o">=</span> <span class="n">odkURL</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">startHTML</span> <span class="o">==</span> <span class="s2">&quot;http://&quot;</span> <span class="ow">or</span> <span class="n">startHTMLS</span> <span class="o">==</span> <span class="s2">&quot;https://&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">ODKConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: ODK_Conf.odkURL&quot;</span><span class="p">)</span>
+        <span class="n">odkUser</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">odkPassword</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="n">odkFormID</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">odkLastRun</span> <span class="o">=</span> <span class="n">queryODK</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="c1"># odkLastRunResult = queryODK[0][6]</span>
+        <span class="c1"># if not odkLastRunResult in (&quot;success&quot;, &quot;fail&quot;):</span>
+        <span class="c1">#     raise ODKConfigurationError \</span>
+        <span class="c1">#         (&quot;Problem in database: ODK_Conf.odkLastRunResult&quot;)</span>
+        <span class="n">odkLastRunDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">odkLastRun</span><span class="p">,</span>
+                                                    <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H:%M:%S&quot;</span>
+                                                   <span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">odkLastRunDatePrev</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">odkLastRunDate</span><span class="p">,</span>
+                                                         <span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">-</span> \
+                              <span class="n">datetime</span><span class="o">.</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y/%m/</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">ntODK</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntODK&quot;</span><span class="p">,</span>
+                                       <span class="p">[</span><span class="s2">&quot;odkID&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkURL&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkUser&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkPassword&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkFormID&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkLastRun&quot;</span><span class="p">,</span>
+                                        <span class="c1"># &quot;odkLastRunResult&quot;,</span>
+                                        <span class="s2">&quot;odkLastRunDate&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkLastRunDatePrev&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsODK</span> <span class="o">=</span> <span class="n">ntODK</span><span class="p">(</span><span class="n">odkID</span><span class="p">,</span>
+                            <span class="n">odkURL</span><span class="p">,</span>
+                            <span class="n">odkUser</span><span class="p">,</span>
+                            <span class="n">odkPassword</span><span class="p">,</span>
+                            <span class="n">odkFormID</span><span class="p">,</span>
+                            <span class="n">odkLastRun</span><span class="p">,</span>
+                            <span class="c1"># odkLastRunResult,</span>
+                            <span class="n">odkLastRunDate</span><span class="p">,</span>
+                            <span class="n">odkLastRunDatePrev</span><span class="p">)</span>
+
+        <span class="k">return</span><span class="p">(</span><span class="n">settingsODK</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.updateODKLastRun"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.updateODKLastRun">[docs]</a>    <span class="k">def</span> <span class="nf">updateODKLastRun</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">plRunDate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Update Transfer Database table ODK_Conf.odkLastRun</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+<span class="sd">        plRunDate : date</span>
+<span class="sd">        Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;UPDATE ODK_Conf SET odkLastRun = ?&quot;</span>
+        <span class="n">par</span> <span class="o">=</span> <span class="p">(</span><span class="n">plRunDate</span><span class="p">,)</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TransferDB.checkDuplicates"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.checkDuplicates">[docs]</a>    <span class="k">def</span> <span class="nf">checkDuplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Search for duplicate VA records.</span>
+
+<span class="sd">        This method searches for duplicate VA records in ODK Briefcase export</span>
+<span class="sd">        file and the Tranfser DB.  If duplicates are found, a warning message</span>
+<span class="sd">        is logged to the EventLog table in the Transfer database.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        DatabaseConnectionError</span>
+<span class="sd">        PipelineError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Need to run configPipeline.&quot;</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">odkBCExportPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                       <span class="s2">&quot;ODKFiles&quot;</span><span class="p">,</span>
+                                       <span class="s2">&quot;odkBCExportNew.csv&quot;</span><span class="p">)</span>
+        <span class="n">dfODK</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">odkBCExportPath</span><span class="p">)</span>
+        <span class="n">dfODKID</span> <span class="o">=</span> <span class="n">dfODK</span><span class="p">[</span><span class="s2">&quot;meta-instanceID&quot;</span><span class="p">]</span>
+
+        <span class="n">sql</span> <span class="o">=</span> <span class="s2">&quot;SELECT id FROM VA_Storage&quot;</span>
+        <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="n">vaIDs</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="n">vaIDsList</span> <span class="o">=</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">vaIDs</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]</span>
+        <span class="n">vaDuplicates</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dfODKID</span><span class="p">)</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">vaIDsList</span><span class="p">))</span>
+        <span class="n">timeFMT</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vaDuplicates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">nDuplicates</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">vaDuplicates</span><span class="p">)</span>
+            <span class="n">sqlXferDB</span> <span class="o">=</span> <span class="s2">&quot;INSERT INTO EventLog </span><span class="se">\</span>
+<span class="s2">                         (eventDesc, eventType, eventTime) VALUES (?, ?, ?)&quot;</span>
+            <span class="n">eventDescPart1</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Duplicate record with ODK Meta-Instance ID: &quot;</span><span class="p">]</span> \
+                            <span class="o">*</span> <span class="n">nDuplicates</span>
+            <span class="n">eventDescPart2</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">vaDuplicates</span><span class="p">)</span>
+            <span class="n">eventDesc</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span> <span class="o">+</span> <span class="n">y</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">eventDescPart1</span><span class="p">,</span> <span class="n">eventDescPart2</span><span class="p">)]</span>
+            <span class="n">eventType</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Warning&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">nDuplicates</span>
+            <span class="n">eventTime</span> <span class="o">=</span> <span class="p">[</span><span class="n">timeFMT</span><span class="p">]</span> <span class="o">*</span> <span class="n">nDuplicates</span>
+            <span class="n">par</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">eventDesc</span><span class="p">,</span> <span class="n">eventType</span><span class="p">,</span> <span class="n">eventTime</span><span class="p">))</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="n">sqlXferDB</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TransferDB.configOpenVA"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.configOpenVA">[docs]</a>    <span class="k">def</span> <span class="nf">configOpenVA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query OpenVA configuration settings from database.</span>
+
+<span class="sd">        This method is intended to receive its input (a Connection object)</span>
+<span class="sd">        from TransferDB.connectDB(), which establishes a connection to a</span>
+<span class="sd">        database with the Pipeline configuration settings.  It sets up the</span>
+<span class="sd">        configuration for all of the VA algorithms included in the R package</span>
+<span class="sd">        openVA.  The output from configOpenVA() serves as an input to the</span>
+<span class="sd">        method OpenVA.setAlgorithmParameters().  This is a wrapper function</span>
+<span class="sd">        that calls __configInterVA__, __configInSilicoVA__, and</span>
+<span class="sd">        __configSmartVA__ to actually pull configuration settings from the</span>
+<span class="sd">        database.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+<span class="sd">        algorithm : VA algorithm used by R package openVA</span>
+<span class="sd">        pipelineDir : Working directory for the Pipeline</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters needed for OpenVA.setAlgorithmParameters().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        OpenVAConfigurationError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s2">&quot;InterVA&quot;</span><span class="p">:</span>
+            <span class="n">settingsInterVA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configInterVA</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">settingsInterVA</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s2">&quot;InSilicoVA&quot;</span><span class="p">:</span>
+            <span class="n">settingsInSilicoVA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configInSilicoVA</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">settingsInSilicoVA</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s2">&quot;SmartVA&quot;</span><span class="p">:</span>
+            <span class="n">settingsSmartVA</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_configSmartVA</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">)</span>
+            <span class="k">return</span><span class="p">(</span><span class="n">settingsSmartVA</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Not an acceptable parameter for &#39;algorithm&#39;.&quot;</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_configInterVA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query OpenVA configuration settings from database.</span>
+
+<span class="sd">        This method is called by configOpenVA when the VA algorithm is either</span>
+<span class="sd">        InterVA4 or InterVA5.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+<span class="sd">        pipelineDir : Working directory for the Pipeline</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters needed for OpenVA.setAlgorithmParameters().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        OpenVAConfigurationError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlInterVA</span> <span class="o">=</span> <span class="s2">&quot;SELECT version, HIV, Malaria FROM InterVA_Conf;&quot;</span>
+            <span class="n">queryInterVA</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlInterVA</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table InterVA_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="c1"># Database Table: InterVA_Conf</span>
+        <span class="n">intervaVersion</span> <span class="o">=</span> <span class="n">queryInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaVersion</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;4&quot;</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InterVA_Conf.version </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;4&#39; or &#39;5&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">intervaHIV</span> <span class="o">=</span> <span class="n">queryInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaHIV</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InterVA_Conf.HIV </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;v&#39;, &#39;l&#39;, or &#39;h&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">intervaMalaria</span> <span class="o">=</span> <span class="n">queryInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaMalaria</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;v&quot;</span><span class="p">,</span> <span class="s2">&quot;l&quot;</span><span class="p">,</span> <span class="s2">&quot;h&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InterVA_Conf.Malaria </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;v&#39;, &#39;l&#39;, or &#39;h&#39;).&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Database Table: Advanced_InterVA_Conf</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlAdvancedInterVA</span> <span class="o">=</span> <span class="s2">&quot;SELECT output, append, </span><span class="se">\</span>
+<span class="s2">            groupcode, replicate, replicate_bug1, replicate_bug2 </span><span class="se">\</span>
+<span class="s2">            FROM Advanced_InterVA_Conf;&quot;</span>
+            <span class="n">queryAdvancedInterVA</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlAdvancedInterVA</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table Advanced_InterVA_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">intervaOutput</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaOutput</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;classic&quot;</span><span class="p">,</span> <span class="s2">&quot;extended&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.output.&quot;</span><span class="p">)</span>
+        <span class="n">intervaAppend</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaAppend</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.append.&quot;</span><span class="p">)</span>
+        <span class="n">intervaGroupcode</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaGroupcode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.groupcode.&quot;</span><span class="p">)</span>
+        <span class="n">intervaReplicate</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaReplicate</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.replicate.&quot;</span><span class="p">)</span>
+        <span class="n">intervaReplicateBug1</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaReplicateBug1</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.replicate_bug1.&quot;</span><span class="p">)</span>
+        <span class="n">intervaReplicateBug2</span> <span class="o">=</span> <span class="n">queryAdvancedInterVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">intervaReplicateBug2</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: Advanced_InterVA_Conf.replicate_bug2.&quot;</span><span class="p">)</span>
+
+        <span class="n">ntInterVA</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntInterVA&quot;</span><span class="p">,</span>
+                                           <span class="p">[</span><span class="s2">&quot;InterVA_Version&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_HIV&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_Malaria&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_output&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_append&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_groupcode&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_replicate&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_replicate_bug1&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;InterVA_replicate_bug2&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsInterVA</span> <span class="o">=</span> <span class="n">ntInterVA</span><span class="p">(</span><span class="n">intervaVersion</span><span class="p">,</span>
+                                    <span class="n">intervaHIV</span><span class="p">,</span>
+                                    <span class="n">intervaMalaria</span><span class="p">,</span>
+                                    <span class="n">intervaOutput</span><span class="p">,</span>
+                                    <span class="n">intervaAppend</span><span class="p">,</span>
+                                    <span class="n">intervaGroupcode</span><span class="p">,</span>
+                                    <span class="n">intervaReplicate</span><span class="p">,</span>
+                                    <span class="n">intervaReplicateBug1</span><span class="p">,</span>
+                                    <span class="n">intervaReplicateBug2</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">settingsInterVA</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_configInSilicoVA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query OpenVA configuration settings from database.</span>
+
+<span class="sd">        This method is called by configOpenVA when the VA algorithm is</span>
+<span class="sd">        InSilicoVA.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+<span class="sd">        pipelineDir : Working directory for the Pipeline</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters needed for OpenVA.setAlgorithmParameters().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        OpenVAConfigurationError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="c1"># Database Table: InSilicoVA_Conf</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlInSilicoVA</span> <span class="o">=</span> <span class="s2">&quot;SELECT data_type, Nsim FROM InSilicoVA_Conf;&quot;</span>
+            <span class="n">queryInSilicoVA</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlInSilicoVA</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table InSilicoVA_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">insilicovaDataType</span> <span class="o">=</span> <span class="n">queryInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaDataType</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;WHO2012&quot;</span><span class="p">,</span> <span class="s2">&quot;WHO2016&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.data_type </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;WHO2012&#39; or &#39;WHO2016&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaNsim</span> <span class="o">=</span> <span class="n">queryInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaNsim</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.Nsim&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Database Table: Advanced_InSilicoVA_Conf</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlAdvancedInSilicoVA</span> <span class="o">=</span> <span class="s2">&quot;SELECT isNumeric, updateCondProb, </span><span class="se">\</span>
+<span class="s2">              keepProbbase_level, CondProb, CondProbNum, datacheck, </span><span class="se">\</span>
+<span class="s2">              datacheck_missing, external_sep, thin, </span><span class="se">\</span>
+<span class="s2">              burnin, auto_length, conv_csmf, jump_scale, levels_prior, </span><span class="se">\</span>
+<span class="s2">              levels_strength, trunc_min, trunc_max, subpop, java_option, seed, </span><span class="se">\</span>
+<span class="s2">              phy_code, phy_cat, phy_unknown, phy_external, phy_debias, </span><span class="se">\</span>
+<span class="s2">              exclude_impossible_cause, no_is_missing, indiv_CI, groupcode </span><span class="se">\</span>
+<span class="s2">              FROM Advanced_InSilicoVA_Conf;&quot;</span>
+            <span class="n">queryAdvancedInSilicoVA</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlAdvancedInSilicoVA</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table Advanced_InSilicoVA_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">insilicovaIsNumeric</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaIsNumeric</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.isNumeric </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaUpdateCondProb</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaUpdateCondProb</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.updateCondProb </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaKeepProbbaseLevel</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaKeepProbbaseLevel</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.keepProbbase_level </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaCondProb</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaCondProb</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.CondProb </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaCondProbNum</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaCondProbNum</span> <span class="o">==</span> <span class="s2">&quot;NULL&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">floatCondProbNum</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaCondProbNum</span><span class="p">)</span>
+                <span class="n">validCondProbNum</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">floatCondProbNum</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">validCondProbNum</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                    <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.CondProbNum </span><span class="se">\</span>
+<span class="s2">                    (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">validCondProbNum</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                    <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.CondProbNum </span><span class="se">\</span>
+<span class="s2">                    (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaDatacheck</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaDatacheck</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.datacheck </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaDatacheckMissing</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaDatacheckMissing</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.datacheck_missing </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaExternalSep</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">7</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaExternalSep</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.external_sep </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaThin</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">8</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">thinFloat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaThin</span><span class="p">)</span>
+            <span class="n">validThin</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">thinFloat</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validThin</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.thin </span><span class="se">\</span>
+<span class="s2">                (must be &#39;thin&#39; &gt; 0.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validThin</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.thin </span><span class="se">\</span>
+<span class="s2">                (must be &#39;thin&#39; &gt; 0.&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaBurnin</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">9</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">burninFloat</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaBurnin</span><span class="p">)</span>
+            <span class="n">validBurnin</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">burninFloat</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validBurnin</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.burnin </span><span class="se">\</span>
+<span class="s2">                (must be &#39;burnin&#39; &gt; 0.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validBurnin</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.burnin </span><span class="se">\</span>
+<span class="s2">                (must be &#39;burnin&#39; &gt; 0.&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaAutoLength</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">10</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaAutoLength</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.auto_length </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaConvCSMF</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">11</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatConvCSMF</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaConvCSMF</span><span class="p">)</span>
+            <span class="n">validConvCSMF</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">floatConvCSMF</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validConvCSMF</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.conv_csmf </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validConvCSMF</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.conv_csmf </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaJumpScale</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">12</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatJumpScale</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaJumpScale</span><span class="p">)</span>
+            <span class="n">validJumpScale</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">floatJumpScale</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validJumpScale</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.jump_scale </span><span class="se">\</span>
+<span class="s2">                (must be greater than &#39;0&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validJumpScale</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.jump_scale </span><span class="se">\</span>
+<span class="s2">                (must be greater than &#39;0&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaLevelsPrior</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">13</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaLevelsPrior</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.levels_prior </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaLevelsStrength</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">14</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatLevelsStrength</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaLevelsStrength</span><span class="p">)</span>
+            <span class="n">validLevelsStrength</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">floatLevelsStrength</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validLevelsStrength</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.levels_strength </span><span class="se">\</span>
+<span class="s2">                (must be greater than &#39;0&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validLevelsStrength</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.levels_strength </span><span class="se">\</span>
+<span class="s2">                (must be greater than &#39;0&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaTruncMin</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">15</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatTruncMin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaTruncMin</span><span class="p">)</span>
+            <span class="n">validTruncMin</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">floatTruncMin</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validTruncMin</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.trunc_min </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validTruncMin</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.trunc_min </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaTruncMax</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">16</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatTruncMax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaTruncMax</span><span class="p">)</span>
+            <span class="n">validTruncMax</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">floatTruncMax</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">validTruncMax</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.trunc_max </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">validTruncMax</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.trunc_max </span><span class="se">\</span>
+<span class="s2">                (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaSubpop</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">17</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaSubpop</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.subpop </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaJavaOption</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">18</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaJavaOption</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">insilicovaJavaOption</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">6</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.java_option </span><span class="se">\</span>
+<span class="s2">                (should look like &#39;-Xmx1g&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">joLength</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">insilicovaJavaOption</span><span class="p">)</span>
+        <span class="n">joLastChar</span> <span class="o">=</span> <span class="n">insilicovaJavaOption</span><span class="p">[(</span><span class="n">joLength</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="n">joFirst4Char</span> <span class="o">=</span> <span class="n">insilicovaJavaOption</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+        <span class="n">joMemSize</span> <span class="o">=</span> <span class="n">insilicovaJavaOption</span><span class="p">[</span><span class="mi">4</span><span class="p">:(</span><span class="n">joLength</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">joFirst4Char</span> <span class="o">==</span> <span class="s2">&quot;-Xmx&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.java_option </span><span class="se">\</span>
+<span class="s2">                (should start with &#39;-Xmx&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">joLastChar</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;g&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.java_option </span><span class="se">\</span>
+<span class="s2">                (should end with &#39;g&#39; for gigabyts or &#39;m&#39; for megabytes).&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">float_joMemSize</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">joMemSize</span><span class="p">)</span>
+            <span class="n">valid_joMemSize</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">float_joMemSize</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="n">valid_joMemSize</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.java_option </span><span class="se">\</span>
+<span class="s2">                (should look like &#39;-Xmx1g&#39;).&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">valid_joMemSize</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.java_option </span><span class="se">\</span>
+<span class="s2">                (should look like &#39;-Xmx1g&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaSeed</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">19</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">floatSeed</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaSeed</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.seed </span><span class="se">\</span>
+<span class="s2">                (must be between a number; preferably an integer).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaPhyCode</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">20</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaPhyCode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.phy_code </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaPhyCat</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">21</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaPhyCat</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.phy_cat </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaPhyUnknown</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">22</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaPhyUnknown</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.phy_unknown </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaPhyExternal</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">23</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaPhyExternal</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.phy_external </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaPhyDebias</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">24</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">insilicovaPhyDebias</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.phy_debias </span><span class="se">\</span>
+<span class="s2">                (valid options: name of R object).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaExcludeImpossibleCause</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">25</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaExcludeImpossibleCause</span> <span class="ow">in</span> \
+          <span class="p">(</span><span class="s2">&quot;subset&quot;</span><span class="p">,</span> <span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="s2">&quot;InterVA&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.exclude_impossible_cause </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;subset&#39;, &#39;all&#39;, &#39;InterVA&#39;, and &#39;none&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaNoIsMissing</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">26</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaNoIsMissing</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.no_is_missing </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaIndivCI</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">27</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaIndivCI</span> <span class="o">==</span> <span class="s2">&quot;NULL&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">floatIndivCI</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">insilicovaIndivCI</span><span class="p">)</span>
+                <span class="n">validIndivCI</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;</span> <span class="n">floatIndivCI</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="n">validIndivCI</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                    <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.indiv_CI </span><span class="se">\</span>
+<span class="s2">                    (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">validIndivCI</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                    <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.indiv_CI </span><span class="se">\</span>
+<span class="s2">                    (must be between &#39;0&#39; and &#39;1&#39;).&quot;</span><span class="p">)</span>
+        <span class="n">insilicovaGroupcode</span> <span class="o">=</span> <span class="n">queryAdvancedInSilicoVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">28</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">insilicovaGroupcode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;FALSE&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: InSilicoVA_Conf.groupcode </span><span class="se">\</span>
+<span class="s2">                (valid options: &#39;TRUE&#39; or &#39;FALSE&#39;).&quot;</span><span class="p">)</span>
+
+        <span class="n">ntInSilicoVA</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntInSilicoVA&quot;</span><span class="p">,</span>
+                                              <span class="p">[</span><span class="s2">&quot;InSilicoVA_data_type&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_Nsim&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_isNumeric&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_updateCondProb&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_keepProbbase_level&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_CondProb&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_CondProbNum&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_datacheck&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_datacheck_missing&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_external_sep&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_thin&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_burnin&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_auto_length&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_conv_csmf&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_jump_scale&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_levels_prior&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_levels_strength&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_trunc_min&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_trunc_max&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_subpop&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_java_option&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_seed&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_phy_code&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_phy_cat&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_phy_unknown&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_phy_external&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_phy_debias&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_exclude_impossible_cause&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_no_is_missing&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_indiv_CI&quot;</span><span class="p">,</span>
+                                               <span class="s2">&quot;InSilicoVA_groupcode&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsInSilicoVA</span> <span class="o">=</span> <span class="n">ntInSilicoVA</span><span class="p">(</span><span class="n">insilicovaDataType</span><span class="p">,</span>
+                                          <span class="n">insilicovaNsim</span><span class="p">,</span>
+                                          <span class="n">insilicovaIsNumeric</span><span class="p">,</span>
+                                          <span class="n">insilicovaUpdateCondProb</span><span class="p">,</span>
+                                          <span class="n">insilicovaKeepProbbaseLevel</span><span class="p">,</span>
+                                          <span class="n">insilicovaCondProb</span><span class="p">,</span>
+                                          <span class="n">insilicovaCondProbNum</span><span class="p">,</span>
+                                          <span class="n">insilicovaDatacheck</span><span class="p">,</span>
+                                          <span class="n">insilicovaDatacheckMissing</span><span class="p">,</span>
+                                          <span class="n">insilicovaExternalSep</span><span class="p">,</span>
+                                          <span class="n">insilicovaThin</span><span class="p">,</span>
+                                          <span class="n">insilicovaBurnin</span><span class="p">,</span>
+                                          <span class="n">insilicovaAutoLength</span><span class="p">,</span>
+                                          <span class="n">insilicovaConvCSMF</span><span class="p">,</span>
+                                          <span class="n">insilicovaJumpScale</span><span class="p">,</span>
+                                          <span class="n">insilicovaLevelsPrior</span><span class="p">,</span>
+                                          <span class="n">insilicovaLevelsStrength</span><span class="p">,</span>
+                                          <span class="n">insilicovaTruncMin</span><span class="p">,</span>
+                                          <span class="n">insilicovaTruncMax</span><span class="p">,</span>
+                                          <span class="n">insilicovaSubpop</span><span class="p">,</span>
+                                          <span class="n">insilicovaJavaOption</span><span class="p">,</span>
+                                          <span class="n">insilicovaSeed</span><span class="p">,</span>
+                                          <span class="n">insilicovaPhyCode</span><span class="p">,</span>
+                                          <span class="n">insilicovaPhyCat</span><span class="p">,</span>
+                                          <span class="n">insilicovaPhyUnknown</span><span class="p">,</span>
+                                          <span class="n">insilicovaPhyExternal</span><span class="p">,</span>
+                                          <span class="n">insilicovaPhyDebias</span><span class="p">,</span>
+                                          <span class="n">insilicovaExcludeImpossibleCause</span><span class="p">,</span>
+                                          <span class="n">insilicovaNoIsMissing</span><span class="p">,</span>
+                                          <span class="n">insilicovaIndivCI</span><span class="p">,</span>
+                                          <span class="n">insilicovaGroupcode</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">settingsInSilicoVA</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_configSmartVA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">pipelineDir</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query OpenVA configuration settings from database.</span>
+
+<span class="sd">        This method is called by configOpenVA when the VA algorithm is</span>
+<span class="sd">        SmartVA.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+<span class="sd">        pipelineDir : Working directory for the Pipeline</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters needed for OpenVA.setAlgorithmParameters().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        OpenVAConfigurationError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlSmartVA</span> <span class="o">=</span> <span class="s2">&quot;SELECT country, hiv, malaria, hce, freetext, figures, </span><span class="se">\</span>
+<span class="s2">            language FROM SmartVA_Conf;&quot;</span>
+            <span class="n">querySmartVA</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlSmartVA</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table SmartVA_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlCountryList</span> <span class="o">=</span> <span class="s2">&quot;SELECT abbrev FROM SmartVA_Country;&quot;</span>
+            <span class="n">queryCountryList</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlCountryList</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table SmartVA_Country...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">smartvaCountry</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">smartvaCountry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">j</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">queryCountryList</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">i</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.country&quot;</span><span class="p">)</span>
+        <span class="n">smartvaHIV</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaHIV</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.hiv&quot;</span><span class="p">)</span>
+        <span class="n">smartvaMalaria</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaMalaria</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.malaria&quot;</span><span class="p">)</span>
+        <span class="n">smartvaHCE</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaHCE</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.hce&quot;</span><span class="p">)</span>
+        <span class="n">smartvaFreetext</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaFreetext</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.freetext&quot;</span><span class="p">)</span>
+        <span class="n">smartvaFigures</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">5</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaFigures</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;True&quot;</span><span class="p">,</span> <span class="s2">&quot;False&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.figures&quot;</span><span class="p">)</span>
+        <span class="n">smartvaLanguage</span> <span class="o">=</span> <span class="n">querySmartVA</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">smartvaLanguage</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;english&quot;</span><span class="p">,</span> <span class="s2">&quot;chinese&quot;</span><span class="p">,</span> <span class="s2">&quot;spanish&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">OpenVAConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: SmartVA_Conf.language&quot;</span><span class="p">)</span>
+
+        <span class="n">ntSmartVA</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntSmartVA&quot;</span><span class="p">,</span>
+                                           <span class="p">[</span><span class="s2">&quot;SmartVA_country&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_hiv&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_malaria&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_hce&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_freetext&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_figures&quot;</span><span class="p">,</span>
+                                            <span class="s2">&quot;SmartVA_language&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsSmartVA</span> <span class="o">=</span> <span class="n">ntSmartVA</span><span class="p">(</span><span class="n">smartvaCountry</span><span class="p">,</span>
+                                    <span class="n">smartvaHIV</span><span class="p">,</span>
+                                    <span class="n">smartvaMalaria</span><span class="p">,</span>
+                                    <span class="n">smartvaHCE</span><span class="p">,</span>
+                                    <span class="n">smartvaFreetext</span><span class="p">,</span>
+                                    <span class="n">smartvaFigures</span><span class="p">,</span>
+                                    <span class="n">smartvaLanguage</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">(</span><span class="n">settingsSmartVA</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TransferDB.configDHIS"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.configDHIS">[docs]</a>    <span class="k">def</span> <span class="nf">configDHIS</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">,</span> <span class="n">algorithm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Query DHIS configuration settings from database.</span>
+
+<span class="sd">        This method is intended to be used in conjunction with (1)</span>
+<span class="sd">        TransferDB.connectDB(), which establishes a connection to a database</span>
+<span class="sd">        with the Pipeline configuration settings; and (2) DHIS.connect(), which</span>
+<span class="sd">        establishes a connection to a DHIS server.  Thus,</span>
+<span class="sd">        TransferDB.configDHIS() gets its input from TransferDB.connectDB() and</span>
+<span class="sd">        the output from TransferDB.config() is a valid argument for</span>
+<span class="sd">        DHIS.config().</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object (e.g., the object returned from</span>
+<span class="sd">        TransferDB.connectDB())</span>
+<span class="sd">        algorithm : VA algorithm used by R package openVA</span>
+
+<span class="sd">        Returns</span>
+
+<span class="sd">        tuple</span>
+<span class="sd">            Contains all parameters for DHIS.connect().</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        DHISConfigurationError</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">sqlDHIS</span> <span class="o">=</span> <span class="s2">&quot;SELECT dhisURL, dhisUser, dhisPassword, dhisOrgUnit </span><span class="se">\</span>
+<span class="s2">              FROM DHIS_Conf;&quot;</span>
+            <span class="n">queryDHIS</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlDHIS</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table DHIS_Conf...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">algorithm</span> <span class="o">==</span> <span class="s2">&quot;SmartVA&quot;</span><span class="p">:</span>
+            <span class="n">sqlCODCodes</span> <span class="o">=</span> <span class="s2">&quot;SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = &#39;Tariff&#39;&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">sqlCODCodes</span> <span class="o">=</span> <span class="s2">&quot;SELECT codName, codCode FROM COD_Codes_DHIS WHERE codSource = &#39;WHO&#39;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">queryCODCodes</span> <span class="o">=</span> <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlCODCodes</span><span class="p">)</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+            <span class="n">dhisCODCodes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">queryCODCodes</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="n">sqlcipher</span><span class="o">.</span><span class="n">OperationalError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database table COD_Codes_DHIS...&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
+        <span class="n">dhisURL</span> <span class="o">=</span> <span class="n">queryDHIS</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">startHTML</span> <span class="o">=</span> <span class="n">dhisURL</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+        <span class="n">startHTMLS</span> <span class="o">=</span> <span class="n">dhisURL</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">startHTML</span> <span class="o">==</span> <span class="s2">&quot;http://&quot;</span> <span class="ow">or</span> <span class="n">startHTMLS</span> <span class="o">==</span> <span class="s2">&quot;https://&quot;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: DHIS_Conf.dhisURL&quot;</span><span class="p">)</span>
+        <span class="n">dhisUser</span> <span class="o">=</span> <span class="n">queryDHIS</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dhisUser</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">dhisUser</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: DHIS_Conf.dhisUser (is empty)&quot;</span><span class="p">)</span>
+        <span class="n">dhisPassword</span> <span class="o">=</span> <span class="n">queryDHIS</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dhisPassword</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">dhisPassword</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: DHIS_Conf.dhisPassword (is empty)&quot;</span><span class="p">)</span>
+        <span class="n">dhisOrgUnit</span> <span class="o">=</span> <span class="n">queryDHIS</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">dhisOrgUnit</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span> <span class="ow">or</span> <span class="n">dhisOrgUnit</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DHISConfigurationError</span> \
+                <span class="p">(</span><span class="s2">&quot;Problem in database: DHIS_Conf.dhisOrgUnit (is empty)&quot;</span><span class="p">)</span>
+
+        <span class="n">ntDHIS</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;ntDHIS&quot;</span><span class="p">,</span>
+                                       <span class="p">[</span><span class="s2">&quot;dhisURL&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;dhisUser&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;dhisPassword&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;dhisOrgUnit&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="n">settingsDHIS</span> <span class="o">=</span> <span class="n">ntDHIS</span><span class="p">(</span><span class="n">dhisURL</span><span class="p">,</span>
+                              <span class="n">dhisUser</span><span class="p">,</span>
+                              <span class="n">dhisPassword</span><span class="p">,</span>
+                              <span class="n">dhisOrgUnit</span><span class="p">)</span>
+
+        <span class="k">return</span><span class="p">([</span><span class="n">settingsDHIS</span><span class="p">,</span> <span class="n">dhisCODCodes</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TransferDB.storeVA"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.storeVA">[docs]</a>    <span class="k">def</span> <span class="nf">storeVA</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">conn</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store VA records in Transfer database.</span>
+
+<span class="sd">        This method is intended to be used in conjunction with the DHIS module,</span>
+<span class="sd">        which prepares the records into the proper format for storage in the</span>
+<span class="sd">        Transfer database.</span>
+
+<span class="sd">        Parameters</span>
+
+<span class="sd">        conn : sqlite3 Connection object</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        PipelineError</span>
+<span class="sd">        DatabaseConnectionError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Need to run configPipeline.&quot;</span><span class="p">)</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">newStoragePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                      <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">,</span>
+                                      <span class="s2">&quot;newStorage.csv&quot;</span><span class="p">)</span>
+        <span class="n">dfNewStorage</span> <span class="o">=</span> <span class="n">read_csv</span><span class="p">(</span><span class="n">newStoragePath</span><span class="p">)</span>
+        <span class="n">dfNewStorageID</span> <span class="o">=</span> <span class="n">dfNewStorage</span><span class="p">[</span><span class="s2">&quot;odkMetaInstanceID&quot;</span><span class="p">]</span>
+        <span class="n">timeFMT</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">_%H:%M:%S&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">dfNewStorage</span><span class="o">.</span><span class="n">itertuples</span><span class="p">():</span>
+                <span class="n">xferDBID</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">nElements</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+                <span class="n">xferDBOutcome</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">nElements</span><span class="p">]</span>
+                <span class="n">vaData</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="mi">8</span><span class="p">:(</span><span class="n">nElements</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+                <span class="n">vaDataFlat</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">y</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">vaData</span>
+                     <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">(</span><span class="n">x</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="k">else</span> <span class="p">(</span><span class="n">x</span><span class="p">,))]</span>
+                <span class="p">)</span>
+                <span class="n">xferDBRecord</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">vaDataFlat</span><span class="p">)</span>
+                <span class="n">sqlXferDB</span> <span class="o">=</span> <span class="s2">&quot;INSERT INTO VA_Storage </span><span class="se">\</span>
+<span class="s2">                             (id, outcome, record, dateEntered) </span><span class="se">\</span>
+<span class="s2">                             VALUES (?, ?, ?, ?)&quot;</span>
+                <span class="n">par</span> <span class="o">=</span> <span class="p">[</span><span class="n">xferDBID</span><span class="p">,</span> <span class="n">xferDBOutcome</span><span class="p">,</span>
+                       <span class="n">sqlite3</span><span class="o">.</span><span class="n">Binary</span><span class="p">(</span><span class="n">xferDBRecord</span><span class="p">),</span> <span class="n">timeFMT</span><span class="p">]</span>
+                <span class="n">c</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">sqlXferDB</span><span class="p">,</span> <span class="n">par</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">DatabaseConnectionError</span>\
+                <span class="p">(</span><span class="s2">&quot;Problem storing VA record to Transfer DB.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.makePipelineDirs"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.makePipelineDirs">[docs]</a>    <span class="k">def</span> <span class="nf">makePipelineDirs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create directories for storing files (if they don&#39;t exist).</span>
+
+<span class="sd">        The method creates the following folders in the working directory (as</span>
+<span class="sd">        set in the Transfer database table Pipeline_Conf): (1) ODKFiles for</span>
+<span class="sd">        files containing verbal autopsy records from the ODK Aggregate server; (2)</span>
+<span class="sd">        OpenVAFiles containing R scripts and results from the cause assignment</span>
+<span class="sd">        algorithms; and (3) DHIS for holding blobs that will be stored in a</span>
+<span class="sd">        data repository (DHIS2 server and/or the local Transfer database).</span>
+
+<span class="sd">        Raises</span>
+
+<span class="sd">        PipelinError</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">odkPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDir</span><span class="p">,</span> <span class="s2">&quot;ODKFiles&quot;</span><span class="p">)</span>
+        <span class="n">openVAPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDir</span><span class="p">,</span> <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">)</span>
+        <span class="n">dhisPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDir</span><span class="p">,</span> <span class="s2">&quot;DHIS&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">odkPath</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">odkPath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Unable to create directory &quot;</span> <span class="o">+</span> <span class="n">odkPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">openVAPath</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">openVAPath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Unable to create directory &quot;</span> <span class="o">+</span> <span class="n">openVAPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dhisPath</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">dhisPath</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Unable to create directory &quot;</span> <span class="o">+</span> <span class="n">dhisPath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.cleanODK"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.cleanODK">[docs]</a>    <span class="k">def</span> <span class="nf">cleanODK</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove ODK Briefcase Export files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Need to run configPipeline.&quot;</span><span class="p">)</span>
+        <span class="n">odkExportNewPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                        <span class="s2">&quot;ODKFiles&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;odkBCExportNew.csv&quot;</span><span class="p">)</span>
+        <span class="n">odkExportPrevPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                         <span class="s2">&quot;ODKFiles&quot;</span><span class="p">,</span>
+                                         <span class="s2">&quot;odkBCExportPrev.csv&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">odkExportNewPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">odkExportNewPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">odkExportPrevPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">odkExportPrevPath</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TransferDB.cleanOpenVA"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.cleanOpenVA">[docs]</a>    <span class="k">def</span> <span class="nf">cleanOpenVA</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove openVA files with COD results.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Need to run configPipeline.&quot;</span><span class="p">)</span>
+        <span class="n">openVAInputPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                        <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;openVA_input.csv&quot;</span><span class="p">)</span>
+        <span class="n">recordStoragePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                         <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">,</span>
+                                         <span class="s2">&quot;recordStorage.csv&quot;</span><span class="p">)</span>
+        <span class="n">newStoragePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                                      <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">,</span>
+                                      <span class="s2">&quot;newStorage.csv&quot;</span><span class="p">)</span>
+        <span class="n">evaPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span>
+                               <span class="s2">&quot;OpenVAFiles&quot;</span><span class="p">,</span>
+                               <span class="s2">&quot;entityAttributeValue.csv&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">openVAInputPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">openVAInputPath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">recordStoragePath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">recordStoragePath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">newStoragePath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">newStoragePath</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">evaPath</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">evaPath</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TransferDB.cleanDHIS"><a class="viewcode-back" href="../../help.html#openva_pipeline.transferDB.TransferDB.cleanDHIS">[docs]</a>    <span class="k">def</span> <span class="nf">cleanDHIS</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Remove DHIS2 blob files.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">PipelineError</span><span class="p">(</span><span class="s2">&quot;Need to run configPipeline.&quot;</span><span class="p">)</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">workingDirectory</span><span class="p">,</span> <span class="s2">&quot;DHIS&quot;</span><span class="p">,</span> <span class="s2">&quot;blobs&quot;</span><span class="p">)</span>
+        <span class="p">)</span></div></div>
+
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Jason Thomas, Samuel J. Clark, and Martin Bratschi.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

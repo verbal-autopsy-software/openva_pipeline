@@ -1,58 +1,52 @@
 Documentation for classes, functions, and methods
 =================================================
 
-.. module:: runPipeline
-.. module:: pipeline
-.. module:: transferDB
-.. module:: odk
-.. module:: openVA
-.. module:: dhis
-.. module:: exceptions
+.. module:: openva_pipeline
 
 Main Interface
 --------------
 
 The OpenVA Pipeline is run using the following function
 
-.. autofunction:: runPipeline.runPipeline
+.. autofunction:: openva_pipeline.runPipeline.runPipeline
 
 
 API for Transfer Database
 -------------------------
-.. autoclass:: transferDB.TransferDB
+.. autoclass:: openva_pipeline.transferDB.TransferDB
    :inherited-members:
 
 API for ODK Briefcase
 ---------------------
-.. autoclass:: odk.ODK
+.. autoclass:: openva_pipeline.odk.ODK
    :inherited-members:
 
 API for OpenVA
 --------------
-.. autoclass:: openVA.OpenVA
+.. autoclass:: openva_pipeline.openVA.OpenVA
    :inherited-members:
 
 API for DHIS2
 -------------
-.. autoclass:: dhis.DHIS
+.. autoclass:: openva_pipeline.dhis.DHIS
    :inherited-members:
-.. autoclass:: dhis.API
+.. autoclass:: openva_pipeline.dhis.API
    :inherited-members:
-.. autoclass:: dhis.VerbalAutopsyEvent
+.. autoclass:: openva_pipeline.dhis.VerbalAutopsyEvent
    :inherited-members:
-.. autofunction:: dhis.create_db
-.. autofunction:: dhis.getCODCode
-.. autofunction:: dhis.findKeyValue
+.. autofunction:: openva_pipeline.dhis.create_db
+.. autofunction:: openva_pipeline.dhis.getCODCode
+.. autofunction:: openva_pipeline.dhis.findKeyValue
 
-Excetptions
+Exceptions
 -----------
-.. autoexception:: exceptions.PipelineError
-.. autoexception:: exceptions.DatabaseConnectionError
-.. autoexception:: exceptions.PipelineConfigurationError
-.. autoexception:: exceptions.ODKConfigurationError
-.. autoexception:: exceptions.OpenVAConfigurationError
-.. autoexception:: exceptions.DHISConfigurationError
-.. autoexception:: exceptions.ODKError
-.. autoexception:: exceptions.OpenVAError
-.. autoexception:: exceptions.SmartVAError
-.. autoexception:: exceptions.DHISConfigurationError
+.. autoexception:: openva_pipeline.exceptions.PipelineError
+.. autoexception:: openva_pipeline.exceptions.DatabaseConnectionError
+.. autoexception:: openva_pipeline.exceptions.PipelineConfigurationError
+.. autoexception:: openva_pipeline.exceptions.ODKConfigurationError
+.. autoexception:: openva_pipeline.exceptions.OpenVAConfigurationError
+.. autoexception:: openva_pipeline.exceptions.DHISConfigurationError
+.. autoexception:: openva_pipeline.exceptions.ODKError
+.. autoexception:: openva_pipeline.exceptions.OpenVAError
+.. autoexception:: openva_pipeline.exceptions.SmartVAError
+.. autoexception:: openva_pipeline.exceptions.DHISConfigurationError

@@ -24,7 +24,7 @@ class API(object):
     """This class provides methods for interacting with the DHIS2 API.
 
     Parameters
-    ----------
+
     dhisURL : str
         Web address for DHIS2 server (e.g., "play.dhis2.org/demo").
     dhisUser : str
@@ -33,7 +33,7 @@ class API(object):
         Password for DHIS2 account.
 
     Methods
-    -------
+
     get(self, endpoint, params)
         GET method for DHIS2 API.
     post(self, endpoint, data) 
@@ -42,7 +42,7 @@ class API(object):
         Post file to DHIS2 and return created UID for that file.
 
     Raises
-    ------
+
     DHISError
 
     """
@@ -215,13 +215,13 @@ class DHIS():
     server and/or the local Transfer database.
 
     Parameters
-    ----------
+
     dhisArgs : (named) tuple
         Contains parameter values for connected to DHIS2, as returned by
         transferDB.configDHIS().
 
     Methods
-    -------
+
     connect(self)
         Wrapper for algorithm-specific methods that create an R script to use
         openVA to assign CODs.
@@ -233,7 +233,7 @@ class DHIS():
         Checks the DHIS2 server for duplicate records.
 
     Raises
-    ------
+
     DHISError
 
     """

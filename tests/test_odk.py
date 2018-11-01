@@ -139,6 +139,9 @@ class ValidConnection(unittest.TestCase):
 
     def test_ODK_briefcase_6(self):
         """Check for exported CSV file."""
+        shutil.rmtree("ODKFiles/ODK Briefcase Storage", ignore_errors = True)
+        pipelineODK = odk.ODK(self.settingsODK, ".")
+        odkBC = pipelineODK.briefcase()
         self.assertTrue(os.path.isfile("ODKFiles/odkBCExportNew.csv"))
 
 class InvalidConnection(unittest.TestCase):
@@ -170,22 +173,22 @@ class InvalidConnection(unittest.TestCase):
                                     "odkLastRunDate",
                                     "odkLastRunDatePrev"]
         )
-    settingsODK = ntODK(odkID,
-                        odkURL,
-                        "WRONG",
-                        odkPassword,
-                        odkFormID,
-                        odkLastRun,
-                        odkLastRunResult,
-                        odkLastRunDate,
-                        odkLastRunDatePrev)
+    badSettingsODK = ntODK(odkID,
+                           odkURL,
+                           "WRONG",
+                           odkPassword,
+                           odkFormID,
+                           odkLastRun,
+                           odkLastRunResult,
+                           odkLastRunDate,
+                           odkLastRunDatePrev)
 
     def test_ODK_bad_odkID(self):
         """Check for error if odkID parameter is invalid."""
 
-        pipelineODK = odk.ODK(self.settingsODK, ".")
+        shutil.rmtree("ODKFiles/ODK Briefcase Storage", ignore_errors = True)
+        pipelineODK = odk.ODK(self.badSettingsODK, ".")
         self.assertRaises(odk.ODKError, pipelineODK.briefcase)
-
 
 if __name__ == "__main__":
     unittest.main()

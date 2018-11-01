@@ -23,13 +23,13 @@ class ODK:
     pipeline database.
 
     Parameters
-    ----------
+
     odkSettings : (named) tuple with all of configuration settings as
-        attributes.
+    attributes.
     workingDirectory : Directory where openVA Pipeline should create files.
 
     Methods
-    -------
+
     briefcase(self)
         Uses ODK Briefcase to export VA records from ODK Aggregate server.
 
@@ -37,7 +37,7 @@ class ODK:
         Merge ODK Briefcase export files (if they exist).
 
     Raises
-    ------
+
     ODKBriefcaseError
 
     """
@@ -55,7 +55,7 @@ class ODK:
         self.odkLastRunDatePrev = odkSettings.odkLastRunDatePrev
         # self.odkLastRunResult = odkSettings.odkLastRunResult
         bcDir = os.path.abspath(os.path.dirname(__file__))
-        self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.10.1.jar")
+        self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.12.2.jar")
         odkPath = os.path.join(workingDirectory, "ODKFiles")
         self.exportDir = odkPath
         self.storageDir = odkPath
@@ -95,28 +95,29 @@ class ODK:
         Longer description here.
 
         Returns
-        -------
+
         Connection object
             SQL connection object for querying config settings
 
         Raises
-        ------
+
         ODKError
 
         """
 
 
         bcArgs = ['java', '-jar', self.bcPath,
-                  # '-e', '-oc', '-em', ## '-e' needed for ODK-Briefcase-v1.12.0.jar
-                  '-oc', '-em',
-                  '-id', str('"' + self.odkFormID    + '"'),
-                  '-sd', str('"' + self.storageDir + '"'),
-                  '-ed', str('"' + self.exportDir  + '"'),
-                  '-f',  str('"' + self.fileName   + '"'),
-                  '-url', self.odkURL,
-                  '-u', self.odkUser,
-                  '-p', self.odkPassword,
-                  '-start', self.odkLastRunDatePrev]
+                  '-url', str('"' + self.odkURL + '"'),
+                  '-u', str('"' + self.odkUser + '"'),
+                  '-p', str('"' + self.odkPassword + '"'),
+                  '-id', str('"' + self.odkFormID + '"'),
+                  ' -e ',
+                  '-sd', str(self.storageDir),
+                  '-ed', str(self.exportDir),
+                  '-f',  str(self.fileName),
+                  '-start', str('"' + self.odkLastRunDatePrev + '"'),
+                  '-oc', '-em']
+
         completed = subprocess.run(args = bcArgs,
                                    stdin  = subprocess.PIPE,
                                    stdout = subprocess.PIPE,

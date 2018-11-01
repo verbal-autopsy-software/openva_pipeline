@@ -31,7 +31,7 @@ class TransferDB:
     module is imported to establish DB connection).
 
     Parameters
-    ----------
+
     dbFileName : str
         File name of the Tranfser database.
     dbDirectory : str
@@ -42,7 +42,7 @@ class TransferDB:
         Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss).
 
     Methods
-    -------
+
     connectDB(self)
         Returns SQLite Connection object to Transfer database.
     configPipeline(self, conn)
@@ -89,12 +89,12 @@ class TransferDB:
         the (encrypted) Transfer database.
 
         Returns
-        -------
+
         SQLite database connection object
             Used to query (encrypted) SQLite database.
-                    
+
         Raises
-        ------
+
         DatabaseConnectionError
 
         """
@@ -123,7 +123,7 @@ class TransferDB:
         codSource; (3) algorithm; and (4) workingDirectory.
 
         Returns
-        -------
+
         tuple
             alogrithmMetadataCode - attribute describing VA data
             codSource - attribute detailing the source of the Cause of Death list
@@ -131,7 +131,7 @@ class TransferDB:
             workingDirectory - attribute indicating the working directory
 
         Raises
-        ------
+
         PipelineConfigurationError
 
         """
@@ -196,16 +196,16 @@ class TransferDB:
         the output from TransferDB.configODK() is a valid argument for ODK.config().
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
 
         Returns
-        -------
+
         tuple
             Contains all parameters for ODK.briefcase().
 
         Raises
-        ------
+
         ODKConfigurationError
 
         """
@@ -266,7 +266,7 @@ class TransferDB:
         """Update Transfer Database table ODK_Conf.odkLastRun
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
         plRunDate : date
         Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)
@@ -287,16 +287,16 @@ class TransferDB:
         is logged to the EventLog table in the Transfer database.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
 
         Raises
-        ------
+
         DatabaseConnectionError
         PipelineError
 
         """
-        
+
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         c = conn.cursor()
@@ -329,7 +329,7 @@ class TransferDB:
     def configOpenVA(self, conn, algorithm, pipelineDir):
         """Query OpenVA configuration settings from database.
 
-        This method is intended to receive its input (a Connection object) 
+        This method is intended to receive its input (a Connection object)
         from TransferDB.connectDB(), which establishes a connection to a
         database with the Pipeline configuration settings.  It sets up the
         configuration for all of the VA algorithms included in the R package
@@ -340,18 +340,18 @@ class TransferDB:
         database.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
         algorithm : VA algorithm used by R package openVA
         pipelineDir : Working directory for the Pipeline
 
         Returns
-        -------
+
         tuple
             Contains all parameters needed for OpenVA.setAlgorithmParameters().
 
         Raises
-        ------
+
         OpenVAConfigurationError
         """
 
@@ -375,17 +375,17 @@ class TransferDB:
         InterVA4 or InterVA5.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
         pipelineDir : Working directory for the Pipeline
 
         Returns
-        -------
+
         tuple
             Contains all parameters needed for OpenVA.setAlgorithmParameters().
 
         Raises
-        ------
+
         OpenVAConfigurationError
         """
 
@@ -414,7 +414,7 @@ class TransferDB:
             raise OpenVAConfigurationError \
                 ("Problem in database: InterVA_Conf.Malaria \
                 (valid options: 'v', 'l', or 'h').")
-        
+
         # Database Table: Advanced_InterVA_Conf
         try:
             sqlAdvancedInterVA = "SELECT output, append, \
@@ -449,7 +449,7 @@ class TransferDB:
         if not intervaReplicateBug2 in ("TRUE", "FALSE"):
             raise OpenVAConfigurationError \
                 ("Problem in database: Advanced_InterVA_Conf.replicate_bug2.")
-        
+
         ntInterVA = collections.namedtuple("ntInterVA",
                                            ["InterVA_Version",
                                             "InterVA_HIV",
@@ -479,17 +479,17 @@ class TransferDB:
         InSilicoVA.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
         pipelineDir : Working directory for the Pipeline
 
         Returns
-        -------
+
         tuple
             Contains all parameters needed for OpenVA.setAlgorithmParameters().
 
         Raises
-        ------
+
         OpenVAConfigurationError
         """
 
@@ -838,7 +838,7 @@ class TransferDB:
                                           insilicovaExcludeImpossibleCause,
                                           insilicovaNoIsMissing,
                                           insilicovaIndivCI,
-                                          insilicovaGroupcode)              
+                                          insilicovaGroupcode)
         return(settingsInSilicoVA)
 
     def _configSmartVA(self, conn, pipelineDir):
@@ -848,17 +848,17 @@ class TransferDB:
         SmartVA.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
         pipelineDir : Working directory for the Pipeline
 
         Returns
-        -------
+
         tuple
             Contains all parameters needed for OpenVA.setAlgorithmParameters().
 
         Raises
-        ------
+
         OpenVAConfigurationError
         """
         c = conn.cursor()
@@ -937,18 +937,18 @@ class TransferDB:
         DHIS.config().
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object (e.g., the object returned from
-            TransferDB.connectDB())
+        TransferDB.connectDB())
         algorithm : VA algorithm used by R package openVA
 
         Returns
-        -------
+
         tuple
             Contains all parameters for DHIS.connect().
 
         Raises
-        ------
+
         DHISConfigurationError
         """
         c = conn.cursor()
@@ -1011,16 +1011,16 @@ class TransferDB:
         Transfer database.
 
         Parameters
-        ----------
+
         conn : sqlite3 Connection object
 
         Raises
-        ------
+
         PipelineError
         DatabaseConnectionError
 
         """
-        
+
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         c = conn.cursor()
@@ -1063,7 +1063,7 @@ class TransferDB:
         data repository (DHIS2 server and/or the local Transfer database).
 
         Raises
-        ------
+
         PipelinError
 
         """
@@ -1071,7 +1071,7 @@ class TransferDB:
         odkPath = os.path.join(self.workingDir, "ODKFiles")
         openVAPath = os.path.join(self.workingDir, "OpenVAFiles")
         dhisPath = os.path.join(self.workingDir, "DHIS")
-        
+
         if not os.path.isdir(odkPath):
             try:
                 os.makedirs(odkPath)
