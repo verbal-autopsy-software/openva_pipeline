@@ -16,10 +16,6 @@ q('no')" > packages.r
 sudo Rscript packages.r
 rm packages.r
 
-#Download ODK Briefcase
-wget -nd https://github.com/opendatakit/briefcase/releases/download/v1.10.1/ODK-Briefcase-v1.10.1.jar
-chmod u+x ODK-Briefcase-v1.10.1.jar
-
 # Install Sqlitebrowser
 sudo apt install -y build-essential git cmake libsqlite3-dev qt5-default qttools5-dev-tools qttools5-dev libqscintilla2-qt5-13 libqscintilla2-qt5-l10n
 
