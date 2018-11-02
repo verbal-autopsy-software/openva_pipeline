@@ -13,13 +13,9 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 
-{% if READTHEDOCS %}
-sudo apt install sqlcipher libsqlcipher-dev
-{% endif %)
-
 import os
 import sys
-print(sys.path)
+sys.path.insert(0, os.abspath('..'))
 import openva_pipeline
 
 # -- Project information -----------------------------------------------------
