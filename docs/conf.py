@@ -12,7 +12,15 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-autodoc_mock_imports = ["pysqlcipher3"]
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['pysqlcipher3']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
 import os
 import sys
