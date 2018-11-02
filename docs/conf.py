@@ -12,11 +12,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+autodoc_mock_imports = ["pysqlcipher3"]
+
 import os
 import sys
 print(sys.path)
 import openva_pipeline
-autodoc_mock_imports = ["pysqlcipher3"]
 
 # -- Project information -----------------------------------------------------
 
