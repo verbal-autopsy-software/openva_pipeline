@@ -16,7 +16,7 @@ import os
 import sys
 print(sys.path)
 import openva_pipeline
-
+autodoc_moc_imports = ["pysqlcipher3"]
 
 # -- Project information -----------------------------------------------------
 
