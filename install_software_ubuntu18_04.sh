@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Add CRAN repository to software sources to get latest version of R
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
+sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
+
 #Install necessary software
 sudo apt update
 sudo apt-get install -y python3-pip python-dev python3-dev openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git
