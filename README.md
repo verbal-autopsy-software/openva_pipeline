@@ -43,5 +43,5 @@ The openva\_pipeline\ packages includes two libraries in openva\_pipeline/openva
 is a tool in the Open Data Kit (ODK) Software Suite, and is open-source software available 
 under the Apache 2.0 license (see [ODK_Briefcase_LICENSE](./ODK_Briefcase_LICENSE).  `smartva` is
 is a closed-source binary packaged available for download from the 
-[The Institute for Health Metrics and Evaluation (IHME)](http://www.healthdata.org/verbal-autopsy/tools) and 
+[D4H-VA/smartva-dhis2 repository](https://github.com/D4H-VA/smartva-dhis2/tree/master/smartvadhis2/lib) and 
 is **NOT** included under the above licenses.
