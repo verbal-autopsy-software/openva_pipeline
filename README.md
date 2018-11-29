@@ -13,6 +13,10 @@ demonstrated with code for an RShiny app in the [OpenVA_RShiny
 repository](https://github.com/verbal-autopsy-software/shinyVA) and described in a
 [vignette](https://github.com/verbal-autopsy-software/shinyVA/blob/master/shiny-openVA-vignette.pdf).
 
+
+The documentation for the openVA Pipeline can be found at:
+[http://openva-pipeline.readthedocs.io/](http://openva-pipeline.readthedocs.io/)
+
 ## Getting Started
 
 The OpenVA Pipeline has been designed for (and tested on) Ubuntu LTS 16.04.
