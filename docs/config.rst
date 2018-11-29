@@ -90,7 +90,7 @@ Pipeline Configuration
         application, *ODK-Briefcase-v1.10.1.jar*).  Note that the pipeline will create new folders and files in this working directory,
         and must be run by a user with privileges for writing files to this location.   
 
-      * *openVA\_Algorithm* -- currently, there are only two acceptable values for the alogrithm are ``InterVA`` or ``Insilico``
+      * *openVA\_Algorithm* -- currently, there are only three acceptable values for the alogrithm: ``Insilico``, ``InterVA`` or ``SmartVA``
 
       * *algorithmMetadataCode* -- this column captures the necessary inputs for producing a COD, namely the VA questionnaire, the
         algorithm, and the symptom-cause information (SCI) (see [below](#SCI) for more information on the SCI).  Note that there are also
@@ -113,3 +113,15 @@ Pipeline Configuration
       * *dhisOrgUnit* -- the Organization Unit (e.g., districts) UID to which the verbal autopsies are associated. The organisation unit
         must be linked to the Verbal Autopsy program.  For more details, see the DHIS2 Verbal Autopsy program
         `installation guide <https://github.com/SwissTPH/dhis2_va_draft/blob/master/docs/Installation.md>`_
+#. **SmartVA Configuration**: The pipeline can also be configured to run SmartVA using the command line interface (CLI) available from the `D4H-VA/smartva-dhis2 repository <http://openva-pipeline.readthedocs.io/>`_.
+   #. Download the smartva CLI from the following folder: `https://github.com/D4H-VA/smartva-dhis2/blob/master/smartvadhis2/lib/smartva <https://github.com/D4H-VA/smartva-dhis2/blob/master/smartvadhis2/lib/>`_ and save it in the pipeline's working directory (see below).
+   #. Update the *Pipeline\_Conf* table in the SQLite database with the following values:
+      * *workingDirectory* -- the directory where the pipeline files are stored -- **THIS IS WHERE THE smarva CLI file should be downloaded**.
+
+      * *openVA\_Algorithm* -- set this field to ``SmartVA``
+
+      * *algorithmMetadataCode* -- set this field to the appropriate SCI, e.g.
+      
+        SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1
+
+      * *codSource* -- set this field to``Tariff``.
