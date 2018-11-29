@@ -38,7 +38,7 @@ GNU General Public License v3.0
 
 ## Licenses for Included Libraries
 
-The openva\_pipeline\ packages includes two libraries in openva\_pipeline/openva\_pipeline/libs:
+The openva\_pipeline\ packages makes use of two external programs:
 `ODK-Briefcase-v1.12.2.jar` and `smartva`.  [ODK Briefcase](https://github.com/opendatakit/briefcase) 
 is a tool in the Open Data Kit (ODK) Software Suite, and is open-source software available 
 under the Apache 2.0 license (see [ODK_Briefcase_LICENSE](./ODK_Briefcase_LICENSE).  `smartva` is
