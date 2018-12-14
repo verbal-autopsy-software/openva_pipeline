@@ -113,8 +113,9 @@ Pipeline Configuration
       * *dhisOrgUnit* -- the Organization Unit (e.g., districts) UID to which the verbal autopsies are associated. The organisation unit
         must be linked to the Verbal Autopsy program.  For more details, see the DHIS2 Verbal Autopsy program
         `installation guide <https://github.com/SwissTPH/dhis2_va_draft/blob/master/docs/Installation.md>`_
+
 #. **SmartVA Configuration**: The pipeline can also be configured to run SmartVA using the Python application available 
-from the `ihmeuw/SmartVA-Analyze repository <https://github.com/ihmeuw/SmartVA-Analze>`_.
+from the `ihmeuw/SmartVA-Analyze repository <https://github.com/ihmeuw/SmartVA-Analyze>`_.
 
    #. Install the SmartVA-Analyze application from the repository: `https://github.com/ihmeuw/SmartVA-Analyze <https://github.com/ihmeuw/SmartVA-Analyze>`_ and save it in the pipeline's working directory (see below).
    
