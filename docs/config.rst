@@ -120,7 +120,7 @@ Pipeline Configuration
    
    #. Update the *Pipeline\_Conf* table in the SQLite database with the following values:
 
-      * *workingDirectory* -- the directory where the pipeline files are stored -- **THIS IS WHERE THE smarva CLI file should be downloaded**.
+      * *workingDirectory* -- the directory where the pipeline files are stored.
 
       * *openVA\_Algorithm* -- set this field to ``SmartVA``
 
