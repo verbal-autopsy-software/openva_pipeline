@@ -36,12 +36,13 @@ GNU General Public License v3.0
 
 ----
 
-## Licenses for Included Libraries
+## Licenses for Dependencies (ODK Briefcase and SmartVA-Analyze)
 
 The openva\_pipeline\ packages makes use of two external programs:
-`ODK-Briefcase-v1.12.2.jar` and `smartva`.  [ODK Briefcase](https://github.com/opendatakit/briefcase) 
+`ODK-Briefcase-v1.12.2.jar` and `SmartVA-Analyze`.  [ODK Briefcase](https://github.com/opendatakit/briefcase) 
 is a tool in the Open Data Kit (ODK) Software Suite, and is open-source software available 
-under the Apache 2.0 license (see [ODK_Briefcase_LICENSE](./ODK_Briefcase_LICENSE).  `smartva` is
-is a closed-source binary packaged available for download from the 
-[D4H-VA/smartva-dhis2 repository](https://github.com/D4H-VA/smartva-dhis2/tree/master/smartvadhis2/lib) and 
-is **NOT** included under the above licenses.
+under the Apache 2.0 license (see [ODK_Briefcase_LICENSE](./ODK_Briefcase_LICENSE).  `SmartVA-Analyze` is
+is an open-source application (see the 
+[SmartVA-Analyze MIT License](https://github.com/ihmeuw/SmartVA-Analyze/blob/master/LICENSE))
+that is available for download from the [ihmeuw/SmartVA-Analyze repository](https://github.com/ihmeuw/SmartVA-Analyze).
+Again, **These applications are NOT included under the same license as the OpenVA Pipeline (GPL-3)**.
