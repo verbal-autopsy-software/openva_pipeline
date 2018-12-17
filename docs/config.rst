@@ -114,13 +114,13 @@ Pipeline Configuration
         must be linked to the Verbal Autopsy program.  For more details, see the DHIS2 Verbal Autopsy program
         `installation guide <https://github.com/SwissTPH/dhis2_va_draft/blob/master/docs/Installation.md>`_
 
-#. **SmartVA Configuration**: The pipeline can also be configured to run SmartVA using the Python application available from the GitHub repository `ihmeuw/SmartVA-Analyze <https://github.com/ihmeuw/SmartVA-Analyze>`_.
+#. **SmartVA Configuration**: The pipeline can also be configured to run SmartVA using the command line interface (CLI)  available from the `ihmeuw/SmartVA-Analyze repository <https://github.com/ihmeuw/SmartVA-Analyze/releases>`_.
 
-   #. Install the SmartVA-Analyze application from the repository: `https://github.com/ihmeuw/SmartVA-Analyze <https://github.com/ihmeuw/SmartVA-Analyze>`_ and save it in the pipeline's working directory (see below).
+   #. Download the smartva CLI from the following repository: `https://github.com/ihmeuw/SmartVA-Analyze/releases <https://github.com/ihmeuw/SmartVA-Analyze/releases>`_ and save it in the pipeline's working directory (see below).
    
    #. Update the *Pipeline\_Conf* table in the SQLite database with the following values:
 
-      * *workingDirectory* -- the directory where the pipeline files are stored.
+      * *workingDirectory* -- the directory where the pipeline files are stored -- **HTIS IS WHERE THE smartva CLI file should be downloaded**.
 
       * *openVA\_Algorithm* -- set this field to ``SmartVA``
 
