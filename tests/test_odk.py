@@ -58,6 +58,15 @@ class ValidConnection(unittest.TestCase):
                         odkLastRunDate,
                         odkLastRunDatePrev)
 
+    def test_downloadBriefcase(self):
+        """Check downloadBriefcase()"""
+        if os.path.isfile("ODK-Briefcase-v1.12.2.jar"):
+            os.remove("ODK-Briefcase-v1.12.2.jar")
+
+        pipelineODK = odk.ODK(self.settingsODK, ".")
+        pipelineODK.downloadBriefcase()
+        self.assertTrue(os.path.isfile("ODK-Briefcase-v1.12.2.jar"))
+
     def test_ODK_briefcase_1(self):
         """Check mergeToPrevExport() moves odkBCExportNew.csv"""
         if os.path.isfile("ODKFiles/odkBCExportNew.csv"):

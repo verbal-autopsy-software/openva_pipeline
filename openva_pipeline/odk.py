@@ -9,6 +9,7 @@ import subprocess
 import os
 import shutil
 from pysqlcipher3 import dbapi2 as sqlcipher
+import requests
 
 from .exceptions import PipelineError
 from .exceptions import ODKError
@@ -22,26 +23,13 @@ class ODK:
     and updates them as needed.  Finally, it logs messages and errors to the
     pipeline database.
 
-    Parameters
-
-    odkSettings : (named) tuple with all of configuration settings as
-    attributes.
-    workingDirectory : Directory where openVA Pipeline should create files.
-
-    Methods
-
-    briefcase(self)
-        Uses ODK Briefcase to export VA records from ODK Aggregate server.
-
-    mergePrevExport(self)
-        Merge ODK Briefcase export files (if they exist).
-
-    Raises
-
-    ODKBriefcaseError
-
+    :param odkSettings: A named tuple with all of configuration settings as
+      attributes.
+    :type odkSettings: named tuple
+    :param workingDirectory: Directory where openVA Pipeline should create
+      files.
+    :type workingDirectory: string
     """
-
 
     def __init__(self, odkSettings, workingDirectory):
 
@@ -54,8 +42,9 @@ class ODK:
         self.odkLastRunDate = odkSettings.odkLastRunDate
         self.odkLastRunDatePrev = odkSettings.odkLastRunDatePrev
         # self.odkLastRunResult = odkSettings.odkLastRunResult
-        bcDir = os.path.abspath(os.path.dirname(__file__))
-        self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.12.2.jar")
+        # bcDir = os.path.abspath(os.path.dirname(__file__))
+        # self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.12.2.jar")
+        self.bcPath = os.path.join(workingDirectory, "ODK-Briefcase-v1.12.2.jar")
         odkPath = os.path.join(workingDirectory, "ODKFiles")
         self.exportDir = odkPath
         self.storageDir = odkPath
@@ -69,6 +58,7 @@ class ODK:
 
     def mergeToPrevExport(self):
         """Merge previous ODK Briefcase export files."""
+
         exportFile_prev = os.path.join(self.exportDir, "odkBCExportPrev.csv")
         exportFile_new = os.path.join(self.exportDir, self.fileName)
 
@@ -89,22 +79,28 @@ class ODK:
         if isExportFile_new and not isExportFile_prev:
             shutil.move(exportFile_new, exportFile_prev)
 
+    def downloadBriefcase(self):
+        """Download the ODK Briefcase jar file from Git Hub."""
+
+        bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
+        try:
+            with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
+                r = requests.get(bcURL, stream = True)
+                bcFile.write(r.content)
+        except (requests.RequestException, IOError) as e:
+            raise ODKError("Error downloading Briefcase: {}".format(str(e)))
+
     def briefcase(self):
-        """Export records from ODK Aggregate server using ODK Briefcase.
+        """Calls ODK Briefcase.
 
-        Longer description here.
+        This method spawns a new process that runs the ODK Briefcase Java
+        application (via a command-line interface) to download a CSV file
+        with verbal autopsy records from an ODK Aggregate server.
 
-        Returns
-
-        Connection object
-            SQL connection object for querying config settings
-
-        Raises
-
-        ODKError
-
+        :returns: SQL connection object for querying config settings
+        :rtype: subprocess.CompletedProcess
+        :raises: ODKError
         """
-
 
         bcArgs = ['java', '-jar', self.bcPath,
                   '-url', str('"' + self.odkURL + '"'),

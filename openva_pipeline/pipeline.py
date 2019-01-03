@@ -25,7 +25,7 @@ class Pipeline:
     storing the results locally as well as accessing the configuration settings.
 
     Parameters
-    ----------
+
     dbFileName : str
         File name of the Tranfser database.
     dbDirectory : str
@@ -34,7 +34,7 @@ class Pipeline:
         Encryption key for the Transfer database.
 
     Methods
-    -------
+
     logEvent(self, eventDesc, eventType)
         Inserts a message into the EventLog table of the Transfer database.
     config(self)
