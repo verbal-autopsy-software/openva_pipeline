@@ -3,13 +3,26 @@ Documentation for classes, functions, and methods
 
 .. module:: openva_pipeline
 
+Running the OpenVA Pipeline
+---------------------------
+
+The openva_pipeline package includes two convenience functions for
+
+#. creating the Transfer Database -- a database that holds configuration
+   settings, VA data and results, and a table for logging events and errors; and
+
+#. running through all of the steps in the openVA Pipeline
+
+.. autofunction:: openva_pipeline.runPipeline.createTransferDB
+.. autofunction:: openva_pipeline.runPipeline.runPipeline
+
 Main Interface
 --------------
 
 The OpenVA Pipeline is run using the following function
 
-.. autofunction:: openva_pipeline.runPipeline.runPipeline
-
+.. autoclass:: openva_pipeline.pipeline.Pipeline
+   :inherited-members:
 
 API for Transfer Database
 -------------------------

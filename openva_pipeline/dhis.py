@@ -23,32 +23,21 @@ from .exceptions import DHISError
 class API(object):
     """This class provides methods for interacting with the DHIS2 API.
 
-    Parameters
+    This class is called by an instance of the :class:`DHIS <DHIS>` to retrieve 
+    information from and post verbal autopsy records (and results) to a 
+    DHIS2 server that has the Verbal Autopsy program installed.
 
-    dhisURL : str
-        Web address for DHIS2 server (e.g., "play.dhis2.org/demo").
-    dhisUser : str
-        Username for DHIS2 account.
-    dhisPassword : str
-        Password for DHIS2 account.
-
-    Methods
-
-    get(self, endpoint, params)
-        GET method for DHIS2 API.
-    post(self, endpoint, data) 
-        POST method for DIHS2 API.
-    post_blob(self, f) 
-        Post file to DHIS2 and return created UID for that file.
-
-    Raises
-
-    DHISError
-
+    :param dhisURL: Web address for DHIS2 server (e.g., "play.dhis2.org/demo").
+    :type dhisURL: string
+    :param dhisUser: Username for DHIS2 account.
+    :type dhisUser: string
+    :param dhisPassword: Password for DHIS2 account.
+    :type dhisPassword: string
+    :raises: DHISError
     """
 
     def __init__(self, dhisURL, dhisUser, dhisPass):
-        
+
         if "/api" in dhisURL:
             raise DHISError \
             ("Please do not specify /api/ in the server argument: \
@@ -63,10 +52,11 @@ class API(object):
         self.url = "{}/api".format(dhisURL) ## possible new parameter
 
     def get(self, endpoint, params = None):
-        """
-        GET method for DHIS2 API.
+        """GET method for DHIS2 API.
+
         :rtype: dict
         """
+
         url = "{}/{}.json".format(self.url, endpoint)
         if not params:
             params = {}
@@ -81,10 +71,11 @@ class API(object):
             raise DHISError(str(requests.RequestException))
 
     def post(self, endpoint, data):
-        """
-        POST  method for DHIS2 API.
+        """POST method for DHIS2 API.
+
         :rtype: dict
         """
+
         url = "{}/{}.json".format(self.url, endpoint)
         try:
             r = requests.post(url=url, json=data, auth=self.auth)
@@ -102,8 +93,10 @@ class API(object):
 
     def post_blob(self, f):
         """ Post file to DHIS2 and return created UID for that file
+
         :rtype: str
         """
+
         url = "{}/fileResources".format(self.url)
         with open(f, "rb") as fName:
             files = {"file": (f, fName, "application/x-sqlite3", {"Expires": "0"})}
@@ -126,7 +119,41 @@ class API(object):
                      )
 
 class VerbalAutopsyEvent(object):
-    """ DHIS2 event + a BLOB file resource"""
+    """Create DHIS2 event + a BLOB file resource
+
+    :param va_id: UID for verbal autopsy record  
+      (used as a DHIS2 data element)
+    :type va_id: string
+    :param program: UID of the DHIS2's Verbal Autopsy program
+    :type program: string
+    :param dhis_orgunit: UID for the DHIS2 Organization Unit where the
+      event (death) should be registered.
+    :type dhis_orgunit: string
+    :param event_date: Date of death with YYYY-MM-DD format
+    :type event_date: datetime.date
+    :param sex: Sex of the deceased (used as a DHIS2 data element).  
+      Possible values must fit to an option in the VA Program's "Sex" 
+      optionSet: female, male, missing, unknown).  If SmartVA is used 
+      to assign cause of death, then sex is an integer with 1 = male 
+      and 2 = female).
+    :type sex: string or integer
+    :param dob: Date of birth of the deceased with YYYY-MM-DD format
+      (used as a DHIS2 data element)
+    :type dob: datetime.date
+    :param age: Age (in years) at time of death
+    :type age: integer
+    :param cod_code: Coded cause of death (must fit to an option in the 
+      VA Program's "CoD codes" optionSet.
+    :type cod_code: string
+    :param algorithm_metadata: Code for how the CoD was obtained (must
+      fit in VA Program's "Algorithm Metadata" optionSet.
+    :type algorithm_metadata: string
+    :param odk_id: UID for the VA record assigned by the ODK Aggregate server
+    :type odk_id: string
+    :param file_id: UID for the blob file (containing the VA data and 
+      results) posted to (and assigned by) DHIS2 server.
+    :type file_id: string
+    """
 
     def __init__(self, va_id, program, dhis_orgunit, event_date, sex, dob, age,
                  cod_code, algorithm_metadata, odk_id, file_id):
@@ -150,12 +177,14 @@ class VerbalAutopsyEvent(object):
             {"dataElement": "oPAg4MA0880", "value": self.age},
             {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
             {"dataElement": "XLHIBoLtjGt", "value": file_id}
-
         ]
 
     def format_to_dhis2(self, dhisUser):
         """
         Format object to DHIS2 compatible event for DHIS2 API
+
+        :param dhisUser: DHIS2 username for account posting the event
+        :returns: DHIS2 event
         :rtype: dict
         """
         event = {
@@ -174,6 +203,10 @@ class VerbalAutopsyEvent(object):
 def create_db(fName, evaList):
     """
     Create a SQLite database with VA data + COD
+
+    :param evaList: Event-Value-Attribute data structure with verbal autopsy
+      data, cause of death result, and VA metadata.
+    :type evaList: list
     :rtype: None
     """
     conn = sqlite3.connect(fName)
@@ -185,8 +218,10 @@ def create_db(fName, evaList):
 
 
 def getCODCode(myDict, searchFor):
-    """
-    Return COD label expected by DHIS2.
+    """Return COD label expected by (DHIS2) VA Program.
+
+    :param searchFor: Cause of Death label returned by openVA.
+    :type searchFor: string
     :rtype: str
     """
     for i in range(len(myDict.keys())):
@@ -207,39 +242,23 @@ def findKeyValue(key, d):
                     yield j
 
 class DHIS():
-    """Class for transfering VA records (with assigned CODs) to the DHIf2S server.
+    """Class for transfering VA records (with assigned CODs) to the DHIS2 server.
 
     This class includes methods for importing VA results (i.e. assigned causes of
     death from openVA or SmartVA) as CSV files, connecting to a DHIS2 server
     with the Verbal Autopsy Program, and posting the results to the DHIS2
     server and/or the local Transfer database.
 
-    Parameters
-
-    dhisArgs : (named) tuple
-        Contains parameter values for connected to DHIS2, as returned by
-        transferDB.configDHIS().
-
-    Methods
-
-    connect(self)
-        Wrapper for algorithm-specific methods that create an R script to use
-        openVA to assign CODs.
-    postVA(self)
-        Prepare and post VA objects to the DHIS2 server.
-    verifyPost(self)
-        Verify that VA records were posted to DHIS2 server.
-    CheckDuplicates(self)
-        Checks the DHIS2 server for duplicate records.
-
-    Raises
-
-    DHISError
-
+    :param dhisArgs: Contains parameter values for connected to DHIS2, as 
+      returned by transferDB.configDHIS().
+    :type dhisArgs: (named) tuple
+    :param workingDirectory: Workind direcotry for the openVA Pipeline
+    :type workingDirectory: string
+    :raises: DHISError
     """
 
     def __init__(self, dhisArgs, workingDirectory):
-        
+
         self.dhisURL = dhisArgs[0].dhisURL
         self.dhisUser = dhisArgs[0].dhisUser
         self.dhisPassword = dhisArgs[0].dhisPassword
@@ -260,7 +279,21 @@ class DHIS():
             raise DHISError("Unable to create directory" + dhisPath)
 
     def connect(self):
-        """Run get method to retrieve VA program ID and Org Unit."""
+        """Setup connection to DHIS2 server.
+
+        This creates a connection to DHIS2's VA Program ID 
+        by creating an instance of :class:`API <API>`.  This method
+        also checks that the VA Program and the organization unit 
+        can both be found on the DHIS2 server.  The configuration
+        settings for connecting to the DHIS2 (e.g., URL, username,
+        password, etc.) are taken from the arguments passed to this
+        method's class :class:`DHIS <DHIS>` (these settings can be
+        created using the method 
+        :meth:`Pipeline.config <openva_pipeline.pipeline.Pipeline.config>`).
+
+        :returns: A class instance for interacting with the DHIS2 API.
+        :rtype: Instance of the :class:`API <API>` class
+        """
 
         try:
             apiDHIS = API(self.dhisURL, self.dhisUser, self.dhisPassword)
@@ -283,7 +316,21 @@ class DHIS():
         return apiDHIS
 
     def postVA(self, apiDHIS):
-        """Post VA records to DHIS."""
+        """Post VA records to DHIS.
+
+        This method reads in a CSV file ("entityAttribuesValue.csv") with 
+        cause of death results (from openVA) then formats events and posts 
+        them to a VA Program (installed on DHIS2 server).
+
+        :param apiDHIS: A class instance for interacting with the DHIS2 API
+          created by the method :meth:`DHIS.connect <connect>`
+        :type apiDHIS: Instance of the :class:`API <API>` class
+        :returns: Log information receieved after posting events to the VA
+          Program on a DHIS2 server (see :meth:`API.post <API.post>`).
+        :rtype: dict
+        :raises: DHISError
+        """
+
         evaPath = os.path.join(self.dirOpenVA, "entityAttributeValue.csv")
         if not os.path.isfile(evaPath):
             raise DHISError("Missing: " + evaPath)
@@ -383,7 +430,17 @@ class DHIS():
         return log
 
     def verifyPost(self, postLog, apiDHIS):
-        """Verify that VA records were posted to DHIS2 server."""
+        """Verify that VA records were posted to DHIS2 server.
+
+        :param postLog: Log information retrieved after posting events to 
+          a VA Program on a DHIS2 server; this is the return object from
+          :meth:`DHIS.postVA <postVA>`.
+        :type postLog: dictionary
+        :param apiDHIS: A class instance for interacting with the DHIS2 API
+          created by the method :meth:`DHIS.connect <connect>`
+        :type apiDHIS: Instance of the :class:`API <API>` class
+        :raises: DHISError
+        """
 
         vaReferences = list(findKeyValue("reference", d = postLog["response"]))
         try:
@@ -403,4 +460,3 @@ class DHIS():
         except:
             raise DHISError\
                 ("Problem with DHIS.postVA...couldn't verify posted records.")
-

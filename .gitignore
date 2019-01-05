@@ -1,4 +1,5 @@
 tests/ODK-Briefcase-v1.12.2.jar
+tests/smartva
 tests/*.log
 tests/.Rhistory
 tests/fontsconfig/
@@ -11,6 +12,7 @@ tests/OpenVAFiles/openVA_input.csv
 tests/OpenVAFiles/2*
 tests/OpenVAFiles/entityAttributeValue.csv
 tests/OpenVAFiles/recordStorage.csv
+tests/OpenVAFiles/newStorage.csv
 tests/DHIS/
 
 openva_pipeline/.Rhistory

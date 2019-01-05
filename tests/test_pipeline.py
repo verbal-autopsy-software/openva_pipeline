@@ -1,13 +1,10 @@
-#------------------------------------------------------------------------------#
-# test_pipeline.py
-#------------------------------------------------------------------------------#
-
 import datetime
 import subprocess
 import shutil
 import os
 import unittest
 import collections
+import requests
 import pandas as pd
 from pysqlcipher3 import dbapi2 as sqlcipher
 
@@ -116,6 +113,32 @@ class Check_Pipeline_config(unittest.TestCase):
         """Test config method configuration of pipeline:
         settingsDHIS.dhisOrgUnit."""
         self.assertEqual(self.settingsDHIS[0].dhisOrgUnit, "SCVeBskgiK6")
+
+
+class DownloadAppsTests(unittest.TestCase):
+    """Check the methods for downloading external apps."""
+
+    def setUp(self):
+        dbFileName = "Pipeline.db"
+        dbDirectory = "."
+        dbKey = "enilepiP"
+        useDHIS = True
+        self.pl = Pipeline(dbFileName, dbDirectory, dbKey, useDHIS)
+
+    def test_downloadBriefcase(self):
+        """Check downloadBriefcase()"""
+        if os.path.isfile("ODK-Briefcase-v1.12.2.jar"):
+            os.remove("ODK-Briefcase-v1.12.2.jar")
+        self.pl.downloadBriefcase()
+        self.assertTrue(os.path.isfile("ODK-Briefcase-v1.12.2.jar"))
+
+    def test_downloadSmartVA(self):
+        """Check downloadSmartVA()"""
+        if os.path.isfile("smartva"):
+            os.remove("smartva")
+        self.pl.downloadSmartVA()
+        self.assertTrue(os.path.isfile("smartva"))
+
 
 class Check_Pipeline_runODK(unittest.TestCase):
     """Check runODK method."""
@@ -661,6 +684,9 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
         settingsOpenVA = settings["openVA"]
         settingsDHIS = settings["dhis"]
 
+        if not os.path.isfile("smartva"):
+            pl.downloadSmartVA()
+
         rOut = pl.runOpenVA(settingsOpenVA,
                             settingsPipeline,
                             settingsODK.odkID,
@@ -888,8 +914,7 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
                       dbKey, useDHIS)
         pl.closePipeline()
 
-        nowDate = datetime.datetime.now()
-        pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        pipelineRunDate = pl.pipelineRunDate
         xferDB = TransferDB(dbFileName = dbFileName,
                             dbDirectory = dbDirectory,
                             dbKey = dbKey,

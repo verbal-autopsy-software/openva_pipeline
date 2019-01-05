@@ -146,56 +146,6 @@ class ProperMergeWithExistingExports(unittest.TestCase):
         self.assertFalse(os.path.isfile("ODKFiles/odkBCExportNew.csv"))
 
 
-class DownloadBriefcaseTests(unittest.TestCase):
-    """Check the everything works as it should."""
-
-    # Define valid parameters for SwissTPH ODK Aggregate Server.
-    odkID = None
-    odkURL = "https://odk.swisstph.ch/ODKAggregateOpenVa"
-    odkUser = "odk_openva"
-    odkPassword = "openVA2018"
-    odkFormID = "va_who_2016_11_03_v1_4_1"
-    odkLastRun = "1901-01-01_00:00:01"
-    odkLastRunDate = datetime.datetime.strptime(
-        odkLastRun, "%Y-%m-%d_%H:%M:%S").strftime("%Y/%m/%d")
-    odkLastRunDatePrev = (
-        datetime.datetime.strptime(odkLastRunDate, "%Y/%m/%d") -
-        datetime.timedelta(days=1)
-    ).strftime("%Y/%m/%d")
-    odkLastRunResult = "fail"
-
-    ntODK = collections.namedtuple("ntODK",
-                                   ["odkID",
-                                    "odkURL",
-                                    "odkUser",
-                                    "odkPassword",
-                                    "odkFormID",
-                                    "odkLastRun",
-                                    "odkLastRunResult",
-                                    "odkLastRunDate",
-                                    "odkLastRunDatePrev"]
-        )
-    settingsODK = ntODK(odkID,
-                        odkURL,
-                        odkUser,
-                        odkPassword,
-                        odkFormID,
-                        odkLastRun,
-                        odkLastRunResult,
-                        odkLastRunDate,
-                        odkLastRunDatePrev)
-
-    def setUp(self):
-        if os.path.isfile("ODK-Briefcase-v1.12.2.jar"):
-            os.remove("ODK-Briefcase-v1.12.2.jar")
-        pipelineODK = odk.ODK(self.settingsODK, ".")
-        pipelineODK.downloadBriefcase()
-
-    def test_downloadBriefcase(self):
-        """Check downloadBriefcase()"""
-        self.assertTrue(os.path.isfile("ODK-Briefcase-v1.12.2.jar"))
-
-
 class InvalidConnection(unittest.TestCase):
     """Check that proper execptions are raised."""
 

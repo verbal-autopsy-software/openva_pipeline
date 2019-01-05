@@ -69,7 +69,15 @@ def runPipeline(database_file_name,
                 database_directory,
                 database_key,
                 export_to_DHIS = True):
-    """Runs through all steps of the OpenVA Pipeline.
+    """Runs through all steps of the OpenVA Pipeline
+
+    This function is a wrapper for the Pipeline class, which 
+    runs through all steps of the OpenVA Pipeline -- (1) connect to 
+    Transfer Database (to retrieve configuration settings); (2) connect to
+    ODK Aggregate to download a CSV file with VA records; (3) run openVA
+    (or SmartVA) to assign cause of death; and (4) store CoD results and
+    VA data in the Transfer Database as well as a DHIS2 VA Program (if
+    requested).
 
     :param database_file_name: File name for the Transfer Database.
     :param database_directory: Path of the Transfer Database.

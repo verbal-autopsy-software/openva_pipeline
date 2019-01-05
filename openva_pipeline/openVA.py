@@ -45,9 +45,7 @@ class OpenVA:
     Raises
 
     OpenVAError
-
     """
-
 
     def __init__(self, vaArgs, pipelineArgs, odkID, runDate):
 
@@ -61,8 +59,7 @@ class OpenVA:
         dirODK = os.path.join(pipelineArgs.workingDirectory, "ODKFiles")
         self.dirODK = dirODK
 
-        dirSmartVA = os.path.abspath(os.path.dirname(__file__))
-        self.cliSmartVA = os.path.join(dirSmartVA, "libs/smartva")
+        self.cliSmartVA = os.path.join(pipelineArgs.workingDirectory, "smartva")
         self.successfulRun = None
 
         try:

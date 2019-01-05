@@ -79,17 +79,6 @@ class ODK:
         if isExportFile_new and not isExportFile_prev:
             shutil.move(exportFile_new, exportFile_prev)
 
-    def downloadBriefcase(self):
-        """Download the ODK Briefcase jar file from Git Hub."""
-
-        bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
-        try:
-            with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
-                r = requests.get(bcURL, stream = True)
-                bcFile.write(r.content)
-        except (requests.RequestException, IOError) as e:
-            raise ODKError("Error downloading Briefcase: {}".format(str(e)))
-
     def briefcase(self):
         """Calls ODK Briefcase.
 
@@ -97,7 +86,7 @@ class ODK:
         application (via a command-line interface) to download a CSV file
         with verbal autopsy records from an ODK Aggregate server.
 
-        :returns: SQL connection object for querying config settings
+        :returns: Return value from method subprocess.run()
         :rtype: subprocess.CompletedProcess
         :raises: ODKError
         """

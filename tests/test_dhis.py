@@ -1,7 +1,3 @@
-#------------------------------------------------------------------------------#
-# test_dhis.py
-#------------------------------------------------------------------------------#
-
 import datetime
 import subprocess
 import shutil
@@ -20,7 +16,7 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 class Check_DHIS(unittest.TestCase):
     """Check the everything works as it should."""
 
-    shutil.rmtree("DHIS2/blobs/", ignore_errors = True)
+    shutil.rmtree("DHIS/blobs/", ignore_errors = True)
     shutil.copy("OpenVAFiles/sampleEAV.csv",
                 "OpenVAFiles/entityAttributeValue.csv")
     shutil.copy("OpenVAFiles/sample_recordStorage.csv",
@@ -75,6 +71,7 @@ class Check_DHIS_Exceptions(unittest.TestCase):
         """Verify exception is raised with faulty input."""
         dirOpenVA = "OpenVAFiles"
         dhisURL = "https://va30se.swisstph-mis.ch"
+        # dhisURL = "https://va25.swisstph-mis.ch"
         dhisUser = "va-demo"
         dhisPassword = "VerbalAutopsy99!"
         dhisOrgUnit = "wrong"
@@ -99,6 +96,7 @@ class Check_DHIS_Exceptions(unittest.TestCase):
         """Verify exepction is raised with faulty input."""
         dirOpenVA = "OpenVAFiles"
         dhisURL = "https://va30se.swisstph-mis.ch"
+        # dhisURL = "https://va25.swisstph-mis.ch"
         dhisUser = "wrong"
         dhisPassword = "VerbalAutopsy99!"
         dhisOrgUnit = "SCVeBskgiK6"

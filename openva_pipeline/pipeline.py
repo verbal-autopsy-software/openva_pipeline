@@ -1,10 +1,14 @@
-#------------------------------------------------------------------------------#
-# pipeline.py
-#------------------------------------------------------------------------------#
+"""
+openva_pipeline.pipeline
+------------------------
+
+This module defines the primary API for the openVA Pipeline.
+"""
 
 import os
 import csv
 import datetime
+import requests
 from pandas import read_csv
 
 from .transferDB import TransferDB
@@ -24,33 +28,13 @@ class Pipeline:
     settings for the pipeline.  The TransferDB class performs the final step of
     storing the results locally as well as accessing the configuration settings.
 
-    Parameters
-
-    dbFileName : str
-        File name of the Tranfser database.
-    dbDirectory : str
+    :param dbFileName: File name of the Tranfser database.
+    :type dbFileName: string
+    :param dbDirectory: str
         Path of folder containing the Transfer database.
-    dbKey : str
-        Encryption key for the Transfer database.
-
-    Methods
-
-    logEvent(self, eventDesc, eventType)
-        Inserts a message into the EventLog table of the Transfer database.
-    config(self)
-        Returns dictionary with the configuration settings for the classes
-        Pipeline, ODK, OpenVA, and DHIS.
-    runODK(slef, argsODK, workingDir)
-        Run check duplicates, copy file, and briefcase.
-    runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate)
-        Create & run script or run smartva.
-    runDHIS(self, argsDHIS, workingDir)
-        Connect to API and post verbal autopsy records to DHIS server.
-    storeResultsDB(self)
-        Store VA results in Transfer database.
-    closePipeline(self, conn)
-        Update ODK_Conf ODKLastRun in Transfer DB and clean up files.
-
+    :type dbDirectory: string
+    :param dbKey: Encryption key for the Transfer database.
+    :type dbKey: string
     """
 
     def __init__(self, dbFileName, dbDirectory, dbKey, useDHIS = True):
@@ -63,8 +47,38 @@ class Pipeline:
         self.pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
         self.useDHIS = useDHIS
 
+    def downloadBriefcase(self):
+        """Download the ODK Briefcase jar file from Git Hub."""
+
+        bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
+        try:
+            with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
+                r = requests.get(bcURL, stream = True)
+                bcFile.write(r.content)
+            os.chmod("ODK-Briefcase-v1.12.2.jar", 0o744)
+        except (requests.RequestException, IOError) as e:
+            raise ODKError("Error downloading Briefcase: {}".format(str(e)))
+
+    def downloadSmartVA(self):
+        """Download the smartva (linux) binary application file from Git Hub."""
+
+        smartvaURL = "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
+        try:
+            with open("smartva", "wb") as smartvaBinary:
+                r = requests.get(smartvaURL, stream = True)
+                smartvaBinary.write(r.content)
+            os.chmod("smartva", 0o777)
+        except (requests.RequestException, IOError) as e:
+            raise ODKError("Error downloading smartva: {}".format(str(e)))
+
     def logEvent(self, eventDesc, eventType):
-        """Commit event or error message to transfer database."""
+        """Commit event or error message into EventLog table of transfer database.
+
+        :param eventDesc: Description of the event.
+        :type eventDesc: string
+        :param eventType: Type of event (error or information)
+        :type evenType: string
+        """
 
         errorFile = os.path.join(self.dbDirectory, "dbErrorLog.csv")
         timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -103,7 +117,12 @@ class Pipeline:
                 print(errorMsg)
 
     def config(self):
-        """Return dictionary with configuration settings for pipeline steps."""
+        """This method retrieves configuration for pipeline from Transfer DB.
+
+        :returns: Configuration settings for pipeline steps (e.g. connecting 
+          to ODK Aggregate, running openVA, or posting records to DHIS)
+        :rtype: dictionary
+        """
 
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,
@@ -126,7 +145,23 @@ class Pipeline:
             return(settings)
 
     def runODK(self, argsODK, argsPipeline):
-        """Run check duplicates, copy file, and briefcase."""
+        """Run check duplicates, copy file, and briefcase.
+
+        This method runs the Java application ODK Briefcase, using the
+        configuration settings in argsODK, and downloads verbal autopsy (VA)
+        records as a (csv) export from an ODK Aggregate server.  If there
+        is a previous ODK export file, this method merges the files by
+        keeping only the unique VA records.
+
+        :param argsODK: Arguments passed to ODK Briefcase for connecting
+          to an ODK Aggregate server.
+        :type argsODK: named tuple
+        :param argsPipeline: Arguments for configuration the openva pipeline.
+        :type argsPipeline: named tuple
+        :return: Return value from method subprocess.run()
+        :rtype: subprocess.CompletedProcess
+        """
+
         pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
         odkBC = pipelineODK.briefcase()
@@ -141,7 +176,20 @@ class Pipeline:
         return(odkBC)
 
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
-        """Create & run script or run smartva."""
+        """Create & run script or run smartva.
+
+        :param argsOpenVA: Configuration settings for openVA.
+        :type argsOpenVA: named tuple
+        :param argsPipeline: Configuration settings for OpenVA Pipeline
+        :type argsPipeline: named tuple
+        :param odkID: column/variable name of VA record ID in ODK export
+        :type odkID: string
+        :param runDate: date and time when OpenVA Pipeline ran
+        :type runDate: nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        :return: an indicator of zero VA records in the ODK export
+        :rtype: dictionary
+        """
+
         pipelineOpenVA = OpenVA(vaArgs = argsOpenVA,
                                 pipelineArgs = argsPipeline,
                                 odkID = odkID,
@@ -155,7 +203,17 @@ class Pipeline:
         return(rOut)
 
     def runDHIS(self, argsDHIS, argsPipeline):
-        """Connect to API and post events."""
+        """Connect to API and post events.
+
+        :param argsDHIS: Configuration settings for connecting to DHIS2 server.
+        :type argsOpenVA: named tuple
+        :param argsPipeline: Configuration settings for OpenVA Pipeline
+        :type argsPipeline: named tuple
+        :return: VA Program ID from the DHIS2 server, the log from 
+          the DHIS2 connection, and the number of records posted to DHIS2
+        :rtype: dictionary
+        """
+
         pipelineDHIS = DHIS(argsDHIS, argsPipeline.workingDirectory)
         apiDHIS = pipelineDHIS.connect()
         postLog = pipelineDHIS.postVA(apiDHIS)
@@ -168,6 +226,7 @@ class Pipeline:
 
     def storeResultsDB(self):
         """Store VA results in Transfer database."""
+
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,
                             dbKey = self.dbKey,
@@ -179,6 +238,7 @@ class Pipeline:
 
     def closePipeline(self):
         """Update ODK_Conf ODKLastRun in Transfer DB and clean up files."""
+
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,
                             dbKey = self.dbKey,
