@@ -121,7 +121,7 @@ class API(object):
 class VerbalAutopsyEvent(object):
     """Create DHIS2 event + a BLOB file resource
 
-    :param va_id: UID for verbal autopsy record  
+    :param va_id: UID for verbal autopsy record 
       (used as a DHIS2 data element)
     :type va_id: string
     :param program: UID of the DHIS2's Verbal Autopsy program
@@ -402,7 +402,8 @@ class DHIS():
                     else:
                         dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
                         eventDate = datetime.date(dod.year, dod.month, dod.day)
-                    age = row[4]
+                    ## age = row[4] # HERE
+                    age = int(row[4])
                     if row[5] == "Undetermined":
                         codCode = "99"
                     else:

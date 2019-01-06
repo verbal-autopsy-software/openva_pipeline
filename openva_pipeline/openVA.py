@@ -23,28 +23,9 @@ class OpenVA:
     exports, runs openVA to assign CODs, and creates outputs for depositing in
     the Transfers DB and to a DHIS server.
 
-    Parameters
-
-    algorithm : str
-        Which VA algorithm should be used to assign COD.
-
-    Methods
-
-    copyVA(self)
-        Create data file for openVA by merging ODK export files.
-    rScript(self)
-        Wrapper for algorithm-specific methods that create an R script to use
-        openVA to assign CODs.
-    __rScript_InSilicoVA(self)__
-        Write an R script for running InSilicoVA and assigning CODs.
-    __rScript_InterVA(self)__
-        Write an R script for running InterVA and assigning CODs.
-    getCOD(self)
-        Run R as subprocess and run the script for assigning CODs.
-
-    Raises
-
-    OpenVAError
+    :param algorithm: Which VA algorithm should be used to assign COD.
+    :type algorithm: str
+    :raises: OpenVAError
     """
 
     def __init__(self, vaArgs, pipelineArgs, odkID, runDate):
@@ -69,7 +50,11 @@ class OpenVA:
             raise OpenVAError("Unable to create directory" + dhisPath)
 
     def copyVA(self): 
-        """Create data file for openVA by merging ODK export files."""
+        """Create data file for openVA by merging ODK export files.
+
+        :returns: Indicator of an empty (i.e. no records) ODK export file
+        :rtype: logical 
+        """
 
         exportFile_prev = os.path.join(self.dirODK, "odkBCExportPrev.csv")
         exportFile_new = os.path.join(self.dirODK, "odkBCExportNew.csv")
@@ -288,7 +273,8 @@ class OpenVA:
         """Write two CSV files: (1) Entity Value Attribute blob pushed to DHIS2 (entityAttributeValue.csv)
                                 (2) table for transfer database (recordStorage.csv)
 
-           Both CSV files are stored in the OpenVA folder."""
+           Both CSV files are stored in the OpenVA folder.
+        """
 
         inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
         outDir = os.path.join(self.dirOpenVA, self.runDate)

@@ -32,46 +32,16 @@ class TransferDB:
 
     Parameters
 
-    dbFileName : str
-        File name of the Tranfser database.
-    dbDirectory : str
-        Path of folder containing the Transfer database.
-    dbKey : str
-        Encryption key for the Transfer database.
-    plRunDate : date
-        Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss).
-
-    Methods
-
-    connectDB(self)
-        Returns SQLite Connection object to Transfer database.
-    configPipeline(self, conn)
-        Accepts SQLite Connection object and returns tuple with configuration
-        settings for the Pipeline.
-    configODK(self, conn)
-        Accepts SQLite Connection object and returns tuple with configuration
-        settings for connecting to ODK Aggregate server.
-    configOpenVA(self, conn)
-        Accepts SQLite Connection object and returns tuple with configuration
-        settings for R package openVA.
-    checkDuplicates(self)
-        Search for duplicate VA records in ODK Briefcase export file and the
-        tranfser DB.
-    configDHIS(self, conn)
-        Accepts SQLite Connection object and returns tuple with configuration
-        settings for connecting to DHIS2 server.
-    storeVA(self)
-        Deposits VA objects to the Transfer DB.
-    makePipelineDirs(self)
-        Returns SQLite Connection object to Transfer database.
-    cleanODK(self)
-        Remove ODK Briefcase Export files.
-    cleanOpenVA(self)
-        Remove openVA files with COD results.
-    cleanDHIS(self)
-        Remove DHIS2 blob files.
+    :param dbFileName: File name of the Tranfser database.
+    :type dbFileName: str
+    :param dbDirectory: Path of folder containing the Transfer database.
+    :type dbDirectory: str
+    :param dbKey: Encryption key for the Transfer database.
+    :type dbKey: str
+    :param plRunDate: Date when pipeline started latest 
+      run (YYYY-MM-DD_hh:mm:ss).
+    :type plRunDate: date
     """
-
 
     def __init__(self, dbFileName, dbDirectory, dbKey, plRunDate):
 
@@ -88,15 +58,9 @@ class TransferDB:
         Uses parameters supplied to the parent class, TransferDB, to connect to
         the (encrypted) Transfer database.
 
-        Returns
-
-        SQLite database connection object
-            Used to query (encrypted) SQLite database.
-
-        Raises
-
-        DatabaseConnectionError
-
+        :returns: Used to query (encrypted) SQLite database.
+        :rtype: SQLite database connection object
+        :raises: DatabaseConnectionError
         """
 
         dbFilePresent = os.path.isfile(self.dbPath)
@@ -122,18 +86,13 @@ class TransferDB:
         returns a tuple with attributes (1) algorithmMetadataCode; (2)
         codSource; (3) algorithm; and (4) workingDirectory.
 
-        Returns
-
-        tuple
-            alogrithmMetadataCode - attribute describing VA data
-            codSource - attribute detailing the source of the Cause of Death list
-            algorithm - attribute indicating which VA algorithm to use
-            workingDirectory - attribute indicating the working directory
-
-        Raises
-
-        PipelineConfigurationError
-
+        :returns: Arguments needed to configure the OpenVA Pipeline
+          alogrithmMetadataCode - attribute describing VA data
+          codSource - attribute detailing the source of the Cause of Death list
+          algorithm - attribute indicating which VA algorithm to use
+          workingDirectory - attribute indicating the working directory
+        :rtype: tuple
+        :raises: PipelineConfigurationError
         """
 
         c = conn.cursor()
@@ -189,26 +148,24 @@ class TransferDB:
         """Query ODK configuration settings from database.
 
         This method is intended to be used in conjunction with (1)
-        TransferDB.connectDB(), which establishes a connection to a database
-        with the Pipeline configuration settings; and (2) ODK.briefcase(), which
-        establishes a connection to an ODK Aggregate server.  Thus,
-        TransferDB.configODK() gets its input from TransferDB.connectDB() and
-        the output from TransferDB.configODK() is a valid argument for ODK.config().
+        :meth:`TransferDB.connectDB() <connectDB>`, which establishes a 
+        connection to a database with the Pipeline configuration settings; 
+        and (2) :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`, 
+        which establishes a connection to an ODK Aggregate server.  Thus,
+        TransferDB.configODK() gets its input from 
+        :meth:`TransferDB.connectDB() <connectDB>` and the output from 
+        TransferDB.configODK() is a valid argument for 
+        :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-
-        Returns
-
-        tuple
-            Contains all parameters for ODK.briefcase().
-
-        Raises
-
-        ODKConfigurationError
-
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :returns: Contains all parameters for 
+          :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
+        :rtype: tuple
+        :raises: ODKConfigurationError
         """
+
         c = conn.cursor()
         sqlODK = "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, \
           odkLastRun FROM ODK_Conf;"
@@ -265,12 +222,11 @@ class TransferDB:
     def updateODKLastRun(self, conn, plRunDate):
         """Update Transfer Database table ODK_Conf.odkLastRun
 
-        Parameters
-
-        conn : sqlite3 Connection object
-        plRunDate : date
-        Date when pipeline started latest run (YYYY-MM-DD_hh:mm:ss)
-
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param plRunDate: Date when pipeline started latest run 
+        :type plRunDate: date (YYYY-MM-DD_hh:mm:ss)
         """
 
         c = conn.cursor()
@@ -286,15 +242,10 @@ class TransferDB:
         file and the Tranfser DB.  If duplicates are found, a warning message
         is logged to the EventLog table in the Transfer database.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-
-        Raises
-
-        DatabaseConnectionError
-        PipelineError
-
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :raises: DatabaseConnectionError, PipelineError
         """
 
         if self.workingDirectory == None:
@@ -329,30 +280,28 @@ class TransferDB:
     def configOpenVA(self, conn, algorithm, pipelineDir):
         """Query OpenVA configuration settings from database.
 
-        This method is intended to receive its input (a Connection object)
-        from TransferDB.connectDB(), which establishes a connection to a
-        database with the Pipeline configuration settings.  It sets up the
-        configuration for all of the VA algorithms included in the R package
-        openVA.  The output from configOpenVA() serves as an input to the
-        method OpenVA.setAlgorithmParameters().  This is a wrapper function
-        that calls __configInterVA__, __configInSilicoVA__, and
-        __configSmartVA__ to actually pull configuration settings from the
-        database.
+        This method is intended to receive its input (a Connection object) 
+        from :meth:`TransferDB.connectDB() <connectDB>`, which establishes a 
+        connection to a database with the Pipeline configuration settings.  It 
+        sets up the configuration for all of the VA algorithms included in the 
+        R package openVA.  The output from 
+        :meth:`configOpenVA() <configOpenVA>` serves as an input to the method 
+        :meth:`OpenVA.setAlgorithmParameters() <openva_pipeline.odk.ODK.setAlgorithmParameters>`.  
+        This is a wrapper function that calls :meth:`configInterVA`,
+        :meth:`configInSilicoVA`, and :meth:`configSmartVA` to actually pull 
+        configuration settings from the database.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-        algorithm : VA algorithm used by R package openVA
-        pipelineDir : Working directory for the Pipeline
-
-        Returns
-
-        tuple
-            Contains all parameters needed for OpenVA.setAlgorithmParameters().
-
-        Raises
-
-        OpenVAConfigurationError
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param algorithm: VA algorithm used by R package openVA
+        :type algorithm: str
+        :param pipelineDir: Working directory for the Pipeline
+        :type pipelineDir: str
+        :returns: Contains all parameters needed for 
+          OpenVA.setAlgorithmParameters().
+        :rtypes: tuple
+        :raises: OpenVAConfigurationError
         """
 
         if algorithm == "InterVA":
@@ -374,19 +323,15 @@ class TransferDB:
         This method is called by configOpenVA when the VA algorithm is either
         InterVA4 or InterVA5.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-        pipelineDir : Working directory for the Pipeline
-
-        Returns
-
-        tuple
-            Contains all parameters needed for OpenVA.setAlgorithmParameters().
-
-        Raises
-
-        OpenVAConfigurationError
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param pipelineDir: Working directory for the Pipeline
+        :type pipelineDir: str
+        :returns: Contains all parameters needed for 
+          OpenVA.setAlgorithmParameters().
+        :rtype: tuple
+        :raises: OpenVAConfigurationError
         """
 
         c = conn.cursor()
@@ -478,19 +423,15 @@ class TransferDB:
         This method is called by configOpenVA when the VA algorithm is
         InSilicoVA.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-        pipelineDir : Working directory for the Pipeline
-
-        Returns
-
-        tuple
-            Contains all parameters needed for OpenVA.setAlgorithmParameters().
-
-        Raises
-
-        OpenVAConfigurationError
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param pipelineDir: Working directory for the Pipeline
+        :type pipelineDir: str
+        :returns: Contains all parameters needed for 
+          OpenVA.setAlgorithmParameters().
+        :rtype: tuple
+        :raises: OpenVAConfigurationError
         """
 
         c = conn.cursor()
@@ -847,20 +788,16 @@ class TransferDB:
         This method is called by configOpenVA when the VA algorithm is
         SmartVA.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-        pipelineDir : Working directory for the Pipeline
-
-        Returns
-
-        tuple
-            Contains all parameters needed for OpenVA.setAlgorithmParameters().
-
-        Raises
-
-        OpenVAConfigurationError
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param pipelineDir: Working directory for the Pipeline
+        :type pipelineDir: str
+        :returns: Contains all parameters needed for OpenVA.setAlgorithmParameters().
+        :rtype: tuple
+        :raises: OpenVAConfigurationError
         """
+
         c = conn.cursor()
 
         try:
@@ -929,27 +866,24 @@ class TransferDB:
         """Query DHIS configuration settings from database.
 
         This method is intended to be used in conjunction with (1)
-        TransferDB.connectDB(), which establishes a connection to a database
-        with the Pipeline configuration settings; and (2) DHIS.connect(), which
-        establishes a connection to a DHIS server.  Thus,
-        TransferDB.configDHIS() gets its input from TransferDB.connectDB() and
-        the output from TransferDB.config() is a valid argument for
-        DHIS.config().
+        :meth:`TransferDB.connectDB()<connectDB>`, which establishes a 
+        connection to a database with the Pipeline configuration settings; 
+        and (2) :meth:`DHIS.connect()<openva_pipeline.dhis.DHIS.connect>`, 
+        which establishes a connection to a DHIS server.  Thus, 
+        TransferDB.configDHIS() gets its input from 
+        :meth:`TransferDB.connectDB()<connectDB>` and the output from 
+        TransferDB.config() is a valid argument for
+        :meth:`DHIS.connect()<openva_pipeline.dhis.DHIS.connect>`
 
-        Parameters
-
-        conn : sqlite3 Connection object (e.g., the object returned from
-        TransferDB.connectDB())
-        algorithm : VA algorithm used by R package openVA
-
-        Returns
-
-        tuple
-            Contains all parameters for DHIS.connect().
-
-        Raises
-
-        DHISConfigurationError
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :param algorithm: VA algorithm used by R package openVA
+        :type algorithm: str
+        :returns: Contains all parameters for 
+          :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`.
+        :rtype: tuple
+        :raises: DHISConfigurationError
         """
         c = conn.cursor()
         try:
@@ -1006,19 +940,14 @@ class TransferDB:
     def storeVA(self, conn):
         """Store VA records in Transfer database.
 
-        This method is intended to be used in conjunction with the DHIS module,
-        which prepares the records into the proper format for storage in the
-        Transfer database.
+        This method is intended to be used in conjunction with the 
+        :class:`DHIS <openva_pipeline.dhis.DHIS>` class, which prepares the 
+        records into the proper format for storage in the Transfer database.
 
-        Parameters
-
-        conn : sqlite3 Connection object
-
-        Raises
-
-        PipelineError
-        DatabaseConnectionError
-
+        :param conn: A connection to the Transfer Database (e.g. the object
+          returned from :meth:`TransferDB.connectDB() <connectDB>`.)
+        :type conn: sqlite3 Connection object
+        :raises: PipelineError, DatabaseConnectionError
         """
 
         if self.workingDirectory == None:
@@ -1057,15 +986,13 @@ class TransferDB:
 
         The method creates the following folders in the working directory (as
         set in the Transfer database table Pipeline_Conf): (1) ODKFiles for
-        files containing verbal autopsy records from the ODK Aggregate server; (2)
-        OpenVAFiles containing R scripts and results from the cause assignment
-        algorithms; and (3) DHIS for holding blobs that will be stored in a
-        data repository (DHIS2 server and/or the local Transfer database).
+        files containing verbal autopsy records from the ODK Aggregate server; 
+        (2) OpenVAFiles containing R scripts and results from the cause 
+        assignment algorithms; and (3) DHIS for holding blobs that will be 
+        stored in a data repository (DHIS2 server and/or the local Transfer 
+        database).
 
-        Raises
-
-        PipelinError
-
+        :raises: PipelineError
         """
 
         odkPath = os.path.join(self.workingDir, "ODKFiles")
@@ -1090,6 +1017,7 @@ class TransferDB:
 
     def cleanODK(self):
         """Remove ODK Briefcase Export files."""
+
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         odkExportNewPath = os.path.join(self.workingDirectory,
@@ -1106,6 +1034,7 @@ class TransferDB:
 
     def cleanOpenVA(self):
         """Remove openVA files with COD results."""
+
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         openVAInputPath = os.path.join(self.workingDirectory,
@@ -1131,9 +1060,9 @@ class TransferDB:
 
     def cleanDHIS(self):
         """Remove DHIS2 blob files."""
+
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
         shutil.rmtree(
             os.path.join(self.workingDirectory, "DHIS", "blobs")
         )
-
