@@ -9,7 +9,6 @@ import subprocess
 import os
 import shutil
 from pysqlcipher3 import dbapi2 as sqlcipher
-import requests
 
 from .exceptions import PipelineError
 from .exceptions import ODKError

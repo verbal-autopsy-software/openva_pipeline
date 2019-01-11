@@ -8,9 +8,11 @@ import shutil
 import os
 import unittest
 import collections
+import requests
 
 import context
 from openva_pipeline import odk
+from openva_pipeline.runPipeline import downloadBriefcase
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -57,6 +59,8 @@ class CompleteFreshRun(unittest.TestCase):
         shutil.rmtree("ODKFiles/ODK Briefcase Storage/", ignore_errors = True)
 
         self.pipelineODK = odk.ODK(self.settingsODK, ".")
+        if not os.path.isfile("ODK-Briefcase-v1.12.2.jar"):
+            downloadBriefcase()
         self.odkBC = self.pipelineODK.briefcase()
 
     def test_briefcase_returncode(self):
@@ -189,6 +193,8 @@ class InvalidConnection(unittest.TestCase):
         """Check for error if odkID parameter is invalid."""
 
         shutil.rmtree("ODKFiles/ODK Briefcase Storage", ignore_errors = True)
+        if not os.path.isfile("ODK-Briefcase-v1.12.2.jar"):
+            runPipeline.downloadBriefcase()
         pipelineODK = odk.ODK(self.badSettingsODK, ".")
         self.assertRaises(odk.ODKError, pipelineODK.briefcase)
 

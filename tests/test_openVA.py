@@ -8,6 +8,7 @@ import datetime
 import context
 from openva_pipeline.transferDB import TransferDB
 from openva_pipeline.openVA import OpenVA
+from openva_pipeline.runPipeline import downloadSmartVA
 from openva_pipeline.exceptions import OpenVAError
 from openva_pipeline.exceptions import SmartVAError
 
@@ -498,6 +499,8 @@ class Check_3_getCOD(unittest.TestCase):
                     dirODK + "/odkBCExportPrev.csv")
         shutil.copy(dirODK + "/odkExport_phmrc-2.csv",
                     dirODK + "/odkBCExportNew.csv")
+        if not os.path.isfile("smartva"):
+            downloadSmartVA()
 
         cliSmartVA = OpenVA(vaArgs = settingsSmartVA,
                             pipelineArgs = settingsPipeline,

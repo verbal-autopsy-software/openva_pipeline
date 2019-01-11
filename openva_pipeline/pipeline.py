@@ -47,30 +47,6 @@ class Pipeline:
         self.pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
         self.useDHIS = useDHIS
 
-    def downloadBriefcase(self):
-        """Download the ODK Briefcase jar file from Git Hub."""
-
-        bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
-        try:
-            with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
-                r = requests.get(bcURL, stream = True)
-                bcFile.write(r.content)
-            os.chmod("ODK-Briefcase-v1.12.2.jar", 0o744)
-        except (requests.RequestException, IOError) as e:
-            raise ODKError("Error downloading Briefcase: {}".format(str(e)))
-
-    def downloadSmartVA(self):
-        """Download the smartva (linux) binary application file from Git Hub."""
-
-        smartvaURL = "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
-        try:
-            with open("smartva", "wb") as smartvaBinary:
-                r = requests.get(smartvaURL, stream = True)
-                smartvaBinary.write(r.content)
-            os.chmod("smartva", 0o777)
-        except (requests.RequestException, IOError) as e:
-            raise ODKError("Error downloading smartva: {}".format(str(e)))
-
     def logEvent(self, eventDesc, eventType):
         """Commit event or error message into EventLog table of transfer database.
 
@@ -117,8 +93,24 @@ class Pipeline:
                 print(errorMsg)
 
     def config(self):
-        """This method retrieves configuration for pipeline from Transfer DB.
+        """Fetch configuration settings from Transfer DB.
 
+        This method queries the Transfer database (DB) and returns objects that
+        can be used as the arguments for other methods in this class, i.e.,
+        :meth:`Pipeline.runODK() <runODK>`, 
+        :meth:`Pipeline.runOpenVA() <runOpenVA>`, and
+        :meth:`Pipeline.runDHIS() <runDHIS>`.
+
+        :param dbFileName: File name of the Transfer DB.
+          (e.g., Pipeline.db)
+        :type dbFileName: str
+        :param dbDirectory: Path to the location of the Transfer DB.
+        :type dbDirectory: str
+        :param dbKey: Encryption key for the Transfer DB
+        :type dbKey: str
+        :param plRunDate: Date when pipeline started latest 
+          run (YYYY-MM-DD_hh:mm:ss).
+        :type plRunDate: date
         :returns: Configuration settings for pipeline steps (e.g. connecting 
           to ODK Aggregate, running openVA, or posting records to DHIS)
         :rtype: dictionary
@@ -147,8 +139,12 @@ class Pipeline:
     def runODK(self, argsODK, argsPipeline):
         """Run check duplicates, copy file, and briefcase.
 
-        This method runs the Java application ODK Briefcase, using the
-        configuration settings in argsODK, and downloads verbal autopsy (VA)
+        This method runs the Java application ODK Briefcase,
+        by calling the method
+        :meth:`ODK.briefcase() <openva_pipeline.odk.ODK.briefcase>`
+        where the configuration settings are taken from the argument
+        argsODK (see :meth:`Pipeline.config() <config>`)
+        , and downloads verbal autopsy (VA)
         records as a (csv) export from an ODK Aggregate server.  If there
         is a previous ODK export file, this method merges the files by
         keeping only the unique VA records.
@@ -178,6 +174,20 @@ class Pipeline:
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
         """Create & run script or run smartva.
 
+        This method runs the through the suite of methods in the 
+        :class:`OpenVA <openva_pipeline.openVA.OpenVA>`.
+        class.  The list of tasks performed (in order) are: (1) call the method
+        :meth:`OpenVA.copyVA() <openva_pipeline.openVA.OpenVA.copyVA>`
+        to copy over CSV files with VA data (retrieved from ODK Aggregate);
+        (2) use the method
+        :meth:`OpenVA.rScript() <openva_pipeline.openVA.OpenVA.rScript>`
+        to create an R script; and (3) call the method
+        :meth:`OpenVA.getCOD() <openva_pipeline.openVA.OpenVA.getCOD>` to
+        run the R script that estimates the causes of death and stores the
+        results in "OpenVAFiles/recordStorage.csv" and 
+        "OpenVAFiles/entityAttributeValue.csv" (the former serving as the
+        blob posted to DHIS2).
+
         :param argsOpenVA: Configuration settings for openVA.
         :type argsOpenVA: named tuple
         :param argsPipeline: Configuration settings for OpenVA Pipeline
@@ -199,11 +209,20 @@ class Pipeline:
         if not zeroRecords:
             pipelineOpenVA.rScript()
             completed = pipelineOpenVA.getCOD()
-            rOut["completed"] = completed
+            # rOut["completed"] = completed
+            rOut["returncode"] = completed.returncode
         return(rOut)
 
     def runDHIS(self, argsDHIS, argsPipeline):
         """Connect to API and post events.
+
+        This method first calls the method
+        :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`
+        to establish a connection with a DHIS2 server and, second
+        calls the method 
+        :meth:`DHIS.postVA() <openva_pipeline.dhis.DHIS.postVA>` to
+        post VA data, the assigned causes of death, and associated
+        metadata (concerning cause assignment).
 
         :param argsDHIS: Configuration settings for connecting to DHIS2 server.
         :type argsOpenVA: named tuple
@@ -237,7 +256,29 @@ class Pipeline:
         conn.close()
 
     def closePipeline(self):
-        """Update ODK_Conf ODKLastRun in Transfer DB and clean up files."""
+        """Update ODK_Conf ODKLastRun in Transfer DB and clean up files.
+
+        This method calls methods in the
+        :class:`TransferDB <openva_pipeline.transferDB.TransferDB>`
+        class to remove the data files created at each step of the 
+        pipeline.  More specifically, it runs
+        :meth:`TransferDB.cleanODK() <openva_pipeline.transferDB.TransferDB.cleanODK>`
+        to remove the ODK Briefcase export files ("ODKFiles/odkBCExportNew.csv"
+        and "ODKFiles/odkBCExportPrev.csv") if they exist;
+        :meth:`TransferDB.cleanOpenVA() <openva_pipeline.transferDB.TransferDB.cleanOpenVA>`
+        to remove the input data file ("OpenVAFiles/openVA_input.csv") and the
+        output files ("OpenVAFiles/recordStorage.csv",
+        "OpenVAFiles/newStorage.csv", and
+        "OpenVAFiles/entityAttributeValue.csv") -- note that all of these
+        results are stored in either/both of the Transfer DB and the DHIS2
+        server's VA program; and, third, the method
+        :meth:`TransferDB.cleanDHIS() <openva_pipeline.transferDB.TransferDB.cleanDHIS>`
+        is called to remove the blobs posted to the DHIS2 server and stored in the
+        folder "DHIS/blobs".  Finally, this method updates the Transfer DB's
+        value in the ODK_Conf table's variable odkLastRun so the next ODK
+        Export file does not include VA records already processed through the
+        pipeline.
+        """
 
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,

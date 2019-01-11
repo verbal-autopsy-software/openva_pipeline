@@ -17,6 +17,7 @@
 
 import sys
 import os
+import requests
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 from openva_pipeline.pipeline import Pipeline
@@ -71,8 +72,8 @@ def runPipeline(database_file_name,
                 export_to_DHIS = True):
     """Runs through all steps of the OpenVA Pipeline
 
-    This function is a wrapper for the Pipeline class, which 
-    runs through all steps of the OpenVA Pipeline -- (1) connect to 
+    This function is a wrapper for the Pipeline class, which
+    runs through all steps of the OpenVA Pipeline -- (1) connect to
     Transfer Database (to retrieve configuration settings); (2) connect to
     ODK Aggregate to download a CSV file with VA records; (3) run openVA
     (or SmartVA) to assign cause of death; and (4) store CoD results and
@@ -131,7 +132,7 @@ def runPipeline(database_file_name,
     try:
         pl.storeResultsDB()
         pl.logEvent("Stored Records to Xfer Database Successfully", "Event")
-    except (PipelineError, DatabaseConnectionError, 
+    except (PipelineError, DatabaseConnectionError,
             PipelineConfigurationError) as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
@@ -143,7 +144,31 @@ def runPipeline(database_file_name,
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
+def downloadBriefcase():
+    """Download the ODK Briefcase (v1.12.2) jar file from Git Hub."""
+
+    bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
+    try:
+        with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
+            r = requests.get(bcURL)
+            bcFile.write(r.content)
+        os.chmod("ODK-Briefcase-v1.12.2.jar", 0o744)
+    except (requests.RequestException, IOError) as e:
+        raise ODKError("Error downloading Briefcase: {}".format(str(e)))
+
+def downloadSmartVA():
+    """Download the smartva (linux) binary application file from Git Hub."""
+
+    smartvaURL = "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
+    try:
+        with open("smartva", "wb") as smartvaBinary:
+            r = requests.get(smartvaURL)
+            smartvaBinary.write(r.content)
+        os.chmod("smartva", 0o777)
+    except (requests.RequestException, IOError) as e:
+        raise ODKError("Error downloading smartva: {}".format(str(e)))
+
 # if __name__ == "__main__":
-#     runPipeline(database_file_name= "run_Pipeline.db", 
+#     runPipeline(database_file_name= "run_Pipeline.db",
 #                 database_directory = "tests",
 #                 database_key = "enilepiP")

@@ -7,7 +7,8 @@ This module posts VA records with assigned causes of death to a DHIS server.
 
 from pysqlcipher3 import dbapi2 as sqlcipher
 import requests
-from pandas import read_csv, groupby
+from pandas import read_csv, groupby, isnull
+from math import isnan
 import sqlite3
 import pickle
 import os
@@ -162,22 +163,33 @@ class VerbalAutopsyEvent(object):
         self.dhis_orgunit = dhis_orgunit
         self.event_date = event_date
         self.sex = sex
-        self.dob = dob
+        self.dob = datetime.datetime.strftime(dob, "%Y-%m-%d")
         self.age = age
         self.cod_code = cod_code
         self.algorithm_metadata = algorithm_metadata
         self.odk_id = odk_id
 
-        self.datavalues = [
-            {"dataElement": "htm6PixLJNy", "value": self.va_id},
-            {"dataElement": "hi7qRC4SMMk", "value": self.sex},
-            {"dataElement": "mwSaVq64k7j", "value": self.dob},
-            {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
-            {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
-            {"dataElement": "oPAg4MA0880", "value": self.age},
-            {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
-            {"dataElement": "XLHIBoLtjGt", "value": file_id}
-        ]
+        if not age == "MISSING":
+            self.datavalues = [
+                {"dataElement": "htm6PixLJNy", "value": self.va_id},
+                {"dataElement": "hi7qRC4SMMk", "value": self.sex},
+                {"dataElement": "mwSaVq64k7j", "value": self.dob},
+                {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
+                {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
+                {"dataElement": "oPAg4MA0880", "value": self.age},
+                {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
+                {"dataElement": "XLHIBoLtjGt", "value": file_id}
+            ]
+        else:
+            self.datavalues = [
+                {"dataElement": "htm6PixLJNy", "value": self.va_id},
+                {"dataElement": "hi7qRC4SMMk", "value": self.sex},
+                {"dataElement": "mwSaVq64k7j", "value": self.dob},
+                {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
+                {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
+                {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
+                {"dataElement": "XLHIBoLtjGt", "value": file_id}
+            ]
 
     def format_to_dhis2(self, dhisUser):
         """
@@ -302,7 +314,7 @@ class DHIS():
 
         vaPrograms = apiDHIS.get("programs",
                                  params={"filter": "name:like:Verbal Autopsy"}
-                                ).get("programs")
+                                 ).get("programs")
         if len(vaPrograms) == 0:
             raise DHISError("No Verbal Autopsy Program found.")
         if len(vaPrograms) > 1:
@@ -396,14 +408,24 @@ class DHIS():
                             sex = "refused to answer"
                     else:
                         sex = row[1].lower()
-                    dob = row[2]
-                    if row[3] =="":
-                        eventDate = datetime.date(9999,9,9)
+                    # dob = row[2]
+                    # if row[2] =="":
+                    if isnull(row[2]):
+                        dob = datetime.date(9999,9,9)
+                    else:
+                        dobTemp = datetime.datetime.strptime(row[2], "%Y-%m-%d")
+                        dob = datetime.date(dobTemp.year, dobTemp.month, dobTemp.day)
+                    # if row[3] =="":
+                    if isnull(row[3]):
+                        eventDate = datetime.date(9999,9,9) 
                     else:
                         dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
                         eventDate = datetime.date(dod.year, dod.month, dod.day)
-                    ## age = row[4] # HERE
-                    age = int(row[4])
+                    # age = int(row[4])
+                    if type(row[4]) == float and not isnan(row[4]):
+                        age = int(row[4])
+                    else:
+                        age = "MISSING"
                     if row[5] == "Undetermined":
                         codCode = "99"
                     else:

@@ -150,7 +150,7 @@ class TransferDB:
         This method is intended to be used in conjunction with (1)
         :meth:`TransferDB.connectDB() <connectDB>`, which establishes a 
         connection to a database with the Pipeline configuration settings; 
-        and (2) :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`, 
+        and (2) :meth:`ODK.briefcase() <openva_pipeline.odk.ODK.briefcase>`, 
         which establishes a connection to an ODK Aggregate server.  Thus,
         TransferDB.configODK() gets its input from 
         :meth:`TransferDB.connectDB() <connectDB>` and the output from 
