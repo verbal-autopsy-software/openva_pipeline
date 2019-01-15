@@ -2,6 +2,7 @@ tests/ODK-Briefcase-v1.12.2.jar
 tests/smartva
 tests/*.log
 tests/.Rhistory
+tests/fontsconfig
 tests/fontsconfig/
 tests/__pycache__/
 tests/*.pyc
