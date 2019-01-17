@@ -20,7 +20,7 @@ pip3 install --upgrade setuptools --user
 
 # Install python packages with Pipenv (recommended)
 pip3 install pipenv --user
-pipenv --pyhton 3 
+pipenv --python 3 
 pipenv install openva-pipeline
 ## If you do not want to use a virtual environment, then comment out the previous 3 lines and uncomment the following line
 #pip3 install openva-pipeline --user
@@ -35,7 +35,7 @@ Rscript packages.r
 rm packages.r
 
 # optional (but recommended) step for installing DB Browser for SQLite (useful for configuring pipeline)
-sudo apt install -y build-essential cmake libsqlite3-dev qt5-default qttools5-dev-tools
+sudo apt install -y build-essential cmake qt5-default qttools5-dev-tools
 git clone https://github.com/sqlitebrowser/sqlitebrowser
 
 cd sqlitebrowser

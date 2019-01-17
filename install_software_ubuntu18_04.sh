@@ -21,7 +21,7 @@ sudo Rscript packages.r
 rm packages.r
 
 # Install Sqlitebrowser
-sudo apt install -y build-essential git cmake libsqlite3-dev qt5-default qttools5-dev-tools qttools5-dev libqscintilla2-qt5-13 libqscintilla2-qt5-l10n
+sudo apt install -y build-essential git cmake qt5-default qttools5-dev-tools qttools5-dev libqscintilla2-qt5-13 libqscintilla2-qt5-l10n
 
 git clone https://github.com/sqlitebrowser/sqlitebrowser
 
