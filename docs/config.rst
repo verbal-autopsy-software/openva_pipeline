@@ -1,53 +1,64 @@
 Pipeline Configuration
 ======================
 
-#. **Create the SQLite database**: The openVA pipeline uses an SQLite database to access configuration settings for ODK Aggregate, openVA in R,
+#. **Create the SQLite database**: The openVA Pipeline uses an SQLite database to access configuration settings for ODK Aggregate, openVA in R,
    and DHIS2. Error and log messages are also stored to this database, along with the VA records downloaded from ODK Aggregate and
    the assigned COD.
 
-   #. The necessary tables and schema are created in the SQL file pipelineDB.sql, which can be downloaded from the
-      `OpenVA_Pipeline GitHub webpage <https://github.com/D4H-CRVS/OpenVA_Pipeline/pipelineDB.sql>`_.  Create the SQLite database in the
-      same folder as the file *pipeline.py*.
+   - While it is possible to create the Transfer Database manually (see the next bullet point) the openva-pipeline package has a built-in
+     function for creating the database with the default settings.  Open a terminal shell, change to the Pipeline's working directory, and
+     start a Python session in the virtual environment with the following commands:
 
-   #. Use SQLCipher to create the pipeline database, assign an encryption key, and populate the database using the following commands
-      (note that the ``$`` is the terminal prompt and ``sqlite>`` is the SQLite prompt, i.e., not part of the commands).
+      .. code:: bash
 
-    .. code:: bash
+         $ pipenv shell
+         $ python
 
-       $ sqlcipher
-       sqlite> .open Pipeline.db
-       sqlite> PRAGMA key=encryption_key;
-       sqlite> .read "pipelineDB.sql"
-       sqlite> .tables
-       sqlite> -- take a look --
-       sqlite> .schema ODK_Conf
-       sqlite> SELECT odkURL from ODK_Conf;
-       sqlite> .quit
+     Within the Python interpreter load the openVA Pipeline package and call the ``createTransferDB()``:
 
-    Note how the pipeline database is encrypted, and can be accessed via with SQLite command: ``PRAGMA key = "encryption_key;"``
+      .. code:: python
 
-    .. code:: bash
+         >>> import openva_pipline as ovaPL
+         >>> ovaPL.createTransferDB('Pipeline.db', '.', 'enilepiP')
+         >>> quit()
 
-       $ sqlcipher
-       sqlite> .open Pipeline.db
-       sqlite> .tables
+    This will create an encrypted SQLite database, called *Pipeline.db*, in the working directory with encryption key `enilepiP`.
 
-       Error: file is encrypted or is not a database
+   - **Manual Installation**
 
-       sqlite> PRAGMA key = "encryption_key";
-       sqlite> .tables
-       sqlite> .quit
+       #. The necessary tables and schema are created in the SQL file pipelineDB.sql, which can be downloaded from the
+          `OpenVA_Pipeline GitHub webpage <https://github.com/verbal-autopsy-software/openva_pipeline/tree/master/openva_pipeline/sql>`_.
+          Create the SQLite database in the folder that will serve as the Pipeline's working directory.
 
-   3. Open the file *pipeline.py* and edit the first two lines of code by including the name of the pipeline SQLite database (the default
-      is *Pipeline.db*) and the encryption password.  The lines in *pipeline.py* are:
+       #. Use SQLCipher to create the pipeline database, assign an encryption key, and populate the database using the following commands
+          (note that the ``$`` is the terminal prompt and ``sqlite>`` is the SQLite prompt, i.e., not part of the commands).
 
-    .. code:: python
+       .. code:: bash
 
-       #----------------------------------------------#
-       # User Settings
-       sqlitePW = "enilepiP"
-       dbName   = "Pipeline.db"
-       #----------------------------------------------#
+          $ sqlcipher
+          sqlite> .open Pipeline.db
+          sqlite> PRAGMA key=encryption_key;
+          sqlite> .read "pipelineDB.sql"
+          sqlite> .tables
+          sqlite> -- take a look --
+          sqlite> .schema ODK_Conf
+          sqlite> SELECT odkURL from ODK_Conf;
+          sqlite> .quit
+
+       Note how the pipeline database is encrypted, and can be accessed via with SQLite command: ``PRAGMA key = "encryption_key;"``
+
+       .. code:: bash
+
+          $ sqlcipher
+          sqlite> .open Pipeline.db
+          sqlite> .tables
+
+          Error: file is encrypted or is not a database
+
+          sqlite> PRAGMA key = "encryption_key";
+          sqlite> .tables
+          sqlite> .quit
+
 
 #. **Configure Pipeline**: The pipeline connects to ODK Aggregate and DHIS2 servers and thus requires usernames, passwords, and URLs.
    Arguments for openVA should also be supplied. We will use
@@ -120,7 +131,7 @@ Pipeline Configuration
    
    #. Update the *Pipeline\_Conf* table in the SQLite database with the following values:
 
-      * *workingDirectory* -- the directory where the pipeline files are stored -- **HTIS IS WHERE THE smartva CLI file should be downloaded**.
+      * *workingDirectory* -- the directory where the pipeline files are stored -- **THIS IS WHERE THE smartva CLI file should be downloaded**.
 
       * *openVA\_Algorithm* -- set this field to ``SmartVA``
 

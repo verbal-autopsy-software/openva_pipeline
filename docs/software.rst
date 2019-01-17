@@ -10,7 +10,7 @@ The following software is required by the openVA pipeline (note: installation in
 * `R <https://cran.r-project.org>`_ (OpenVA Pipeline was tested on Version 3.4.3)
 * `SQLite3 <https://www.sqlite.org>`_
 * `SQLCipher <https://github.com/sqlcipher/sqlcipher>`_
-* `ODK Briefcase <https://github.com/opendatakit/briefcase/releases>`_ (OpenVA Pipeline was tested on Version v1.10.1) 
+* `ODK Briefcase <https://github.com/opendatakit/briefcase/releases>`_ (OpenVA Pipeline was tested on Version v1.12.2) 
 
 It is also useful to install `DB Browser <https://github.com/sqlitebrowser/sqlitebrowser/blob/master/BUILDING.md>`_  for SQLite.  This
 optional tool is useful for configuring the SQLite Database.

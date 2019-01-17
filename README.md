@@ -22,7 +22,7 @@ The documentation for the openVA Pipeline can be found at:
 The OpenVA Pipeline has been designed for (and tested on) Ubuntu LTS 16.04.
 The steps to install and configure the pipeline can be found in
 `docs/setup.md`. To make the installation easier, there is also a bash shell
-script `install_software.sh` that installs all of the necessary software (the
+script `install_software_ubuntu16_04.sh` that installs all of the necessary software (the
 script requires the `sudo` password).
 
 <!-- The documentation can also be found on [Read the Docs](https://openva-pipeline.readthedocs.io/en/latest/): -->

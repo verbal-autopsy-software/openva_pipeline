@@ -13,10 +13,7 @@ processing of verbal autopsy (VA) data from an `ODK Aggregate server
 <https://cran.r-project.org/web/packages/openVA/index.html>`_ library from the
 `R <https://cran.r-project.org/>`_ statistical software, and ending with a
 DHIS2 server (with the `VA program
-<https://github.com/SwissTPH/dhis2_va_draft>`_).  A friendly graphical user
-interface to R is also provided via an `RShiny app
-<https://github.com/verbal-autopsy-software/shinyVA>`_ and
-vignette.
+<https://github.com/SwissTPH/dhis2_va_draft>`_).
 
 .. toctree::
    :maxdepth: 2
@@ -25,6 +22,7 @@ vignette.
    Software Requirements <software>
    Installation Guide <install>
    Pipeline Configuration <config>
+   Vignette: Example Run  <vignette>
    Documentation for classes, functions, and methods <help>
 
 

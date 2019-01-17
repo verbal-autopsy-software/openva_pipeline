@@ -6,11 +6,11 @@ sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran
 
 #Install necessary software
 sudo apt update
-sudo apt-get install -y python3-pip python-dev python3-dev openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git
+sudo apt-get install -y python3-pip python3-dev openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git
 
 #Install python packages 
 python3 -m pip install --upgrade pip setuptools --user
-python3 -m pip install pbr testresources requests pysqlcipher3 pandas --user
+python3 -m pip install openva-pipeline --user
 
 #Write Rscript to install packages, then run the R script
 sudo R CMD javareconf
