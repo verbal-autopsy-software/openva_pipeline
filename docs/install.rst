@@ -1,14 +1,23 @@
-Installation Guide 
+Installation Guide
 ==================
 
 The following instructions guide the installation of the openVA Pipeline on Ubuntu 16.04 operating system.
 
-  .. note:: 
+  .. note::
      To make the installation process easier, all of the required software can be installed by downloading and running the bash script
      `install_software_ubuntu16_04.sh <https://https://github.com/verbal-autopsy-software/openva_pipeline/blob/master/install_software_ubuntu16_04.sh>`_
      located in the main folder of the openVA_Pipeline repository.  There is a corresponding script for installing the pipeline (and
-     dependencies) on Ubuntu 18.04: 
+     dependencies) on Ubuntu 18.04:
      `install_software_ubuntu18_04.sh <https://https://github.com/verbal-autopsy-software/openva_pipeline/blob/master/install_software_ubuntu18_04.sh>`_
+
+#. Add the apt key (signed by Michael Rutter marutter@gmail.com) to authenticate R package from CRAN and add
+   the CRAN repository to get the latest version of R (for more details see CRAN page:
+   `Ubuntu packages for R <https://cran.r-project.org/bin/linux/ubuntu/README.html>`_).
+
+   .. code:: bash
+
+     $ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+     $ sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' >> /etc/apt/sources.list"
 
 #. Install Python, OpenJDK, **R**, SQLite3, SQLCipher, and Git by typing the following commands at a terminal prompt (indicated by $)
 
@@ -20,7 +29,7 @@ The following instructions guide the installation of the openVA Pipeline on Ubun
 #. (*optional*) Download the `ODK-Briefcase-v1.12.2.jar <https://github.com/opendatakit/briefcase/releases>`_ file to a folder that will
    serve as the openVA_Pipeline working directory.
 
-#. Configure OpenJDK with R by running the following command 
+#. Configure OpenJDK with R by running the following command
 
    .. code:: bash
 
@@ -69,14 +78,14 @@ The following instructions guide the installation of the openVA Pipeline on Ubun
      >>> quit()                            # return to virtualenv terminal shell
 
      $ exit
-     
+
 
    Note: the first command: ``pip3 install --upgrade pip --user`` will produce a warning message: ::
 
         You are using pip version 8.1.1, however version 10.0.1 is available.
         You should consider upgrading via the 'pip install --upgrade pip' command.
 
-   However, after running the command ``hash -d pip3``, the command ``pip3 --version`` shows that version 10.0.1 is 
+   However, after running the command ``hash -d pip3``, the command ``pip3 --version`` shows that version 10.0.1 is
    indeed installed.
 
 #. Install DB Browser for SQLite with the commands
@@ -118,4 +127,3 @@ Simply use ``pip3`` to install the openva-pipeline package as follows
 .. code:: bash
 
    $ pip3 install openva-pipeline --user
-
