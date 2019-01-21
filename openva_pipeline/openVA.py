@@ -117,16 +117,15 @@ class OpenVA:
         whoInstrumentVersion = algorithmMetadata[5]
         rCode_crossVA = "data <- map_records_insilicova(records) \n"
 
-        if whoInstrumentVersion not in ["v1_4_1"]:
+        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
             raise OpenVAError \
                 ("CrossVA not able to process WHO instrument version: " +
                  whoInstrumentVersion)
 
         if whoInstrumentVersion == "v1_4_1" and self.vaArgs.InSilicoVA_data_type == "WHO2016":
             rCode_crossVA = "data <- odk2openVA(records) \n"
-            # rCode_crossVA = "data <- odk2openVA_v141(records) \n"
-        # if whoInstrumentVersion == "v1_5_1" and self.vaArgs.InSilicoVA_data_type == "WHO2016":
-        #     rCode_crossVA = "data <- odk2openVA_v151(records) \n"
+        if whoInstrumentVersion == "v1_5_1" and self.vaArgs.InSilicoVA_data_type == "WHO2016":
+            rCode_crossVA = "data <- odk2openVA(records) \n"
         try:
             with open(fileName, "w", newline = "") as f:
                 f.write("date() \n")
@@ -207,16 +206,15 @@ class OpenVA:
         whoInstrumentVersion = algorithmMetadata[5]
         rCode_crossVA = "data <- map_records_interva4(records) \n"
 
-        if whoInstrumentVersion not in ["v1_4_1"]:
+        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
             raise OpenVAError \
                 ("CrossVA not able to process WHO instrument version: " +
                  whoInstrumentVersion)
 
         if whoInstrumentVersion == "v1_4_1" and self.vaArgs.InterVA_Version == "5":
             rCode_crossVA = "data <- odk2openVA(records) \n"
-            # rCode_crossVA = "data <- odk2openVA_v141(records) \n"
-        # if whoInstrumentVersion == "v1_5_1" and self.vaArgs.InterVA_Version == "5":
-        #     rCode_crossVA = "data <- odk2openVA_v151(records) \n"
+        if whoInstrumentVersion == "v1_5_1" and self.vaArgs.InterVA_Version == "5":
+            rCode_crossVA = "data <- odk2openVA(records) \n"
         try:
             with open(fileName, "w", newline = "") as f:
                 f.write("date() \n")
