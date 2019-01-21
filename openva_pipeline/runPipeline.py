@@ -120,7 +120,7 @@ def runPipeline(database_file_name,
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
-    if (rOut["zeroRecords"] == True);:
+    if (rOut["zeroRecords"] == True):
         pl.logEvent("No new VA records from ODK (now exiting)", "Event")
         sys.exit(0)
 
