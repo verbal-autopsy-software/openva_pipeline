@@ -8,7 +8,7 @@ This module runs openVA and smartVA to assign causes of death to VA records.
 import subprocess
 import shutil
 import os
-import pandas as pd
+from pandas read_csv, DataFrame, concat, merge
 import numpy as np
 from pysqlcipher3 import dbapi2 as sqlcipher
 
@@ -276,21 +276,21 @@ class OpenVA:
 
         inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
         outDir = os.path.join(self.dirOpenVA, self.runDate)
-        dfData    = pd.read_csv(inFile)
-        dfResults = pd.read_csv(outDir +
+        dfData    = read_csv(inFile)
+        dfResults = read_csv(outDir +
                     "/1-individual-cause-of-death/individual-cause-of-death.csv")
-        codeDF    = pd.DataFrame(
+        codeDF    = DataFrame(
             np.repeat(self.pipelineArgs.algorithmMetadataCode,
                       dfResults.shape[0]), columns=["metadataCode"]
         )
-        dfResults = pd.concat([dfResults, codeDF], axis=1)
+        dfResults = concat([dfResults, codeDF], axis=1)
         colsKeep = ["sex", "birth_date", "death_date",
                     "age", "cause34", "metadataCode", "sid"]
-        dfRecordStorage = pd.merge(left=dfResults[colsKeep],
-                                   left_on="sid",
-                                   right=dfData,
-                                   right_on="Generalmodule-sid",
-                                   how="right")
+        dfRecordStorage = merge(left=dfResults[colsKeep],
+                                left_on="sid",
+                                right=dfData,
+                                right_on="Generalmodule-sid",
+                                how="right")
         dfRecordStorage.rename(columns =
                                {"meta-instanceID": "odkMetaInstanceID"},
                                inplace = True
@@ -301,11 +301,11 @@ class OpenVA:
         dfRecordStorage.to_csv(self.dirOpenVA + "/recordStorage.csv", index = False)
 
         colsKeep = ["sid", "cause34", "metadataCode"]
-        dfTemp   = pd.merge(left=dfResults[colsKeep],
-                            left_on="sid",
-                            right=dfData,
-                            right_on="Generalmodule-sid",
-                            how="right")
+        dfTemp   = merge(left=dfResults[colsKeep],
+                         left_on="sid",
+                         right=dfData,
+                         right_on="Generalmodule-sid",
+                         how="right")
         dfTemp.dropna(subset=["cause34"])
         dfTemp.drop(columns="sid", inplace=True)
         dfTemp.rename(columns = {"meta-instanceID": "odkMetaInstanceID"},
