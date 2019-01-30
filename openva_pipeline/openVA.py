@@ -8,7 +8,7 @@ This module runs openVA and smartVA to assign causes of death to VA records.
 import subprocess
 import shutil
 import os
-from pandas read_csv, DataFrame, concat, merge
+from pandas import read_csv, DataFrame, concat, merge
 import numpy as np
 from pysqlcipher3 import dbapi2 as sqlcipher
 
