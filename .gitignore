@@ -3,7 +3,7 @@ tests/smartva
 tests/*.log
 tests/.Rhistory
 tests/fontsconfig
-tests/fontsconfig/
+tests/fontsconfig/*
 tests/__pycache__/
 tests/*.pyc
 tests/ODKFiles/ODK Briefcase Storage/*
