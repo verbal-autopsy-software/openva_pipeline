@@ -47,4 +47,4 @@ under the Apache 2.0 license (see
 [SmartVA-Analyze MIT License](https://github.com/ihmeuw/SmartVA-Analyze/blob/master/LICENSE))
 that is available for download from the
 [ihmeuw/SmartVA-Analyze repository](https://github.com/ihmeuw/SmartVA-Analyze/releases).
-Again, **These applications are NOT included under the same license as the OpenVA Pipeline (GPL-3)**.
+**These applications are NOT included under the same license as the OpenVA Pipeline (GPL-3)**.
