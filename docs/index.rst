@@ -10,9 +10,9 @@ The `OpenVA Pipeline
 <https://github.com/verbal-autopsy-software/openva_pipeline>`_ automates the
 processing of verbal autopsy (VA) data from an `ODK Aggregate server
 <https://docs.opendatakit.org/aggregate-intro/>`_, through the `openVA
-<https://cran.r-project.org/web/packages/openVA/index.html>`_ library from the
-`R <https://cran.r-project.org/>`_ statistical software, and ending with a
-DHIS2 server (with the `VA program
+<https://cran.r-project.org/web/packages/openVA/index.html>`_ library of VA
+algorithms from the `R <https://cran.r-project.org/>`_ statistical software,
+to a DHIS2 server (with the `VA DHIS2 Program
 <https://github.com/SwissTPH/dhis2_va_draft>`_).
 
 .. toctree::

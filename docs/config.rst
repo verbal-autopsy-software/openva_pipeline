@@ -1,7 +1,7 @@
 Pipeline Configuration
 ======================
 
-#. **Create the SQLite database**: The openVA Pipeline uses an SQLite database to access configuration settings for ODK Aggregate, openVA in R,
+#. **Create the SQLite database**: The openVA Pipeline uses an SQLite database to store and access configuration settings for ODK Aggregate, openVA in R,
    and DHIS2. Error and log messages are also stored to this database, along with the VA records downloaded from ODK Aggregate and
    the assigned COD.
 
@@ -98,13 +98,13 @@ Pipeline Configuration
       above (in the ODK Aggregate Configuration section) and edit the following columns:
 
       * *workingDirectory* -- the directory where the pipeline files (i.e., *pipeline.py*, *Pipeline.db* and the ODK Briefcase
-        application, *ODK-Briefcase-v1.10.1.jar*).  Note that the pipeline will create new folders and files in this working directory,
+        application, *ODK-Briefcase-v1.10.1.jar*) are stored.  Note that the pipeline will create new folders and files in this working directory,
         and must be run by a user with privileges for writing files to this location.   
 
       * *openVA\_Algorithm* -- currently, there are only three acceptable values for the alogrithm: ``Insilico``, ``InterVA`` or ``SmartVA``
 
       * *algorithmMetadataCode* -- this column captures the necessary inputs for producing a COD, namely the VA questionnaire, the
-        algorithm, and the symptom-cause information (SCI) (see [below](#SCI) for more information on the SCI).  Note that there are also
+        algorithm, and the symptom-cause information (SCI) (for more details, see the section: :ref:`SCI`).  Note that there are also
         different versions (e.g., InterVA 4.01 and InterVA 4.02, or WHO 2012 questionnare and the WHO 2016 instrument/questionnaire).  It is
         important to keep track of these inputs in order to make the COD determination reproducible and to fully understand the assignment
         of the COD.  A list of all algorith metadata codes is provided in the *dhisCode* column in the *Algorithm\_Metadata\_Options* table.
@@ -140,3 +140,18 @@ Pipeline Configuration
         SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1
 
       * *codSource* -- set this field to``Tariff``.
+
+Miscellaneous Notes
+=======================
+
+.. _SCI:
+
+Symptom-Cause Information
+-------------------------
+
+A key component of automated cause assignment methods for VA is the symptom-cause information (SCI) that describes how VA symptoms are
+related to each cause. It is likely that the relationships of VA symptoms to causes vary in important ways across space and
+between administrative jurisdictions, and they are likely to change through time as new diseases and conditions emerge and as
+treatments become available. Consequently, automated cause assignment algorithms used for mortality surveillance should optimally
+rely on representative SCI that is locally and continuously updated.  Furthermore, it is vital to track the SCI used for COD 
+assignment to enable reproducibility and to fully understand the assignment of the COD.

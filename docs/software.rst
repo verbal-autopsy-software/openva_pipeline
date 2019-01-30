@@ -14,4 +14,4 @@ The following software is required by the openVA pipeline (note: installation in
 * `ODK Briefcase <https://github.com/opendatakit/briefcase/releases>`_ (OpenVA Pipeline was tested on Version v1.12.2) 
 
 It is also useful to install `DB Browser <https://github.com/sqlitebrowser/sqlitebrowser/blob/master/BUILDING.md>`_  for SQLite.  This
-optional tool is useful for configuring the SQLite Database.
+optional tool is useful for configuring the Pipeline (i.e., configuration tables in the SQLite Database).
