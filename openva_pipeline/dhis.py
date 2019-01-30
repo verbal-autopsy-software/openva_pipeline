@@ -8,7 +8,7 @@ This module posts VA records with assigned causes of death to a DHIS server.
 from pysqlcipher3 import dbapi2 as sqlcipher
 import requests
 from pandas import read_csv
-from pandas import DataFrame.groupby as groupby
+from pandas import DataFrame
 from pandas import isnull
 from math import isnan
 import sqlite3
