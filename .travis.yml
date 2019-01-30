@@ -1,12 +1,13 @@
 dist: xenial
 language: python
 python:
-  - "3.5"
+  - '3.5'
 env:
   - DB=sqlite3
 before_install:
   - sudo apt-get install -y python3-dev libsqlite3-dev sqlcipher libsqlcipher-dev
-  - pip install pipenv
-  - pipenv sync
-script: pipenv run python tests/test_transferDB.py
+install: 
+  - 'pip install pipenv'
+  - 'pipenv sync'
+script: pipenv run python -m unittest discover -s tests/ -p 'test*'
 _static
