@@ -4,7 +4,7 @@ import shutil
 import os
 import unittest
 import collections
-import pandas as pd
+from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 import context
@@ -68,7 +68,7 @@ class Check_DHIS(unittest.TestCase):
     def test_verifyPost(self):
         """Verify VA records got posted to DHIS2."""
 
-        dfNewStorage = pd.read_csv('OpenVAFiles/newStorage.csv')
+        dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
         nPushed = sum(dfNewStorage['pipelineOutcome'] == 'Pushed to DHIS2')
         self.assertEqual(nPushed, self.pipelineDHIS.nPostedRecords)
 

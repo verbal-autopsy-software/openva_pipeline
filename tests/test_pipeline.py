@@ -5,7 +5,7 @@ import os
 import unittest
 import collections
 import requests
-import pandas as pd
+from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 import context
@@ -315,7 +315,7 @@ class Check_storeResultsDB(unittest.TestCase):
     def test_runODK_checkDuplicates(self):
         """Check checkDuplicates() method:"""
 
-        vaRecords = pd.read_csv('ODKFiles/odkBCExportNew.csv')
+        vaRecords = read_csv('ODKFiles/odkBCExportNew.csv')
         nVA = vaRecords.shape[0]
         rOut = self.pl.runOpenVA(self.settingsOpenVA,
                                  self.settingsPipeline,
@@ -738,7 +738,7 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
     def test_runDHIS_verifyPost(self):
         """Verify VA records got posted to DHIS2:"""
 
-        dfNewStorage = pd.read_csv('OpenVAFiles/newStorage.csv')
+        dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
         nPushed = sum(dfNewStorage['pipelineOutcome'] == 'Pushed to DHIS2')
         self.assertEqual(nPushed, self.pipelineDHIS['nPostedRecords'])
 
@@ -799,7 +799,7 @@ class Check_Pipeline_depositResults(unittest.TestCase):
         conn.close()
         vaIDsList = [j for i in vaIDs for j in i]
         cls.s1 = set(vaIDsList)
-        dfNewStorage = pd.read_csv('OpenVAFiles/newStorage.csv')
+        dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
         dfNewStorageID = dfNewStorage['odkMetaInstanceID']
         cls.s2 = set(dfNewStorageID)
 
