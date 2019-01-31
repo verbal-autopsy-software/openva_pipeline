@@ -8,6 +8,7 @@ from pysqlcipher3 import dbapi2 as sqlcipher
 
 import context
 from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.runPipeline import createTransferDB
 from openva_pipeline.exceptions import DatabaseConnectionError
 from openva_pipeline.exceptions import PipelineConfigurationError
 from openva_pipeline.exceptions import ODKConfigurationError
@@ -24,6 +25,8 @@ class Check_DB_Has_Tables(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'Pipeline.db', dbDirectory = '.',
                             dbKey = 'enilepiP', plRunDate = pipelineRunDate)
@@ -91,6 +94,11 @@ class Check_DB_Has_Tables(unittest.TestCase):
         """Test that the Pipeline.db has Algorithm_Metadata_Options table."""
         self.assertIn('Algorithm_Metadata_Options', self.listTableNames)
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_DB_Connection_Exceptions(unittest.TestCase):
 
@@ -116,9 +124,12 @@ class Check_DB_Connection_Exceptions(unittest.TestCase):
 class Check_Pipeline_Conf(unittest.TestCase):
     """Test methods that grab configuration settings for pipline."""
 
+
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -241,6 +252,11 @@ class Check_Pipeline_Conf(unittest.TestCase):
                           self.copy_xferDB.configPipeline, self.copy_conn)
         self.copy_conn.rollback()
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_ODK_Conf(unittest.TestCase):
     """Test methods that grab ODK configuration."""
@@ -248,6 +264,9 @@ class Check_ODK_Conf(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -304,6 +323,11 @@ class Check_ODK_Conf(unittest.TestCase):
         """Test ODK_Conf table has valid odkLastRunDatePrev"""
         self.assertEqual(self.settingsODK.odkLastRunDatePrev, '1899/12/31')
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_OpenVA_Conf_InterVA(unittest.TestCase):
     """Test methods that grab InterVA configuration."""
@@ -312,6 +336,8 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -480,14 +506,21 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
+    @classmethod
+    def tearDownClass(cls):
 
-class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
+        os.remove('Pipeline.db')
+
+
+class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     """Test methods that grab InSilicoVA configuration."""
 
 
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -988,14 +1021,21 @@ class Check_5_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
+    @classmethod
+    def tearDownClass(cls):
 
-class Check_5_SmartVA_Conf(unittest.TestCase):
+        os.remove('Pipeline.db')
+
+
+class Check_SmartVA_Conf(unittest.TestCase):
     """Test methods that grab InSilicoVA configuration."""
 
 
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -1122,6 +1162,11 @@ class Check_5_SmartVA_Conf(unittest.TestCase):
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_DHIS_Conf(unittest.TestCase):
     """Test methods that grab DHIS configuration."""
@@ -1130,6 +1175,8 @@ class Check_DHIS_Conf(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -1206,6 +1253,11 @@ class Check_DHIS_Conf(unittest.TestCase):
                           self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_DHIS_storeVA(unittest.TestCase):
 
@@ -1216,6 +1268,8 @@ class Check_DHIS_storeVA(unittest.TestCase):
         shutil.copy('OpenVAFiles/sample_newStorage.csv',
                     'OpenVAFiles/newStorage.csv')
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         pipelineRunDate = datetime.datetime.now()
@@ -1244,6 +1298,11 @@ class Check_DHIS_storeVA(unittest.TestCase):
         s2 = set(dfNewStorageID)
         self.assertTrue(s2.issubset(s1))
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_updateODKLastRun(unittest.TestCase):
     """Test methods that updates ODK_Conf.odkLastRun"""
@@ -1252,6 +1311,8 @@ class Check_updateODKLastRun(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         dbDirectory = '.'
@@ -1280,6 +1341,11 @@ class Check_updateODKLastRun(unittest.TestCase):
             updatedRunDate = i[0]
         self.assertEqual(updatedRunDate, self.newRunDate)
         self.copy_xferDB.updateODKLastRun(self.copy_conn, oldRunDate)
+
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
 
 
 if __name__ == '__main__':

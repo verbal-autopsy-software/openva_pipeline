@@ -17,6 +17,7 @@ from openva_pipeline.transferDB import TransferDB
 from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.runPipeline import downloadBriefcase
 from openva_pipeline.runPipeline import downloadSmartVA
+from openva_pipeline.runPipeline import createTransferDB
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -28,6 +29,8 @@ class Check_Pipeline_config(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
         settings = pl.config()
         cls.settingsPipeline = settings['pipeline']
@@ -134,6 +137,11 @@ class Check_Pipeline_config(unittest.TestCase):
 
         self.assertEqual(self.settingsDHIS[0].dhisOrgUnit, 'SCVeBskgiK6')
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class DownloadAppsTests(unittest.TestCase):
     """Check the methods for downloading external apps:"""
@@ -142,6 +150,8 @@ class DownloadAppsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         cls.pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
 
     def test_downloadBriefcase(self):
@@ -160,6 +170,11 @@ class DownloadAppsTests(unittest.TestCase):
         downloadSmartVA()
         self.assertTrue(os.path.isfile('smartva'))
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_runODK_clean(unittest.TestCase):
     """Check runODK method on initial run:"""
@@ -175,6 +190,8 @@ class Check_runODK_clean(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportPrev.csv')
         if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
             downloadBriefcase()
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
         settings = pl.config()
@@ -202,11 +219,18 @@ class Check_runODK_clean(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_runODK_with_exports(unittest.TestCase):
     """Check runODK method with existing ODK exports:"""
 
+
+    @classmethod
+    def setUpClass(cls):
+
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
     def setUp(self):
 
@@ -221,6 +245,8 @@ class Check_runODK_with_exports(unittest.TestCase):
         self.old_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
             downloadBriefcase()
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         self.dbFileName = 'Pipeline.db'
         self.dbDirectory = '.'
@@ -278,10 +304,21 @@ class Check_runODK_with_exports(unittest.TestCase):
                 hasAll = False
         self.assertTrue(hasAll)
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_storeResultsDB(unittest.TestCase):
     """Check storeResultsDB method marks duplicate records:"""
 
+
+    @classmethod
+    def setUpClass(cls):
+
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
     def setUp(self):
 
@@ -343,6 +380,11 @@ class Check_storeResultsDB(unittest.TestCase):
         shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         self.conn.close()
 
+    @classmethod
+    def tearDownClass(cls):
+
+        os.remove('Pipeline.db')
+
 
 class Check_runOpenVA(unittest.TestCase):
     """Check runOpenVA method sets up files correctly"""
@@ -361,6 +403,8 @@ class Check_runOpenVA(unittest.TestCase):
             'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
             'ODKFiles/odkBCExportNew.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
         settings = pl.config()
@@ -410,6 +454,7 @@ class Check_runOpenVA(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_runOpenVA_zeroRecords(unittest.TestCase):
@@ -429,6 +474,8 @@ class Check_runOpenVA_zeroRecords(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('OpenVAFiles/openVA_input.csv'):
             os.remove('OpenVAFiles/openVA_input.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         plZero = Pipeline('copy_Pipeline.db', '.', 'enilepiP', True)
         settings = plZero.config()
@@ -462,6 +509,7 @@ class Check_runOpenVA_zeroRecords(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
@@ -471,6 +519,8 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db', dbDirectory = '.',
@@ -543,6 +593,7 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
             os.remove('OpenVAFiles/recordStorage.csv')
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
@@ -552,6 +603,8 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db', dbDirectory = '.',
@@ -621,6 +674,7 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
             os.remove('OpenVAFiles/recordStorage.csv')
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_runOpenVA_SmartVA(unittest.TestCase):
@@ -640,6 +694,8 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('smartva'):
             downloadSmartVA()
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
@@ -693,6 +749,7 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
             os.remove('OpenVAFiles/recordStorage.csv')
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_Pipeline_runDHIS(unittest.TestCase):
@@ -713,6 +770,8 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
                     'OpenVAFiles/recordStorage.csv')
         shutil.copy('OpenVAFiles/sample_newStorage.csv',
                     'OpenVAFiles/newStorage.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
         plRunDate = pl.pipelineRunDate
@@ -754,6 +813,7 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
         if os.path.isfile('OpenVAFiles/newStorage.csv'):
             os.remove('OpenVAFiles/newStorage.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_Pipeline_depositResults(unittest.TestCase):
@@ -763,6 +823,8 @@ class Check_Pipeline_depositResults(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
         if os.path.isfile('OpenVAFiles/newStorage.csv'):
             os.remove('OpenVAFiles/newStorage.csv')
         shutil.copy('OpenVAFiles/sample_newStorage.csv',
@@ -812,6 +874,7 @@ class Check_Pipeline_depositResults(unittest.TestCase):
     def tearDownClass(cls):
         if os.path.isfile('OpenVAFiles/newStorage.csv'):
             os.remove('OpenVAFiles/newStorage.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_Pipeline_cleanPipeline(unittest.TestCase):
@@ -840,6 +903,8 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
         if not os.path.isfile('OpenVAFiles/newStorage.csv'):
             shutil.copy('OpenVAFiles/sample_newStorage.csv',
                         'OpenVAFiles/newStorage.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         os.makedirs('DHIS/blobs/', exist_ok = True)
         shutil.copy('OpenVAFiles/sample_newStorage.csv',
@@ -905,6 +970,7 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
         if os.path.isfile('OpenVAFiles/newStorage.csv'):
             os.remove('OpenVAFiles/newStorage.csv')
+        os.remove('Pipeline.db')
 
 
 if __name__ == '__main__':

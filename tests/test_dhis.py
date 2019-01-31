@@ -10,6 +10,7 @@ from pysqlcipher3 import dbapi2 as sqlcipher
 import context
 from openva_pipeline import dhis
 from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.runPipeline import createTransferDB
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -40,6 +41,8 @@ class Check_DHIS(unittest.TestCase):
         wrong_dbKey = 'wrongKey'
         # dbDirectory = os.path.abspath(os.path.dirname(__file__))
         dbDirectory = '.'
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB(dbFileName, dbDirectory, dbKey)
         pipelineRunDate = datetime.datetime.now()
 
         xferDB = TransferDB(dbFileName = dbFileName,
@@ -78,6 +81,7 @@ class Check_DHIS(unittest.TestCase):
         shutil.rmtree('DHIS/blobs/', ignore_errors = True)
         os.remove('OpenVAFiles/entityAttributeValue.csv')
         os.remove('OpenVAFiles/newStorage.csv')
+        os.remove('Pipeline.db')
 
 
 class Check_DHIS_Exceptions(unittest.TestCase):

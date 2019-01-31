@@ -9,6 +9,7 @@ import context
 from openva_pipeline.transferDB import TransferDB
 from openva_pipeline.openVA import OpenVA
 from openva_pipeline.runPipeline import downloadSmartVA
+from openva_pipeline.runPipeline import createTransferDB
 from openva_pipeline.exceptions import OpenVAError
 from openva_pipeline.exceptions import SmartVAError
 
@@ -29,6 +30,8 @@ class Check_copyVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'Pipeline.db',
@@ -91,6 +94,7 @@ class Check_copyVA(unittest.TestCase):
         os.remove('ODKFiles/odkBCExportPrev.csv')
         os.remove('ODKFiles/odkBCExportNew.csv')
         os.remove('OpenVAFiles/openVA_input.csv')
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
@@ -113,6 +117,8 @@ class Check_zeroRecords(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('OpenVAFiles/openVA_input.csv'):
             os.remove('OpenVAFiles/openVA_input.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'Pipeline.db',
@@ -156,6 +162,7 @@ class Check_zeroRecords(unittest.TestCase):
 
         os.remove('ODKFiles/odkBCExportPrev.csv')
         os.remove('ODKFiles/odkBCExportNew.csv')
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
@@ -176,6 +183,8 @@ class Check_InSilicoVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
@@ -241,6 +250,7 @@ class Check_InSilicoVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
@@ -271,6 +281,8 @@ class Check_InterVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
@@ -335,6 +347,7 @@ class Check_InterVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
@@ -367,6 +380,8 @@ class Check_SmartVA(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('smartva'):
             downloadSmartVA()
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
@@ -426,6 +441,7 @@ class Check_SmartVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
@@ -457,6 +473,8 @@ class Check_Exceptions(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('smartva'):
             downloadSmartVA()
+        if not os.path.isfile('Pipeline.db'):
+            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         self.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                         strftime('%Y_%m_%d_%H:%M:%S')
@@ -527,6 +545,7 @@ class Check_Exceptions(unittest.TestCase):
         self.assertRaises(SmartVAError, self.rOpenVA.getCOD)
 
     def tearDown(self):
+        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', self.staticRunDate),
             ignore_errors = True
