@@ -9,4 +9,9 @@ before_install:
 install: 
   - 'pip install pipenv'
   - 'pipenv sync'
-script: 'cd tests; python -m unittest discover'
+script:
+  - 'cd tests; python test_transferDB.py'
+  - 'cd tests; python test_odk.py'
+  - 'cd tests; python test_openVA.py'
+  - 'cd tests; python test_dhis.py'
+  - 'cd tests; python test_pipeline.py'

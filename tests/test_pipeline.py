@@ -694,8 +694,6 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('smartva'):
             downloadSmartVA()
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
@@ -749,8 +747,7 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
             os.remove('OpenVAFiles/recordStorage.csv')
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
-        os.remove('Pipeline.db')
-
+ 
 
 class Check_Pipeline_runDHIS(unittest.TestCase):
     """Check runDHIS method"""
