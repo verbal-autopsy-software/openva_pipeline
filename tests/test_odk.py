@@ -27,7 +27,7 @@ class CompleteFreshRun(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
         if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
-            runPipeline.downloadBriefcase()
+            downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
@@ -111,7 +111,7 @@ class ProperMergeWithExistingExports(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
         if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
-            runPipeline.downloadBriefcase()
+            downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
@@ -203,7 +203,7 @@ class InvalidConnection(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
         if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
-            runPipeline.downloadBriefcase()
+            downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'

@@ -50,7 +50,7 @@ class OpenVA:
             if not os.path.isdir(dirOpenVA):
                 os.makedirs(dirOpenVA)
         except:
-            raise OpenVAError("Unable to create directory" + dhisPath)
+            raise OpenVAError("Unable to create directory" + dirOpenVA)
 
     def copyVA(self): 
         """Create data file for openVA by merging ODK export files.
@@ -378,8 +378,3 @@ class OpenVA:
             self.smartVA_to_csv()
             self.successfulRun = True
             return(completed)
-
-#------------------------------------------------------------------------------#
-# Exceptions
-#------------------------------------------------------------------------------#
-
