@@ -183,8 +183,6 @@ class Check_InSilicoVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pipelineRunDate = datetime.datetime.now()
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
@@ -196,6 +194,9 @@ class Check_InSilicoVA(unittest.TestCase):
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
         par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
+        sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
+        par = ('WHO2012',)
+        c.execute(sql, par)
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
         settingsInSilicoVA = xferDB.configOpenVA(conn,
@@ -205,10 +206,7 @@ class Check_InSilicoVA(unittest.TestCase):
         conn.close()
         cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
-        shutil.rmtree(
-            os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
-        )
+ 
         cls.rScript = os.path.join('OpenVAFiles', cls.staticRunDate,
                                    'Rscript_' + cls.staticRunDate + '.R')
         cls.rOutFile = os.path.join('OpenVAFiles', cls.staticRunDate,
@@ -250,7 +248,6 @@ class Check_InSilicoVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
