@@ -11,7 +11,7 @@ install:
   - 'pipenv sync'
 script:
   - 'cd tests; python test_transferDB.py'
-  - 'cd tests; python test_odk.py'
-  - 'cd tests; python test_openVA.py'
-  - 'cd tests; python test_dhis.py'
-  - 'cd tests; python test_pipeline.py'
+  - 'python test_odk.py'
+  - 'python test_openVA.py'
+  - 'python test_dhis.py'
+  - 'python test_pipeline.py'
