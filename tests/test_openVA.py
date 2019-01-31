@@ -473,8 +473,6 @@ class Check_Exceptions(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('smartva'):
             downloadSmartVA()
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         self.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                         strftime('%Y_%m_%d_%H:%M:%S')
@@ -484,18 +482,31 @@ class Check_Exceptions(unittest.TestCase):
                             plRunDate = self.staticRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
-        sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
         if self.id() == '__main__.Check_Exceptions.test_insilico_exception':
+            algorithm = 'InSilicoVA'
+            sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
             par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
+            c.execute(sql, par)
+            sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
+            par = ('WHO2016',)
+            c.execute(sql, par)
         elif self.id() == '__main__.Check_Exceptions.test_interva_exception':
+            algorithm = 'InterVA'
+            sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
             par = ('InterVA', 'InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
+            c.execute(sql, par)
+            sql = 'UPDATE InterVA_Conf SET version = ?'
+            par = ('5',)
+            c.execute(sql, par)
         else:
+            algorithm = 'SmartVA'
+            sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
             par = ('SmartVA', 'SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1')
-        c.execute(sql, par)
+            c.execute(sql, par)
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
         settingsAlgorithm = xferDB.configOpenVA(conn,
-                                                par[0],
+                                                algorithm,
                                                 settingsPipeline.workingDirectory)
         if self.id() == '__main__.Check_Exceptions.test_smartva_exception':
             ntSmartVA = collections.namedtuple("ntSmartVA",
@@ -517,13 +528,9 @@ class Check_Exceptions(unittest.TestCase):
 
         conn.rollback()
         conn.close()
-        shutil.rmtree(
-            os.path.join('OpenVAFiles', self.staticRunDate),
-            ignore_errors = True
-        )
         rOpenVA = OpenVA(vaArgs = settingsAlgorithm,
                          pipelineArgs = settingsPipeline,
-                         odkID = 'this should raise an exception',
+                         odkID = '',
                          runDate = self.staticRunDate)
         zeroRecords = rOpenVA.copyVA()
         rOpenVA.rScript()
@@ -545,7 +552,6 @@ class Check_Exceptions(unittest.TestCase):
         self.assertRaises(SmartVAError, self.rOpenVA.getCOD)
 
     def tearDown(self):
-        os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', self.staticRunDate),
             ignore_errors = True
