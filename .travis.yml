@@ -10,7 +10,9 @@ install:
   - pip install pipenv
   - rm Pipfile*
   - pipenv --python 3.5.2
-  - pipenv install requests, pandas, pysqlcipher3
+  - pipenv install requests 
+  - pipenv install pandas 
+  - pipenv install pysqlcipher3
 script:
   - cd tests; python test_transferDB.py
   - python test_odk.py
