@@ -1,17 +1,19 @@
 dist: xenial
 language: python
 python:
-  - '3.5.2'
+  - 3.5.2
 env:
   - DB=sqlite3
 before_install:
   - sudo apt-get install -y python3-dev libsqlite3-dev sqlcipher libsqlcipher-dev
 install: 
-  - 'pip install pipenv'
-  - 'pipenv sync'
+  - pip install pipenv
+  - rm Pipfile*
+  - pipenv --python 3.5.2
+  - pipenv install requests, pandas, pysqlcipher3
 script:
-  - 'cd tests; python test_transferDB.py'
-  - 'python test_odk.py'
-  - 'python test_openVA.py'
-  - 'python test_dhis.py'
-  - 'python test_pipeline.py'
+  - cd tests; python test_transferDB.py
+  - python test_odk.py
+  - python test_openVA.py
+  - python test_dhis.py
+  - python test_pipeline.py
