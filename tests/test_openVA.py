@@ -4,6 +4,7 @@ import shutil
 import collections
 from pysqlcipher3 import dbapi2 as sqlcipher
 import datetime
+import subprocess
 
 import context
 from openva_pipeline.transferDB import TransferDB
