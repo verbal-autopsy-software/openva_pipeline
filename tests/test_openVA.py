@@ -33,7 +33,9 @@ class Check_copyVA(unittest.TestCase):
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
-        pipelineRunDate = datetime.datetime.now()
+        # pipelineRunDate = datetime.datetime.now()
+        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                            strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
@@ -120,7 +122,9 @@ class Check_zeroRecords(unittest.TestCase):
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
-        pipelineRunDate = datetime.datetime.now()
+        # pipelineRunDate = datetime.datetime.now()
+        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                            strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
@@ -184,7 +188,9 @@ class Check_InSilicoVA(unittest.TestCase):
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
 
-        pipelineRunDate = datetime.datetime.now()
+        # pipelineRunDate = datetime.datetime.now()
+        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                            strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
@@ -281,7 +287,9 @@ class Check_InterVA(unittest.TestCase):
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
-        pipelineRunDate = datetime.datetime.now()
+        # pipelineRunDate = datetime.datetime.now()
+        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                            strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
@@ -380,7 +388,9 @@ class Check_SmartVA(unittest.TestCase):
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
-        pipelineRunDate = datetime.datetime.now()
+        # pipelineRunDate = datetime.datetime.now()
+        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
+                            strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
