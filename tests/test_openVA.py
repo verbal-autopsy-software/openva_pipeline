@@ -4,7 +4,6 @@ import shutil
 import collections
 from pysqlcipher3 import dbapi2 as sqlcipher
 import datetime
-import subprocess
 
 import context
 from openva_pipeline.transferDB import TransferDB
@@ -490,7 +489,7 @@ class Check_Exceptions(unittest.TestCase):
                             plRunDate = self.staticRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
-        if self.id() == '__main__.Check_Exceptions.test_insilico_exception':
+        if self.id() == 'test_openVA.Check_Exceptions.test_insilico_exception':
             algorithm = 'InSilicoVA'
             sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
             par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
@@ -498,7 +497,7 @@ class Check_Exceptions(unittest.TestCase):
             sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
             par = ('WHO2016',)
             c.execute(sql, par)
-        elif self.id() == '__main__.Check_Exceptions.test_interva_exception':
+        elif self.id() == 'test_openVA.Check_Exceptions.test_interva_exception':
             algorithm = 'InterVA'
             sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
             par = ('InterVA', 'InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
@@ -516,7 +515,7 @@ class Check_Exceptions(unittest.TestCase):
         settingsAlgorithm = xferDB.configOpenVA(conn,
                                                 algorithm,
                                                 settingsPipeline.workingDirectory)
-        if self.id() == '__main__.Check_Exceptions.test_smartva_exception':
+        if self.id() == 'test_openVA.Check_Exceptions.test_smartva_exception':
             ntSmartVA = collections.namedtuple("ntSmartVA",
                                                ["SmartVA_country",
                                                 "SmartVA_hiv",
@@ -536,13 +535,12 @@ class Check_Exceptions(unittest.TestCase):
 
         conn.rollback()
         conn.close()
-        rOpenVA = OpenVA(vaArgs = settingsAlgorithm,
-                         pipelineArgs = settingsPipeline,
-                         odkID = '',
-                         runDate = self.staticRunDate)
-        zeroRecords = rOpenVA.copyVA()
-        rOpenVA.rScript()
-        self.rOpenVA = rOpenVA
+        self.rOpenVA = OpenVA(vaArgs = settingsAlgorithm,
+                              pipelineArgs = settingsPipeline,
+                              odkID = '',
+                              runDate = self.staticRunDate)
+        zeroRecords = self.rOpenVA.copyVA()
+        self.rOpenVA.rScript()
 
     def test_insilico_exception(self):
         """getCOD() raises exception with faulty R script for InSilicoVA."""
