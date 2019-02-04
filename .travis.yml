@@ -5,12 +5,7 @@ python:
 env:
   - DB=sqlite3
 before_install:
-  - sudo apt-get install -y python3-dev libsqlite3-dev sqlcipher libsqlcipher-dev
+  - sudo apt-get install -y python3-dev libsqlite3-dev sqlcipher libsqlcipher-dev openjdk-8-jdk r-base 
 install: 
   - pip install requests pandas pysqlcipher3
-script:
-  - cd tests; python test_openVA.py
-  - python test_pipeline.py
-  - python test_transferDB.py
-  - python test_dhis.py
-  - python test_odk.py
+script: python -m unittest discover -s test
