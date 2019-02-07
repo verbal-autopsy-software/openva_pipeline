@@ -12,7 +12,7 @@ environment:
 install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
-- sudo apt-get install -y --allow-change-held-packages default-jdk
+- sudo apt-get install -y --allow-change-held-packages default-jdk default-jre default-jdk-headless openjdk-11-jdk
 - sudo apt-get install -y --allow-change-held-packages r-base sqlcipher libsqlcipher-dev
 - sudo apt-get install -y --allow-change-held-packages r-cran-rjava
 - sudo R CMD javareconf
