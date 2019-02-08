@@ -17,9 +17,11 @@ install:
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
-- python -m pip install -r requirements.txt --user
+- python3 -m pip install -r requirements.txt --user
+- python --version
+- python3 --version
 
 test_script:
-- python -m unittest discover -s tests
+- python3 -m unittest discover -s tests
 
 build: off
