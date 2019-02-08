@@ -13,7 +13,8 @@ install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
 - sudo apt update
-- sudo apt install -y ca-certificate-java java-common openjdk-11-jre-headless
+- sudo apt upgrade
+- sudo apt install -y ca-certificates-java java-common openjdk-11-jre-headless
 - sudo apt install -y openjdk-11-jre
 - sudo apt install -y default-jre r-base sqlcipher libsqlcipher-dev
 - sudo apt install -y r-cran-rjava
