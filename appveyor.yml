@@ -16,9 +16,10 @@ install:
 - sudo R CMD javareconf
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
+- cd /home/appveyor/projects/openva-pipeline/
+- pip3 install -r requirements.txt
 
 test_script:
-- cd /home/appveyor/projects/openva-pipeline/
 - python -m unittest discover -s tests
 
 build: off
