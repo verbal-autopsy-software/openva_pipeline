@@ -20,7 +20,7 @@ install:
 - sudo apt-get install -y r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev software-properties-common
 - sudo add-apt-repository ppa:deadsnakes/ppa
 - sudo apt-get update
-- sudo apt-get install -y $env:MY_VAR
+- sudo apt-get install -y ${env:MY_VAR}
 - sudo apt-get install -y python3-pip
 - sudo R CMD javareconf
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
