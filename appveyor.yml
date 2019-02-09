@@ -24,6 +24,7 @@ install:
 - cd Python-$PYVERSION
 - sudo ./configure --enable-loadable-sqlite-extensions && sudo make && sudo make altinstall
 - sudo R CMD javareconf
+- cd /home/appveyor/projects
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
