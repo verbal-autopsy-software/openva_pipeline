@@ -14,12 +14,13 @@ stack: python %PYTHON%
 install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
-- sudo apt-get install -y r-base sqlcipher libsqlcipher-dev python3-pip
+- sudo apt-get install -y r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev python3-pip
 - sudo R CMD javareconf
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
 - python3 --version
+- python3 -m pip install sqlite3
 - python3 -m pip install -r requirements.txt
 
 test_script:
