@@ -19,7 +19,7 @@ install:
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
 - sudo apt-get install -y r-base sqlcipher libsqlcipher-dev
 - cd /opt/
-- sudo wget https://www.python.org/ftp/python/$env:PYVERSION/Python-${env:PYVERSION}.tar.xz
+- sudo wget https://www.python.org/ftp/python/$PYVERSION/Python-${PYVERSION}.tar.xz
 - sudo tar xf Python-${env:PYVERSION}.tar.xz
 - sudo cd Python-${env:PYVERSION}
 - sudo ./configure --enable-loadable-sqlite-extensions && sudo make && sudo make altinstall
