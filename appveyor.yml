@@ -21,7 +21,7 @@ install:
 - cd /opt/
 - sudo wget https://www.python.org/ftp/python/$PYVERSION/Python-$PYVERSION.tar.xz
 - sudo tar xf Python-$PYVERSION.tar.xz
-- sudo cd Python-$PYVERSION
+- cd Python-$PYVERSION
 - sudo ./configure --enable-loadable-sqlite-extensions && sudo make && sudo make altinstall
 - sudo R CMD javareconf
 - sudo echo "install.packages(c('openVA', 'CrossVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
