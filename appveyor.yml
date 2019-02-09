@@ -28,7 +28,7 @@ install:
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
 - /usr/local/bin/python$PYTHON --version
-- /usr/local/bin/pip$PYTHON install -r requirements.txt --user
+- sudo /usr/local/bin/pip$PYTHON install -r requirements.txt
 
 test_script:
 - /usr/local/bin/python$PYTHON -m unittest discover -s tests
