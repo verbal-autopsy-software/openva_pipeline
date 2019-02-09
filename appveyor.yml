@@ -16,7 +16,7 @@ install:
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
 - sudo apt-get install -y r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev python3-pip
 - cd /usr/src
-- wget https://www.python.org/ftp/python/3.5.6/Python-3.5.6.tgz
+- sudo wget https://www.python.org/ftp/python/3.5.6/Python-3.5.6.tgz
 - sudo tar xzf Python-3.5.6.tgz
 - cd Python-3.5.6
 - sudo ./configure
