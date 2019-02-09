@@ -15,7 +15,7 @@ install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran35/' >> /etc/apt/sources.list"
 - sudo apt-get install -y r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev
-- sudo apt-get remove --purge python3.6
+- sudo apt-get remove --purge python3
 - cd /usr/src
 - sudo wget https://www.python.org/ftp/python/3.5.6/Python-3.5.6.tgz
 - sudo tar xzf Python-3.5.6.tgz
