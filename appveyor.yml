@@ -3,8 +3,8 @@ image: ubuntu1804
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
-      PYTHON: "3.5"
-      PYVERSION: "3.5.6"
+      PYTHON: "3.6"
+      PYVERSION: "3.6.5"
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       PYTHON: "3.6"
       PYVERSION: "3.6.8"
