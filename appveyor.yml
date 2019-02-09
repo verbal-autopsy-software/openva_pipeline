@@ -4,13 +4,13 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       MY_VAR: "python3.5"
-#      PYTHON: "3.5"
+      PYTHON: "3.5"
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       MY_VAR: "python3.6"
-#      PYTHON: "3.6"
+      PYTHON: "3.6"
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
       MY_VAR: "python3.7"
-#      PYTHON: "3.7"
+      PYTHON: "3.7"
 
 stack: python %PYTHON%
 
