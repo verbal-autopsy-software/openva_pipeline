@@ -7,8 +7,6 @@ name = "pypi"
 "pysqlcipher3" = "*"
 pandas = "*"
 requests = "*"
-sphinx = "*"
-mock = "*"
 
 [dev-packages]
 
