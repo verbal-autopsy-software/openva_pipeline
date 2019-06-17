@@ -8,7 +8,7 @@ CREATE TABLE Pipeline_Conf
 
 INSERT INTO Pipeline_Conf
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InSilicoVA", ".");
+  VALUES("InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InSilicoVA", ".");
 
 CREATE TABLE VA_Storage
 (
@@ -68,7 +68,7 @@ CREATE TABLE InSilicoVA_Conf
   Nsim char(9)
 );
 
-INSERT INTO InSilicoVA_Conf (data_type, Nsim) VALUES("WHO2012", "4000");
+INSERT INTO InSilicoVA_Conf (data_type, Nsim) VALUES("WHO2016", "4000");
 
 CREATE TABLE Advanced_InSilicoVA_Conf
 (
