@@ -46,7 +46,7 @@ CREATE TABLE InterVA_Conf
   Malaria char(1) NOT NULL CHECK (Malaria IN ("v", "l", "h"))
 );
 
-INSERT INTO InterVA_Conf (version, HIV, Malaria) VALUES("4", "v", "v");
+INSERT INTO InterVA_Conf (version, HIV, Malaria) VALUES("5", "v", "v");
 
 CREATE TABLE Advanced_InterVA_Conf
 (
