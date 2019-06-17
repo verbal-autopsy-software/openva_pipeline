@@ -8,7 +8,7 @@ CREATE TABLE Pipeline_Conf
 
 INSERT INTO Pipeline_Conf
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InSilicoVA", ".");
+  VALUES("InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1", "WHO", "InterVA", ".");
 
 CREATE TABLE VA_Storage
 (

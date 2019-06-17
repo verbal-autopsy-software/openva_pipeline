@@ -178,7 +178,10 @@ class OpenVA:
                 f.write("\t no.is.missing = " + self.vaArgs.InSilicoVA_no_is_missing + ", \n")
                 f.write("\t indiv.CI = " + self.vaArgs.InSilicoVA_indiv_CI + ", \n")
                 f.write("\t groupcode = " + self.vaArgs.InSilicoVA_no_is_missing + ") \n")
-                f.write("sex <- ifelse(tolower(data$male)=='y', 'Male', 'Female') \n")
+                if self.vaArgs.InSilicoVA_data_type == "WHO2012":
+                    f.write("sex <- ifelse(tolower(data$male)=='y', 'Male', 'Female') \n")
+                if self.vaArgs.InSilicoVA_data_type == "WHO2016":
+                    f.write("sex <- ifelse(tolower(data$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
                 f.write("hasCOD <- as.character(data$id) %in% as.character(levels(cod$ID)) \n")
                 f.write("dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') \n")
@@ -249,7 +252,10 @@ class OpenVA:
                 f.write("\t write = TRUE, \n")
                 f.write("\t directory = '" + os.path.join(self.dirOpenVA, self.runDate) + "', \n")
                 f.write("\t filename = 'warnings_" + self.runDate + "') \n")
-                f.write("sex <- ifelse(tolower(data$MALE) == 'y', 'Male', 'Female') \n")
+                if self.vaArgs.InterVA_Version == "4":
+                    f.write("sex <- ifelse(tolower(data$MALE)=='y', 'Male', 'Female') \n")
+                if self.vaArgs.InterVA_Version == "5":
+                    f.write("sex <- ifelse(tolower(data$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
                 f.write("hasCOD <- as.character(data$ID) %in% as.character(levels(cod$ID)) \n")
                 f.write("dob <- as.Date(as.character(records$consented.deceased_CRVS.info_on_deceased.Id10021), '%b %d, %Y') \n")
