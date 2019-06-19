@@ -1,0 +1,32 @@
+# Use an official Ubuntu 16.04 as a parent image
+FROM ubuntu:16.04
+
+# Create user & log in
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends apt-utils
+RUN apt-get install -y sudo apt-transport-https
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+RUN bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu xenial-cran35/' >> /etc/apt/sources.list"
+RUN apt-get update
+RUN apt-get install -y python3-pip python3-dev openjdk-8-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git nano
+RUN R CMD javareconf
+RUN Rscript -e "install.packages(c('openVA', 'CrossVA'))"
+
+RUN useradd -m ovauser -s /bin/bash -G sudo
+ENV DEBIAN_FRONTEND teletype
+
+USER ovauser:ovauser
+WORKDIR /home/ovauser
+RUN export LC_ALL=C.UTF-8
+RUN export LANG=C.UTF-8
+
+RUN python3 -m pip install --upgrade pip --user
+RUN python3 -m pip install --upgrade setuptools --user
+RUN python3 -m pip install openva-pipeline --user
+
+# Launch container with command:
+# $ docker run -u 0 -it containerName bash
+# change ovauser's password and switch to account with:
+# $ passwd ovauser
+# $ su - ovauser
