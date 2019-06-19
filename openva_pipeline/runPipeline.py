@@ -59,7 +59,7 @@ def createTransferDB(database_file_name,
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
         raise DatabaseConnectionError("Unable to set encryption key..." + str(e))
     try:
-        with open(sqlPath, "r", newline = "\n") as sqlScript:
+        with open(sqlPath, "r", newline = "\n", encoding="utf-8") as sqlScript:
             # c.executescript(sqlScript.read())
             conn.executescript(sqlScript.read())
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
