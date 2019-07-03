@@ -43,7 +43,7 @@ class Check_Pipeline_config(unittest.TestCase):
         settingsPipeline.algorithmMetadataCode:"""
 
         self.assertEqual(self.settingsPipeline.algorithmMetadataCode,
-            'InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
+            'InterVA|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
 
     def test_config_pipeline_codSource(self):
         """Test config method configuration of pipeline:
@@ -55,7 +55,7 @@ class Check_Pipeline_config(unittest.TestCase):
         """Test config method configuration of pipeline:
         settingsPipeline.algorithm:"""
 
-        self.assertEqual(self.settingsPipeline.algorithm, 'InSilicoVA')
+        self.assertEqual(self.settingsPipeline.algorithm, 'InterVA')
 
     def test_config_pipeline_workingDirecotry(self):
         """Test config method configuration of pipeline:
@@ -100,18 +100,6 @@ class Check_Pipeline_config(unittest.TestCase):
         settingsODK.odkLastRun:"""
 
         self.assertEqual(self.settingsODK.odkLastRun, '1900-01-01_00:00:01')
-
-    def test_config_openva_InSilicoVA_data_type(self):
-        """Test config method configuration of pipeline:
-        settingsOpenVA.InSilicoVA_data_type:"""
-
-        self.assertEqual(self.settingsOpenVA.InSilicoVA_data_type, 'WHO2012')
-
-    def test_config_openva_InSilicoVA_Nsim(self):
-        """Test config method configuration of pipeline:
-        settingsOpenVA.InSilicoVA_Nsim:"""
-
-        self.assertEqual(self.settingsOpenVA.InSilicoVA_Nsim, '4000')
 
     def test_config_dhis_dhisURL(self):
         """Test config method configuration of pipeline:
@@ -527,7 +515,7 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
         par = ('InSilicoVA', 'InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1');
         c.execute(sql, par)
         sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
-        par = ('WHO2012',);
+        par = ('WHO2016',);
         c.execute(sql, par)
         conn.commit()
         conn.close()
@@ -604,7 +592,7 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
-        par = ('InterVA', 'InterVA4|4.04|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
+        par = ('InterVA', 'InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
         conn.commit()
         conn.close()

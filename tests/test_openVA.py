@@ -201,7 +201,7 @@ class Check_InSilicoVA(unittest.TestCase):
         par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
         sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
-        par = ('WHO2012',)
+        par = ('WHO2016',)
         c.execute(sql, par)
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
@@ -284,8 +284,8 @@ class Check_InterVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB('Pipeline.db', '.', 'enilepiP')
+        if not os.path.isfile('copy_Pipeline.db'):
+            createTransferDB('copy_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
@@ -297,13 +297,13 @@ class Check_InterVA(unittest.TestCase):
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
-        par = ('InterVA','InterVA4|4.04|InterVA|4|2016 WHO Verbal Autopsy Form|v1_4_1')
+        par = ('InterVA','InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
-        settingsInSilicoVA = xferDB.configOpenVA(conn,
-                                                 'InterVA',
-                                                 settingsPipeline.workingDirectory)
+        settingsInterVA = xferDB.configOpenVA(conn,
+                                              'InterVA',
+                                              settingsPipeline.workingDirectory)
         conn.rollback()
         conn.close()
         cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
