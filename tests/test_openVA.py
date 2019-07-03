@@ -316,7 +316,7 @@ class Check_InterVA(unittest.TestCase):
                                    'Rscript_' + cls.staticRunDate + '.R')
         cls.rOutFile = os.path.join('OpenVAFiles', cls.staticRunDate,
                                     'Rscript_' + cls.staticRunDate + '.Rout')
-        rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
+        rOpenVA = OpenVA(vaArgs = settingsInterVA,
                          pipelineArgs = settingsPipeline,
                          odkID = settingsODK.odkID,
                          runDate = cls.staticRunDate)

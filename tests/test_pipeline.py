@@ -43,7 +43,7 @@ class Check_Pipeline_config(unittest.TestCase):
         settingsPipeline.algorithmMetadataCode:"""
 
         self.assertEqual(self.settingsPipeline.algorithmMetadataCode,
-            'InterVA|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
+            'InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
 
     def test_config_pipeline_codSource(self):
         """Test config method configuration of pipeline:
@@ -585,9 +585,12 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
+        if os.path.isfile('InterVA_Pipeline.db'):
+            os.remove('InterVA_Pipeline.db')
+        createTransferDB('InterVA_Pipeline.db', '.', 'enilepiP')
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db', dbDirectory = '.',
+        xferDB = TransferDB(dbFileName = 'InterVA_Pipeline.db', dbDirectory = '.',
                             dbKey = 'enilepiP', plRunDate = pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
@@ -654,6 +657,8 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
             os.remove('OpenVAFiles/recordStorage.csv')
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
+        if os.path.isfile('InterVA_Pipeline.db'):
+            os.remove('InterVA_Pipeline.db')
 
 
 class Check_runOpenVA_SmartVA(unittest.TestCase):
