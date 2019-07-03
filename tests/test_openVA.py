@@ -284,13 +284,14 @@ class Check_InterVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
-        if not os.path.isfile('copy_Pipeline.db'):
-            createTransferDB('copy_Pipeline.db', '.', 'enilepiP')
+        if os.path.isfile('InterVA_Pipeline.db'):
+            os.remove('InterVA_Pipeline.db')
+        createTransferDB('InterVA_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
+        xferDB = TransferDB(dbFileName = 'InterVA_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
                             plRunDate = pipelineRunDate)
@@ -304,7 +305,6 @@ class Check_InterVA(unittest.TestCase):
         settingsInterVA = xferDB.configOpenVA(conn,
                                               'InterVA',
                                               settingsPipeline.workingDirectory)
-        conn.rollback()
         conn.close()
         cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
@@ -352,7 +352,7 @@ class Check_InterVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        os.remove('Pipeline.db')
+        os.remove('InterVA_Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
