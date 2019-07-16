@@ -187,18 +187,22 @@ class Check_InSilicoVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
+        if os.path.isfile('Check_InSilicoVA_Pipeline.db'):
+            os.remove('Check_InSilicoVA_Pipeline.db')
+        if not os.path.isfile('Check_InSilicoVA_Pipeline.db'):
+            createTransferDB('Check_InSilicoVA_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
+        xferDB = TransferDB(dbFileName = 'Check_InSilicoVA_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
                             plRunDate = pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
-        par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
+        par = ('InSilicoVA', 'InSilicoVA-2016|1.0.0|InterVA|1|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
         sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
         par = ('WHO2016',)
@@ -208,7 +212,7 @@ class Check_InSilicoVA(unittest.TestCase):
         settingsInSilicoVA = xferDB.configOpenVA(conn,
                                                  'InSilicoVA',
                                                  settingsPipeline.workingDirectory)
-        conn.rollback()
+        # conn.rollback()
         conn.close()
         cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
@@ -268,6 +272,7 @@ class Check_InSilicoVA(unittest.TestCase):
             os.remove("OpenVAFiles/recordStorage.csv")
         if os.path.isfile("OpenVAFiles/entityAttributeValue.csv"):
             os.remove("OpenVAFiles/entityAttributeValue.csv")
+        os.remove("Check_InSilicoVA_Pipeline.db")
 
 
 class Check_InterVA(unittest.TestCase):
@@ -284,14 +289,14 @@ class Check_InterVA(unittest.TestCase):
                     'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv',
                     'ODKFiles/odkBCExportNew.csv')
-        if os.path.isfile('InterVA_Pipeline.db'):
-            os.remove('InterVA_Pipeline.db')
-        createTransferDB('InterVA_Pipeline.db', '.', 'enilepiP')
+        if os.path.isfile('Check_InterVA_Pipeline.db'):
+            os.remove('Check_InterVA_Pipeline.db')
+        createTransferDB('Check_InterVA_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'InterVA_Pipeline.db',
+        xferDB = TransferDB(dbFileName = 'Check_InterVA_Pipeline.db',
                             dbDirectory = '.',
                             dbKey = 'enilepiP',
                             plRunDate = pipelineRunDate)
@@ -352,7 +357,7 @@ class Check_InterVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        os.remove('InterVA_Pipeline.db')
+        os.remove('Check_InterVA_Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
             ignore_errors = True
