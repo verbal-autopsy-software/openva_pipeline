@@ -189,8 +189,7 @@ class Check_InSilicoVA(unittest.TestCase):
                     'ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('Check_InSilicoVA_Pipeline.db'):
             os.remove('Check_InSilicoVA_Pipeline.db')
-        if not os.path.isfile('Check_InSilicoVA_Pipeline.db'):
-            createTransferDB('Check_InSilicoVA_Pipeline.db', '.', 'enilepiP')
+        createTransferDB('Check_InSilicoVA_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
@@ -202,7 +201,7 @@ class Check_InSilicoVA(unittest.TestCase):
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
-        par = ('InSilicoVA', 'InSilicoVA-2016|1.0.0|InterVA|1|2016 WHO Verbal Autopsy Form|v1_4_1')
+        par = ('InSilicoVA', 'InSilicoVA-2016|1.0.0|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
         c.execute(sql, par)
         sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
         par = ('WHO2016',)
