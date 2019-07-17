@@ -343,9 +343,9 @@ class OpenVA:
                                        stderr = subprocess.PIPE)
             if completed.returncode == 1:
                 self.successfulRun = False
-                raise OpenVAError("Error running R script:" + str(completed.stderr))
                 with open(rScriptOut, "r") as f:
-                    print(f.read(), end="")
+                    raise OpenVAError("Error running R script:" + print(f.read(), end=""))
+                # raise OpenVAError("Error running R script:" + str(completed.stderr))
             self.successfulRun = True
             return(completed)
 
