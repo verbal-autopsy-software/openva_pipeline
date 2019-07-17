@@ -2,13 +2,13 @@ image: ubuntu1804
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - APPVEYOR_BUILD_WORKER_IMAGE: ubuntu1804
       PYTHON: "3.6"
       PYVERSION: "3.6.5"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - APPVEYOR_BUILD_WORKER_IMAGE: ubuntu1804
       PYTHON: "3.6"
       PYVERSION: "3.6.8"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - APPVEYOR_BUILD_WORKER_IMAGE: ubuntu1804
       PYTHON: "3.7"
       PYVERSION: "3.7.2"
 
