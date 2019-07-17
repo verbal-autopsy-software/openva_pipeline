@@ -344,6 +344,8 @@ class OpenVA:
             if completed.returncode == 1:
                 self.successfulRun = False
                 raise OpenVAError("Error running R script:" + str(completed.stderr))
+                with open(rScriptOut, 'r') as f:
+                    print f.read()
             self.successfulRun = True
             return(completed)
 
