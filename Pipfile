@@ -5,11 +5,12 @@ name = "pypi"
 
 [packages]
 "pysqlcipher3" = "*"
-pandas = "*"
+pandas = ">=1.2.4"
 requests = "*"
 urllib3 = ">=1.24.2"
+numpy = ">=1.20.3"
 
 [dev-packages]
 
 [requires]
-python_version = "3.5"
+python_version = "3.7"

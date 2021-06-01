@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="openva_pipeline",
-    version="0.0.0.9012",
+    version="0.0.0.91",
     author="Jason Thomas, Samuel J. Clark, & Martin W. Bratschi",
     author_email="jarthomas@gmail.com",
     description="Automates the processing of verbal autopsy data.",
@@ -22,7 +22,7 @@ setuptools.setup(
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.7",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
     ],

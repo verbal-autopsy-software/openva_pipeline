@@ -1,3 +1,4 @@
 requests
 pandas
 pysqlcipher3
+pycrossva
