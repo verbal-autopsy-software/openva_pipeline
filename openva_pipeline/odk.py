@@ -8,6 +8,9 @@ This module uses ODK Briefcase to pull VA records from an ODK Aggregate server.
 import subprocess
 import os
 import shutil
+import requests
+import csv
+import sys
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 from .exceptions import PipelineError
@@ -44,6 +47,7 @@ class ODK:
         # bcDir = os.path.abspath(os.path.dirname(__file__))
         # self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.12.2.jar")
         self.bcPath = os.path.join(workingDirectory, "ODK-Briefcase-v1.12.2.jar")
+        self.odkProjectNumber = odkSettings.odkProjectNumber
         odkPath = os.path.join(workingDirectory, "ODKFiles")
         self.exportDir = odkPath
         self.storageDir = odkPath
@@ -109,3 +113,38 @@ class ODK:
         if completed.returncode == 1:
             raise ODKError(completed.stderr)
         return(completed)
+
+    def central(self):
+        """Connects to ODK Central through api.
+
+        This method calls requests.get to download a CSV file with verbal
+        autopsy records from an ODK Collect server.
+
+        :returns: Returns a string indicating the number of downloaded records.
+        :rtype: string
+        :raises: ODKError
+        """
+        exportFile_new = os.path.join(self.exportDir, self.fileName)
+        url = os.path.join(self.odkURL, "v1/projects", self.odkProjectNumber,
+                           "forms", self.odkFormID, "submissions.csv")
+        username = self.odkUser
+        password = self.odkPassword
+        try:
+            r = requests.get(url, auth=(username, password))
+        except requests.exceptions.SSLError as e:
+            raise ODKError(
+                "Unable to connect to ODK Central (using requests): {0}".format(e))
+        except:
+            raise ODKError(
+                "Unable to connect to ODK Central (unexpected error): {0}".format(sys.exc_info()))
+
+        if r.status_code != 200:
+            raise ODKError("Error getting data from ODK Central: {0}".format(r.text))
+
+        odk_text = r.text.splitlines()
+        n_records = len(odk_text) - 1
+        odk_data = [i.split(",") for i in odk_text]
+        with open(exportFile_new, "w") as f:
+            writer = csv.writer(f)
+            writer.writerows(odk_data)
+        return("SUCCESS! Downloaded {} records".format(n_records))

@@ -115,9 +115,9 @@ class TransferDB:
                 ("Problem in database table Pipeline_Conf..." + str(e))
 
         algorithmMetadataCode = queryPipeline[0][0]
-        if algorithmMetadataCode not in [j for i in metadataQuery for j in i]:
-            raise PipelineConfigurationError \
-                ("Problem in database: Pipeline_Conf.algorithmMetadataCode")
+        # if algorithmMetadataCode not in [j for i in metadataQuery for j in i]:
+        #     raise PipelineConfigurationError \
+        #         ("Problem in database: Pipeline_Conf.algorithmMetadataCode")
         codSource = queryPipeline[0][1]
         if codSource not in ("ICD10", "WHO", "Tariff"):
             raise PipelineConfigurationError \
@@ -168,7 +168,7 @@ class TransferDB:
 
         c = conn.cursor()
         sqlODK = "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, \
-          odkLastRun FROM ODK_Conf;"
+          odkLastRun, odkUseCentral, odkProjectNumber FROM ODK_Conf;"
         try:
             queryODK = c.execute(sqlODK).fetchall()
         except (sqlcipher.OperationalError) as e:
@@ -185,6 +185,8 @@ class TransferDB:
         odkPassword = queryODK[0][3]
         odkFormID = queryODK[0][4]
         odkLastRun = queryODK[0][5]
+        odkUseCentral = queryODK[0][6]
+        odkProjectNumber = queryODK[0][7]
         # odkLastRunResult = queryODK[0][6]
         # if not odkLastRunResult in ("success", "fail"):
         #     raise ODKConfigurationError \
@@ -205,7 +207,9 @@ class TransferDB:
                                         "odkLastRun",
                                         # "odkLastRunResult",
                                         "odkLastRunDate",
-                                        "odkLastRunDatePrev"]
+                                        "odkLastRunDatePrev",
+                                        "odkUseCentral",
+                                        "odkProjectNumber"]
         )
         settingsODK = ntODK(odkID,
                             odkURL,
@@ -215,7 +219,9 @@ class TransferDB:
                             odkLastRun,
                             # odkLastRunResult,
                             odkLastRunDate,
-                            odkLastRunDatePrev)
+                            odkLastRunDatePrev,
+                            odkUseCentral,
+                            odkProjectNumber)
 
         return(settingsODK)
 

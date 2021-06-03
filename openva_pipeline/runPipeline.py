@@ -103,9 +103,9 @@ def runPipeline(database_file_name,
     settingsDHIS = settings["dhis"]
 
     try:
-        odkBC = pl.runODK(settingsODK,
-                          settingsPipeline)
-        pl.logEvent("Briefcase Export Completed Successfully", "Event")
+        odkOut = pl.runODK(settingsODK,
+                           settingsPipeline)
+        pl.logEvent("ODK Export Completed Successfully", "Event")
     except ODKError as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
@@ -170,7 +170,7 @@ def downloadSmartVA():
             smartvaBinary.write(r.content)
         os.chmod("smartva", 0o777)
     except (requests.RequestException, IOError) as e:
-        raise ODKError("Error downloading smartva: {}".format(str(e)))
+        raise SmartVAError("Error downloading smartva: {}".format(str(e)))
 
 # if __name__ == "__main__":
 #     runPipeline(database_file_name= "run_Pipeline.db",
