@@ -139,18 +139,20 @@ class Pipeline:
     def runODK(self, argsODK, argsPipeline):
         """Run check duplicates, copy file, and briefcase.
 
-        This method runs the Java application ODK Briefcase,
+        This method downloads data from either (1) an ODK Central server,
+        using :meth:`ODK.central() <openva_pipeline.odk.ODK.central>`, or
+        (2) an ODK Aggregate server using the Java application ODK Briefcase,
         by calling the method
-        :meth:`ODK.briefcase() <openva_pipeline.odk.ODK.briefcase>`
-        where the configuration settings are taken from the argument
+        :meth:`ODK.briefcase() <openva_pipeline.odk.ODK.briefcase>`.  The
+        configuration settings are taken from the argument
         argsODK (see :meth:`Pipeline.config() <config>`)
         , and downloads verbal autopsy (VA)
-        records as a (csv) export from an ODK Aggregate server.  If there
+        records as a (csv) export from an ODK Central/Aggregate server.  If there
         is a previous ODK export file, this method merges the files by
         keeping only the unique VA records.
 
-        :param argsODK: Arguments passed to ODK Briefcase for connecting
-          to an ODK Aggregate server.
+        :param argsODK: Arguments passed to connect and download records
+          from the ODK Central/Aggregate server.
         :type argsODK: named tuple
         :param argsPipeline: Arguments for configuration the openva pipeline.
         :type argsPipeline: named tuple
@@ -160,7 +162,10 @@ class Pipeline:
 
         pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
-        odkBC = pipelineODK.briefcase()
+        if argsODK.odkUseCentral:
+            odkCentral = pipelineODK.central()
+        else:
+            odkBC = pipelineODK.briefcase()
         xferDB = TransferDB(dbFileName = self.dbFileName,
                             dbDirectory = self.dbDirectory,
                             dbKey = self.dbKey,
@@ -169,7 +174,10 @@ class Pipeline:
         xferDB.configPipeline(conn)
         xferDB.checkDuplicates(conn)
         conn.close()
-        return(odkBC)
+        if argsODK.odkUseCentral:
+            return(odkCentral)
+        else:
+            return(odkBC)
 
     def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
         """Create & run script or run smartva.
