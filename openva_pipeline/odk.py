@@ -127,10 +127,11 @@ class ODK:
         exportFile_new = os.path.join(self.exportDir, self.fileName)
         url = os.path.join(self.odkURL, "v1/projects", self.odkProjectNumber,
                            "forms", self.odkFormID, "submissions.csv")
+        data_filter = "?$filter=__system/submissionDate%20ge%20" + self.odkLastRunDate.replace("/", "-")
         username = self.odkUser
         password = self.odkPassword
         try:
-            r = requests.get(url, auth=(username, password))
+            r = requests.get(url + data_filter, auth=(username, password))
         except requests.exceptions.SSLError as e:
             raise ODKError(
                 "Unable to connect to ODK Central (using requests): {0}".format(e))
