@@ -149,14 +149,14 @@ def runPipeline(database_file_name,
         sys.exit(1)
 
 def downloadBriefcase():
-    """Download the ODK Briefcase (v1.12.2) jar file from Git Hub."""
+    """Download the ODK Briefcase (v1.18.0) jar file from Git Hub."""
 
-    bcURL = "https://github.com/opendatakit/briefcase/releases/download/v1.12.2/ODK-Briefcase-v1.12.2.jar"
+    bcURL = "https://github.com/getodk/briefcase/releases/download/v1.18.0/ODK-Briefcase-v1.18.0.jar"
     try:
-        with open("ODK-Briefcase-v1.12.2.jar", "wb") as bcFile:
+        with open("ODK-Briefcase-v1.18.0.jar", "wb") as bcFile:
             r = requests.get(bcURL)
             bcFile.write(r.content)
-        os.chmod("ODK-Briefcase-v1.12.2.jar", 0o744)
+        os.chmod("ODK-Briefcase-v1.18.0.jar", 0o744)
     except (requests.RequestException, IOError) as e:
         raise ODKError("Error downloading Briefcase: {}".format(str(e)))
 

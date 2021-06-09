@@ -26,14 +26,14 @@ class CompleteFreshRun(unittest.TestCase):
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
         odkUser = 'odk_openva'
         odkPassword = 'openVA2018'
-        odkFormID = 'va_who_2016_11_03_v1_4_1'
+        odkFormID = 'va_who_v1_5_1'
         odkLastRun = '1901-01-01_00:00:01'
         odkLastRunDate = datetime.datetime.strptime(
             odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
@@ -65,7 +65,7 @@ class CompleteFreshRun(unittest.TestCase):
                             odkLastRunDatePrev)
 
         cls.pipelineODK = odk.ODK(settingsODK, '.')
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
         cls.odkBC = cls.pipelineODK.briefcase()
 
@@ -110,14 +110,14 @@ class ProperMergeWithExistingExports(unittest.TestCase):
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
         odkUser = 'odk_openva'
         odkPassword = 'openVA2018'
-        odkFormID = 'va_who_2016_11_03_v1_4_1'
+        odkFormID = 'va_who_v1_5_1'
         odkLastRun = '1901-01-01_00:00:01'
         odkLastRunDate = datetime.datetime.strptime(
             odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
@@ -202,14 +202,14 @@ class InvalidConnection(unittest.TestCase):
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
 
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
 
         odkID = None
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
         odkUser = 'odk_openva'
         odkPassword = 'openVA2018'
-        odkFormID = 'va_who_2016_11_03_v1_4_1'
+        odkFormID = 'va_who_v1_5_1'
         odkLastRun = '1901-01-01_00:00:01'
         odkLastRunDate = datetime.datetime.strptime(
             odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
@@ -228,7 +228,9 @@ class InvalidConnection(unittest.TestCase):
                                         'odkLastRun',
                                         'odkLastRunResult',
                                         'odkLastRunDate',
-                                        'odkLastRunDatePrev']
+                                        'odkLastRunDatePrev',
+                                        'odkUseCentral',
+                                        'odkProjectNumber']
             )
         badSettingsODK = ntODK(odkID,
                                odkURL,
@@ -238,7 +240,9 @@ class InvalidConnection(unittest.TestCase):
                                odkLastRun,
                                odkLastRunResult,
                                odkLastRunDate,
-                               odkLastRunDatePrev)
+                               odkLastRunDatePrev,
+                               odkUseCentral,
+                               odkProjectNumber)
 
         cls.pipelineODK = odk.ODK(badSettingsODK, '.')
 

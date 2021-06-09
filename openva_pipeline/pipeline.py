@@ -162,7 +162,7 @@ class Pipeline:
 
         pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
         pipelineODK.mergeToPrevExport()
-        if argsODK.odkUseCentral:
+        if argsODK.odkUseCentral == "True":
             odkCentral = pipelineODK.central()
         else:
             odkBC = pipelineODK.briefcase()
@@ -174,7 +174,7 @@ class Pipeline:
         xferDB.configPipeline(conn)
         xferDB.checkDuplicates(conn)
         conn.close()
-        if argsODK.odkUseCentral:
+        if argsODK.odkUseCentral == "True":
             return(odkCentral)
         else:
             return(odkBC)

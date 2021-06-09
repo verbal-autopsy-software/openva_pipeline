@@ -1,30 +1,41 @@
-import setuptools
+import os
+from codecs import open
+from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+here = os.path.abspath(os.path.dirname(__file__))
 
-setuptools.setup(
-    name="openva_pipeline",
-    version="0.0.0.91",
-    author="Jason Thomas, Samuel J. Clark, & Martin W. Bratschi",
-    author_email="jarthomas@gmail.com",
-    description="Automates the processing of verbal autopsy data.",
-    long_description=long_description,
+about = {}
+with open(os.path.join(here, "openva_pipeline", "__version__.py"), "r", "utf-8") as f:
+    exec(f.read(), about)
+
+with open("README.md", "r", "utf-8") as f:
+    readme = f.read()
+
+
+setup(
+    name=about["__title__"],
+    version=about["__version__"],
+    author=about["__author__"],
+    author_email=about["__author_email__"],
+    description=about["__description__"],
+    long_description=readme,
     long_description_content_type="text/markdown",
-    url="https://github.com/verbal-autopsy-software/openva_pipeline",
-    license="GPLv3",
-    packages=setuptools.find_packages(),
+    url=about["__url__"],
+    license=about["__license__"],
+    packages=find_packages(),
     include_package_data=True,
     install_requires=[
         'pandas',
         'pysqlcipher3',
         'requests',
+        'pycrossva @ git+https://github.com/verbal-autopsy-software/pyCrossVA@pipeline',
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
     ],
 )
-

@@ -39,7 +39,7 @@ CREATE TABLE ODK_Conf
 
 INSERT INTO ODK_Conf
   (odkURL, odkUser, odkPassword, odkFormID, odkLastRun, odkUseCentral, odkProjectNumber)
-  VALUES("https://odk-central.swisstph.ch", "odk_openva", "openVA2018", "va_who_v1_5_1", "1900-01-01_00:00:01", "True", "40");
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_v1_5_1", "1900-01-01_00:00:01", "True", "40");
 
 CREATE TABLE InterVA_Conf
 (

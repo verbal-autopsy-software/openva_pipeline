@@ -46,7 +46,7 @@ class ODK:
         # self.odkLastRunResult = odkSettings.odkLastRunResult
         # bcDir = os.path.abspath(os.path.dirname(__file__))
         # self.bcPath = os.path.join(bcDir, "libs/ODK-Briefcase-v1.12.2.jar")
-        self.bcPath = os.path.join(workingDirectory, "ODK-Briefcase-v1.12.2.jar")
+        self.bcPath = os.path.join(workingDirectory, "ODK-Briefcase-v1.18.0.jar")
         self.odkProjectNumber = odkSettings.odkProjectNumber
         odkPath = os.path.join(workingDirectory, "ODKFiles")
         self.exportDir = odkPath
@@ -95,16 +95,17 @@ class ODK:
         """
 
         bcArgs = ['java', '-jar', self.bcPath,
-                  '-url', str('"' + self.odkURL + '"'),
-                  '-u', str('"' + self.odkUser + '"'),
-                  '-p', str('"' + self.odkPassword + '"'),
-                  '-id', str('"' + self.odkFormID + '"'),
-                  ' -e ',
-                  '-sd', str(self.storageDir),
-                  '-ed', str(self.exportDir),
-                  '-f',  str(self.fileName),
-                  '-start', str('"' + self.odkLastRunDatePrev + '"'),
-                  '-oc', '-em']
+                  '-plla',
+                  '--odk_url', str('"' + self.odkURL + '"'),
+                  '--odk_username', str('"' + self.odkUser + '"'),
+                  '--odk_password', str('"' + self.odkPassword + '"'),
+                  '--storage_directory', str(self.storageDir),
+                  '--form_id', str('"' + self.odkFormID + '"'),
+                  '-e',
+                  '--export_directory', str(self.exportDir),
+                  '--export_filename',  str(self.fileName),
+                  '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
+                  '--overwrite_csv_export', '--exclude_media_export']
 
         completed = subprocess.run(args = bcArgs,
                                    stdin  = subprocess.PIPE,
