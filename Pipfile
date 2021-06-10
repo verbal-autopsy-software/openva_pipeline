@@ -4,10 +4,10 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"pysqlcipher3" = "*"
+"pysqlcipher3" = ">=1.0.4"
 pandas = ">=1.2.4"
-requests = "*"
-urllib3 = ">=1.24.2"
+requests = ">=2.25.1"
+urllib3 = ">=1.26.5"
 numpy = ">=1.20.3"
 
 [dev-packages]
