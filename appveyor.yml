@@ -11,9 +11,9 @@ environment:
   - TOXENV: py39
     PYTHON: "3.9"
 
+stack: python $PYTHON
 
 install:
-- source $HOME/venv$PYTHON/bin/activate
 - pip install tox
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >> /etc/apt/sources.list"
