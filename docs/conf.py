@@ -33,7 +33,7 @@ author = 'Jason Thomas, Samuel J. Clark, and Martin W. Bratschi'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.0.0.9007'
+release = '0.9.0'
 
 
 # -- General configuration ---------------------------------------------------

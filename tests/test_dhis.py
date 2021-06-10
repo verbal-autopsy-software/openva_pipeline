@@ -7,6 +7,9 @@ import collections
 from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
+from sys import path
+source_path = os.path.dirname(os.path.abspath(__file__))
+path.append(source_path)
 import context
 from openva_pipeline import dhis
 from openva_pipeline.transferDB import TransferDB

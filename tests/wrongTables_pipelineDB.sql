@@ -1,4 +1,5 @@
 -- Used for testing pipeline (when DB has missing tables)
+PRAGMA key = "enilepiP";
 
 -- Pipeline Configuration
 CREATE TABLE A

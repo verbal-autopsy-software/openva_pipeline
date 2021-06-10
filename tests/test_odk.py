@@ -7,6 +7,9 @@ import unittest
 import collections
 import requests
 
+from sys import path
+source_path = os.path.dirname(os.path.abspath(__file__))
+path.append(source_path)
 import context
 from openva_pipeline import odk
 from openva_pipeline.runPipeline import downloadBriefcase

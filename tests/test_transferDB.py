@@ -6,6 +6,9 @@ import datetime
 from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
+from sys import path
+source_path = os.path.dirname(os.path.abspath(__file__))
+path.append(source_path)
 import context
 from openva_pipeline.transferDB import TransferDB
 from openva_pipeline.runPipeline import createTransferDB
@@ -182,23 +185,24 @@ class Check_Pipeline_Conf(unittest.TestCase):
                           self.wrongFields_conn
         )
 
-    def test_pipelineConf_algorithmMetadataCode(self):
-        """Test Pipeline_Conf table has valid algorithmMetadataCode."""
+    # Thinking about removing this check -- 2021-06-09 (jt)
+    # def test_pipelineConf_algorithmMetadataCode(self):
+    #     """Test Pipeline_Conf table has valid algorithmMetadataCode."""
 
-        validMetadataCode = self.settingsPipeline.algorithmMetadataCode in \
-            [j for i in self.metadataQuery for j in i]
-        self.assertTrue(validMetadataCode)
+    #     validMetadataCode = self.settingsPipeline.algorithmMetadataCode in \
+    #         [j for i in self.metadataQuery for j in i]
+    #     self.assertTrue(validMetadataCode)
 
-    def test_pipelineConf_algorithmMetadataCode_Exception_value(self):
-        """configPipeline should fail with invalid algorithmMetadataCode."""
+    # def test_pipelineConf_algorithmMetadataCode_Exception_value(self):
+    #     """configPipeline should fail with invalid algorithmMetadataCode."""
 
-        c = self.copy_conn.cursor()
-        sql = 'UPDATE Pipeline_Conf SET algorithmMetadataCode = ?'
-        par = ('wrong',)
-        c.execute(sql, par)
-        self.assertRaises(PipelineConfigurationError,
-                          self.copy_xferDB.configPipeline, self.copy_conn)
-        self.copy_conn.rollback()
+    #     c = self.copy_conn.cursor()
+    #     sql = 'UPDATE Pipeline_Conf SET algorithmMetadataCode = ?'
+    #     par = ('wrong',)
+    #     c.execute(sql, par)
+    #     self.assertRaises(PipelineConfigurationError,
+    #                       self.copy_xferDB.configPipeline, self.copy_conn)
+    #     self.copy_conn.rollback()
 
     def test_pipelineConf_codSource(self):
         """Test Pipeline_Conf table has valid codSource"""
@@ -309,7 +313,7 @@ class Check_ODK_Conf(unittest.TestCase):
 
     def test_odkConf_odkFormID(self):
         """Test ODK_Conf table has valid odkFormID"""
-        self.assertEqual(self.settingsODK.odkFormID, 'va_who_2016_11_03_v1_4_1')
+        self.assertEqual(self.settingsODK.odkFormID, 'va_who_v1_5_1')
 
     def test_odkConf_odkLastRun(self):
         """Test ODK_Conf table has valid odkLastRun"""

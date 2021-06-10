@@ -1,4 +1,5 @@
 -- Set up Pipeline database for ODK, openVA/SmartVA, and DHIS2 configuration, and create table for an event log.
+PRAGMA key = "enilepiP";
 
 -- Pipeline Configuration
 CREATE TABLE Pipeline_Conf
@@ -38,12 +39,14 @@ CREATE TABLE ODK_Conf
   odkUser          char(50),
   odkPassword      char(50),
   odkFormID        char(50),
-  odkLastRun       date
+  odkLastRun       date,
+  odkUseCentral    char(5) NOT NULL CHECK (odkUseCentral IN ("True", "False")),
+  odkProjectNumber char(6)
 );
 
 INSERT INTO ODK_Conf
-  (odkURL, odkUser, odkPassword, odkFormID, odkLastRun)
-  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_2016_11_03_v1_4_1", "1900-01-01_00:00:01");
+  (odkURL, odkUser, odkPassword, odkFormID, odkLastRun, odkUseCentral, odkProjectNumber)
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_v1_5_1", "1900-01-01_00:00:01", "True", "40");
 
 -- openVA Configuration: algorithm-specific tables
 ---- InterVA

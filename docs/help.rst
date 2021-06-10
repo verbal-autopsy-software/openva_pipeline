@@ -62,4 +62,4 @@ Exceptions
 .. autoexception:: openva_pipeline.exceptions.ODKError
 .. autoexception:: openva_pipeline.exceptions.OpenVAError
 .. autoexception:: openva_pipeline.exceptions.SmartVAError
-.. autoexception:: openva_pipeline.exceptions.DHISConfigurationError
+.. autoexception:: openva_pipeline.exceptions.DHISError

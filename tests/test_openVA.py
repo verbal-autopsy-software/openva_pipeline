@@ -5,6 +5,9 @@ import collections
 from pysqlcipher3 import dbapi2 as sqlcipher
 import datetime
 
+from sys import path
+source_path = os.path.dirname(os.path.abspath(__file__))
+path.append(source_path)
 import context
 from openva_pipeline.transferDB import TransferDB
 from openva_pipeline.openVA import OpenVA

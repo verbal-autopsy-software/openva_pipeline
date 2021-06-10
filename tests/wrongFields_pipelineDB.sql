@@ -1,4 +1,5 @@
 -- Used for testing pipeline (when field name is missing/expecting different name)
+PRAGMA key = "enilepiP";
 
 -- Pipeline Configuration
 CREATE TABLE Pipeline_Conf

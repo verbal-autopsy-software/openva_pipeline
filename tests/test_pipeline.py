@@ -8,6 +8,9 @@ import requests
 from pandas import read_csv
 from pysqlcipher3 import dbapi2 as sqlcipher
 
+from sys import path
+source_path = os.path.dirname(os.path.abspath(__file__))
+path.append(source_path)
 import context
 from openva_pipeline.dhis import DHIS
 from openva_pipeline.dhis import API
