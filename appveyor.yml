@@ -2,13 +2,22 @@ image: ubuntu2004
 
 environment:
   matrix:
-  - TOXENV: py36
-  - TOXENV: py37
-  - TOXENV: py38
-  - TOXENV: py39
+  - PYTHON: "3.6"
+    PYVERSION: "3.6.x"
+    TOXENV: py36
+  - PYTHON: "3.7"
+    PYVERSION: "3.7.x"
+    TOXENV: py37
+  - PYTHON: "3.8"
+    PYVERSION: "3.8.x"
+    TOXENV: py38
+  - PYTHON: "3.9"
+    PYVERSION: "3.9.x"
+    TOXENV: py39
+
 
 install:
-- pip install tox
+- pip$PYTHON install tox
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >> /etc/apt/sources.list"
 - sudo apt-get update
@@ -18,7 +27,7 @@ install:
 - sudo echo "install.packages('openVA', repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
-- sudo /usr/local/bin/pip$PYTHON install -e .
+- sudo /usr/local/bin/pip$PYTHON install -r requirements.txt
 - cd /home/appveyor/projects/openva-pipeline/tests
 - sudo chmod +x setup_test_databases.sh
 - sudo ./setup_test_databases.sh

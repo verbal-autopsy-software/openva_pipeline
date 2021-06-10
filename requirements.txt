@@ -1,3 +1,4 @@
 requests
 pandas
 pysqlcipher3
+git+https://github.com/verbal-autopsy-software/pyCrossVA@pipeline
