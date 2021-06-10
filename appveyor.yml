@@ -5,6 +5,7 @@ environment:
   - TOXENV: py36
   - TOXENV: py37
   - TOXENV: py38
+  - TOXENV: py39
 
 install:
 - pip install tox
@@ -14,7 +15,7 @@ install:
 - sudo apt-get install -y r-base sqlcipher libsqlcipher-dev
 - sudo R CMD javareconf
 - cd /home/appveyor/projects
-- sudo echo "install.packages('openVA'), repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
+- sudo echo "install.packages('openVA', repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R
 - sudo Rscript Rpackages.R
 - cd /home/appveyor/projects/openva-pipeline/
 - sudo /usr/local/bin/pip$PYTHON install -r requirements.txt
