@@ -1,18 +1,17 @@
+from openva_pipeline import odk
+from openva_pipeline.runPipeline import downloadBriefcase
+
 import datetime
-import subprocess
 import shutil
 import os
 import glob
 import unittest
 import collections
-import requests
 
 from sys import path
 source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
-import context
-from openva_pipeline import odk
-from openva_pipeline.runPipeline import downloadBriefcase
+#import context
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
@@ -20,10 +19,9 @@ os.chdir(os.path.abspath(os.path.dirname(__file__)))
 class CompleteFreshRun(unittest.TestCase):
     """Check successful completion from blank slate."""
 
-
     @classmethod
     def setUpClass(cls):
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -45,6 +43,8 @@ class CompleteFreshRun(unittest.TestCase):
             datetime.timedelta(days=1)
         ).strftime('%Y/%m/%d')
         odkLastRunResult = 'fail'
+        odkUseCentral = 'False'
+        odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
                                        ['odkID',
@@ -55,8 +55,9 @@ class CompleteFreshRun(unittest.TestCase):
                                         'odkLastRun',
                                         'odkLastRunResult',
                                         'odkLastRunDate',
-                                        'odkLastRunDatePrev']
-        )
+                                        'odkLastRunDatePrev',
+                                        'odkUseCentral',
+                                        'odkProjectNumber'])
         settingsODK = ntODK(odkID,
                             odkURL,
                             odkUser,
@@ -65,7 +66,9 @@ class CompleteFreshRun(unittest.TestCase):
                             odkLastRun,
                             odkLastRunResult,
                             odkLastRunDate,
-                            odkLastRunDatePrev)
+                            odkLastRunDatePrev,
+                            odkUseCentral,
+                            odkProjectNumber)
 
         cls.pipelineODK = odk.ODK(settingsODK, '.')
         if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
@@ -91,7 +94,7 @@ class CompleteFreshRun(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -103,11 +106,10 @@ class CompleteFreshRun(unittest.TestCase):
 class ProperMergeWithExistingExports(unittest.TestCase):
     """Check that unique VA records get preserved with new & exports."""
 
-
     @classmethod
     def setUpClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -129,6 +131,8 @@ class ProperMergeWithExistingExports(unittest.TestCase):
             datetime.timedelta(days=1)
         ).strftime('%Y/%m/%d')
         odkLastRunResult = 'fail'
+        odkUseCentral = 'False'
+        odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
                                        ['odkID',
@@ -139,8 +143,9 @@ class ProperMergeWithExistingExports(unittest.TestCase):
                                         'odkLastRun',
                                         'odkLastRunResult',
                                         'odkLastRunDate',
-                                        'odkLastRunDatePrev']
-            )
+                                        'odkLastRunDatePrev',
+                                        'odkUseCentral',
+                                        'odkProjectNumber'])
         settingsODK = ntODK(odkID,
                             odkURL,
                             odkUser,
@@ -149,7 +154,9 @@ class ProperMergeWithExistingExports(unittest.TestCase):
                             odkLastRun,
                             odkLastRunResult,
                             odkLastRunDate,
-                            odkLastRunDatePrev)
+                            odkLastRunDatePrev,
+                            odkUseCentral,
+                            odkProjectNumber)
 
         shutil.copy('ODKFiles/previous_bc_export.csv', 'ODKFiles/odkBCExportPrev.csv')
         shutil.copy('ODKFiles/another_bc_export.csv', 'ODKFiles/odkBCExportNew.csv')
@@ -183,7 +190,7 @@ class ProperMergeWithExistingExports(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -195,11 +202,10 @@ class ProperMergeWithExistingExports(unittest.TestCase):
 class InvalidConnection(unittest.TestCase):
     """Check that proper execptions are raised."""
 
-
     @classmethod
     def setUpClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -221,6 +227,8 @@ class InvalidConnection(unittest.TestCase):
             datetime.timedelta(days=1)
         ).strftime('%Y/%m/%d')
         odkLastRunResult = 'fail'
+        odkUseCentral = 'False'
+        odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
                                        ['odkID',
@@ -233,8 +241,7 @@ class InvalidConnection(unittest.TestCase):
                                         'odkLastRunDate',
                                         'odkLastRunDatePrev',
                                         'odkUseCentral',
-                                        'odkProjectNumber']
-            )
+                                        'odkProjectNumber'])
         badSettingsODK = ntODK(odkID,
                                odkURL,
                                'WRONG',
@@ -257,7 +264,7 @@ class InvalidConnection(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors=True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -265,5 +272,6 @@ class InvalidConnection(unittest.TestCase):
         for bcLog in glob.glob('briefcase*.log'):
             os.remove('./' + bcLog)
 
+
 if __name__ == '__main__':
-    unittest.main(verbosity = 2)
+    unittest.main(verbosity=2)
