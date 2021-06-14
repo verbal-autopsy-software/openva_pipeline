@@ -37,34 +37,34 @@ class Check_copyVA(unittest.TestCase):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
-        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
+        pipelineRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
+        xferDB = TransferDB(dbFileName='Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=pipelineRunDate)
         conn = xferDB.connectDB()
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
         settingsInterVA = xferDB.configOpenVA(conn,
                                               'InterVA',
                                               settingsPipeline.workingDirectory)
-        cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
+        cls.staticRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
 
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
 
-        rOpenVA = OpenVA(vaArgs = settingsInterVA,
-                         pipelineArgs = settingsPipeline,
-                         odkID = settingsODK.odkID,
-                         runDate = cls.staticRunDate)
+        rOpenVA = OpenVA(vaArgs=settingsInterVA,
+                         pipelineArgs=settingsPipeline,
+                         odkID=settingsODK.odkID,
+                         runDate=cls.staticRunDate)
         cls.zeroRecords = rOpenVA.copyVA()
 
     def test_copyVA_zeroRecords_False(self):
-        """Check that copyVA() returns zeroRecords = False."""
+        """Check that copyVA() returns zeroRecords=False."""
 
         self.assertFalse(self.zeroRecords)
 
@@ -79,7 +79,7 @@ class Check_copyVA(unittest.TestCase):
         """Check that copyVA() includes all records."""
 
         hasAll = True
-        with open('OpenVAFiles/openVA_input.csv') as fCombined:
+        with open('OpenVAFiles/pycrossva_input.csv') as fCombined:
             fCombinedLines = fCombined.readlines()
         with open('ODKFiles/previous_bc_export.csv') as fPrevious:
             fPreviousLines = fPrevious.readlines()
@@ -102,7 +102,7 @@ class Check_copyVA(unittest.TestCase):
         os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
 
 
@@ -126,30 +126,30 @@ class Check_zeroRecords(unittest.TestCase):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
-        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
+        pipelineRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
+        xferDB = TransferDB(dbFileName='Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=pipelineRunDate)
         conn = xferDB.connectDB()
         settingsPipeline = xferDB.configPipeline(conn)
         settingsODK = xferDB.configODK(conn)
         settingsInterVA = xferDB.configOpenVA(conn,
                                               'InterVA',
                                               settingsPipeline.workingDirectory)
-        cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
+        cls.staticRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
 
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
 
-        rOpenVA = OpenVA(vaArgs = settingsInterVA,
-                         pipelineArgs = settingsPipeline,
-                         odkID = settingsODK.odkID,
-                         runDate = cls.staticRunDate)
+        rOpenVA = OpenVA(vaArgs=settingsInterVA,
+                         pipelineArgs=settingsPipeline,
+                         odkID=settingsODK.odkID,
+                         runDate=cls.staticRunDate)
         cls.zeroRecords = rOpenVA.copyVA()
 
     def test_copyVA_zeroRecords_True(self):
@@ -172,7 +172,7 @@ class Check_zeroRecords(unittest.TestCase):
         os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
 
 
@@ -195,12 +195,12 @@ class Check_InSilicoVA(unittest.TestCase):
         createTransferDB('Check_InSilicoVA_Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
-        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Check_InSilicoVA_Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
+        pipelineRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
+        xferDB = TransferDB(dbFileName='Check_InSilicoVA_Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
@@ -223,10 +223,10 @@ class Check_InSilicoVA(unittest.TestCase):
                                    'Rscript_' + cls.staticRunDate + '.R')
         cls.rOutFile = os.path.join('OpenVAFiles', cls.staticRunDate,
                                     'Rscript_' + cls.staticRunDate + '.Rout')
-        rOpenVA = OpenVA(vaArgs = settingsInSilicoVA,
-                         pipelineArgs = settingsPipeline,
-                         odkID = settingsODK.odkID,
-                         runDate = cls.staticRunDate)
+        rOpenVA = OpenVA(vaArgs=settingsInSilicoVA,
+                         pipelineArgs=settingsPipeline,
+                         odkID=settingsODK.odkID,
+                         runDate=cls.staticRunDate)
         zeroRecords = rOpenVA.copyVA()
         rOpenVA.rScript()
         cls.completed = rOpenVA.getCOD()
@@ -262,7 +262,7 @@ class Check_InSilicoVA(unittest.TestCase):
 
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -298,10 +298,10 @@ class Check_InterVA(unittest.TestCase):
         # pipelineRunDate = datetime.datetime.now()
         pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
                             strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Check_InterVA_Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
+        xferDB = TransferDB(dbFileName='Check_InterVA_Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
@@ -317,16 +317,16 @@ class Check_InterVA(unittest.TestCase):
                             strftime('%Y_%m_%d_%H:%M:%S')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
         cls.rScript = os.path.join('OpenVAFiles', cls.staticRunDate,
                                    'Rscript_' + cls.staticRunDate + '.R')
         cls.rOutFile = os.path.join('OpenVAFiles', cls.staticRunDate,
                                     'Rscript_' + cls.staticRunDate + '.Rout')
-        rOpenVA = OpenVA(vaArgs = settingsInterVA,
-                         pipelineArgs = settingsPipeline,
-                         odkID = settingsODK.odkID,
-                         runDate = cls.staticRunDate)
+        rOpenVA = OpenVA(vaArgs=settingsInterVA,
+                         pipelineArgs=settingsPipeline,
+                         odkID=settingsODK.odkID,
+                         runDate=cls.staticRunDate)
         zeroRecords = rOpenVA.copyVA()
         rOpenVA.rScript()
         cls.completed = rOpenVA.getCOD()
@@ -362,7 +362,7 @@ class Check_InterVA(unittest.TestCase):
         os.remove('Check_InterVA_Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -396,12 +396,12 @@ class Check_SmartVA(unittest.TestCase):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         # pipelineRunDate = datetime.datetime.now()
-        pipelineRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
+        pipelineRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
+        xferDB = TransferDB(dbFileName='copy_Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=pipelineRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
@@ -414,16 +414,16 @@ class Check_SmartVA(unittest.TestCase):
                                               settingsPipeline.workingDirectory)
         conn.rollback()
         conn.close()
-        cls.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                            strftime('%Y_%m_%d_%H:%M:%S')
+        cls.staticRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
-        cliSmartVA = OpenVA(vaArgs = settingsSmartVA,
-                            pipelineArgs = settingsPipeline,
-                            odkID = settingsODK.odkID,
-                            runDate = cls.staticRunDate)
+        cliSmartVA = OpenVA(vaArgs=settingsSmartVA,
+                            pipelineArgs=settingsPipeline,
+                            odkID=settingsODK.odkID,
+                            runDate=cls.staticRunDate)
         zeroRecords = cliSmartVA.copyVA()
         cls.completed = cliSmartVA.getCOD()
         cls.svaOut = os.path.join(
@@ -458,7 +458,7 @@ class Check_SmartVA(unittest.TestCase):
         os.remove('Pipeline.db')
         shutil.rmtree(
             os.path.join('OpenVAFiles', cls.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -474,7 +474,6 @@ class Check_SmartVA(unittest.TestCase):
 
 class Check_Exceptions(unittest.TestCase):
 
-
     def setUp(self):
 
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
@@ -488,12 +487,12 @@ class Check_Exceptions(unittest.TestCase):
         if not os.path.isfile('smartva'):
             downloadSmartVA()
 
-        self.staticRunDate = datetime.datetime(2018, 9, 1, 9, 0, 0). \
-                        strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = self.staticRunDate)
+        self.staticRunDate = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
+        xferDB = TransferDB(dbFileName='copy_Pipeline.db',
+                            dbDirectory='.',
+                            dbKey='enilepiP',
+                            plRunDate=self.staticRunDate)
         conn = xferDB.connectDB()
         c = conn.cursor()
         if self.id() == 'test_openVA.Check_Exceptions.test_insilico_exception':
@@ -518,7 +517,6 @@ class Check_Exceptions(unittest.TestCase):
             par = ('SmartVA', 'SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1')
             c.execute(sql, par)
         settingsPipeline = xferDB.configPipeline(conn)
-        settingsODK = xferDB.configODK(conn)
         settingsAlgorithm = xferDB.configOpenVA(conn,
                                                 algorithm,
                                                 settingsPipeline.workingDirectory)
@@ -542,10 +540,10 @@ class Check_Exceptions(unittest.TestCase):
 
         conn.rollback()
         conn.close()
-        self.rOpenVA = OpenVA(vaArgs = settingsAlgorithm,
-                              pipelineArgs = settingsPipeline,
-                              odkID = '',
-                              runDate = self.staticRunDate)
+        self.rOpenVA = OpenVA(vaArgs=settingsAlgorithm,
+                              pipelineArgs=settingsPipeline,
+                              odkID=None,
+                              runDate=self.staticRunDate)
         zeroRecords = self.rOpenVA.copyVA()
         self.rOpenVA.rScript()
 
@@ -555,7 +553,7 @@ class Check_Exceptions(unittest.TestCase):
         self.assertRaises(OpenVAError, self.rOpenVA.getCOD)
 
     def test_interva_exception(self):
-        """getCOD() should raise an exception with problematic interva R script."""
+        """getCOD() should raise an exception with problematic Interva R script."""
 
         self.assertRaises(OpenVAError, self.rOpenVA.getCOD)
 
@@ -567,7 +565,7 @@ class Check_Exceptions(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(
             os.path.join('OpenVAFiles', self.staticRunDate),
-            ignore_errors = True
+            ignore_errors=True
         )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -582,4 +580,4 @@ class Check_Exceptions(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main(verbosity = 2)
+    unittest.main(verbosity=2)

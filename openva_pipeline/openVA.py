@@ -20,12 +20,13 @@ from .exceptions import PipelineError
 from .exceptions import OpenVAError
 from .exceptions import SmartVAError
 
+
 class OpenVA:
     """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.
 
-    This class creates and executes an R script that copies (and merges) ODK Briefcase
-    exports, runs openVA to assign CODs, and creates outputs for depositing in
-    the Transfers DB and to a DHIS server.
+    This class creates and executes an R script that copies (and merges)
+    ODK Briefcase exports, runs openVA to assign CODs, and creates outputs for
+    depositing in the Transfers DB and to a DHIS server.
 
     :param algorithm: Which VA algorithm should be used to assign COD.
     :type algorithm: str
@@ -44,21 +45,23 @@ class OpenVA:
         dirODK = os.path.join(pipelineArgs.workingDirectory, "ODKFiles")
         self.dirODK = dirODK
 
-        self.cliSmartVA = os.path.join(pipelineArgs.workingDirectory, "smartva")
+        self.cliSmartVA = os.path.join(pipelineArgs.workingDirectory,
+                                       "smartva")
         self.successfulRun = None
 
         try:
             if not os.path.isdir(dirOpenVA):
                 os.makedirs(dirOpenVA)
-        except:
-            raise OpenVAError("Unable to create directory" + dirOpenVA)
+        except (PermissionError, OSError) as exc:
+            raise OpenVAError("Unable to create directory" +
+                              dirOpenVA) from exc
 
-    def copyVA(self): 
+    def copyVA(self):
         """Create data file for openVA by merging ODK export files & converting
            with pycrossva.
 
         :returns: Indicator of an empty (i.e. no records) ODK export file
-        :rtype: logical 
+        :rtype: logical
         """
 
         exportFile_prev = os.path.join(self.dirODK, "odkBCExportPrev.csv")
@@ -78,41 +81,51 @@ class OpenVA:
         else:
             pcva_input = "2016WHOv151"
 
-        if self.odkID == None:
+        if self.odkID is None:
             odk_data_col_id = "meta-instanceID"
         else:
             odk_data_col_id = self.odkID
 
         if isExportFile_new and not isExportFile_prev:
-            with open(exportFile_new, "r", newline = "") as fNew:
+            with open(exportFile_new, "r", newline="") as fNew:
                 fNewLines = fNew.readlines()
             if len(fNewLines) == 1:
                 zeroRecords = True
-                return(zeroRecords)
+                return zeroRecords
+            shutil.copy(exportFile_new, pycvaInput)
+            if self.pipelineArgs.algorithm == "SmartVA":
+                shutil.copy(pycvaInput, openVAInputFile)
             else:
-                shutil.copy(exportFile_new, pycvaInput)
-                final_data = transform(mapping=(pcva_input, "InterVA5"), raw_data=pycvaInput, raw_data_id=odk_data_col_id)
+                final_data = transform(mapping=(pcva_input, "InterVA5"),
+                                       raw_data=pycvaInput,
+                                       raw_data_id=odk_data_col_id,
+                                       verbose=0)
                 final_data.to_csv(openVAInputFile, index=False)
 
         if isExportFile_new and isExportFile_prev:
-            with open(exportFile_new, "r", newline = "") as fNew:
+            with open(exportFile_new, "r", newline="") as fNew:
                 fNewLines = fNew.readlines()
-            with open(exportFile_prev, "r", newline = "") as fPrev:
+            with open(exportFile_prev, "r", newline="") as fPrev:
                 fPrevLines = fPrev.readlines()
 
             if len(fNewLines) == 1 and len(fPrevLines) == 1:
                 zeroRecords = True
-                return(zeroRecords)
+                return zeroRecords
 
+            shutil.copy(exportFile_new, pycvaInput)
+            with open(pycvaInput, "a", newline="") as fCombined:
+                for line in fPrevLines:
+                    if line not in fNewLines:
+                        fCombined.write(line)
+            if self.pipelineArgs.algorithm == "SmartVA":
+                shutil.copy(pycvaInput, openVAInputFile)
             else:
-                shutil.copy(exportFile_new, pycvaInput)
-                with open(pycvaInput, "a", newline = "") as fCombined:
-                    for line in fPrevLines:
-                        if line not in fNewLines:
-                            fCombined.write(line)
-                final_data = transform(mapping=(pcva_input, "InterVA5"), raw_data=pycvaInput, raw_data_id=odk_data_col_id)
+                final_data = transform(mapping=(pcva_input, "InterVA5"),
+                                       raw_data=pycvaInput,
+                                       raw_data_id=odk_data_col_id,
+                                       verbose=0)
                 final_data.to_csv(openVAInputFile, index=False)
-                return(zeroRecords)
+        return zeroRecords
 
     def rScript(self):
         """Create an R script for running openVA and assigning CODs."""
@@ -122,9 +135,10 @@ class OpenVA:
                 os.makedirs(
                     os.path.join(self.dirOpenVA, self.runDate)
                 )
-            except PermissionError as e:
-                raise OpenVAError("Unable to create openVA dir" + str(e))
-        
+            except (PermissionError, OSError) as exc:
+                raise OpenVAError("Unable to create openVA dir" +
+                                  str(exc)) from exc
+
         if self.pipelineArgs.algorithm == "InSilicoVA":
             self._rScript_insilicoVA()
         if self.pipelineArgs.algorithm == "InterVA":
@@ -140,11 +154,10 @@ class OpenVA:
         raw_data_file = os.path.join(self.dirOpenVA, "pycrossva_input.csv")
 
         if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
-            raise OpenVAError \
-                ("CrossVA not able to process WHO instrument version: " +
-                 whoInstrumentVersion)
+            raise OpenVAError("pyCrossVA not able to process WHO " +
+                              "instrument version: " + whoInstrumentVersion)
         try:
-            with open(fileName, "w", newline = "") as f:
+            with open(fileName, "w", newline="") as f:
                 f.write("date() \n")
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
@@ -211,8 +224,9 @@ class OpenVA:
                 f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
-        except:
-            raise OpenVAError("Problem writing R script for InSilicoVA.")
+        except (PermissionError, OSError) as exc:
+            raise OpenVAError("Problem writing R script " +
+                              "for InSilicoVA.") from exc
 
     def _rScript_interVA(self):
 
@@ -225,11 +239,10 @@ class OpenVA:
         raw_data_file = os.path.join(self.dirOpenVA, "pycrossva_input.csv")
 
         if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
-            raise OpenVAError \
-                ("CrossVA not able to process WHO instrument version: " +
-                 whoInstrumentVersion)
+            raise OpenVAError("pyCrossVA not able to process WHO " +
+                              "instrument version: " + whoInstrumentVersion)
         try:
-            with open(fileName, "w", newline = "") as f:
+            with open(fileName, "w", newline="") as f:
                 f.write("date() \n")
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
@@ -278,22 +291,25 @@ class OpenVA:
                 f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
-        except:
-            raise OpenVAError("Problem writing R script for InterVA.")
+        except (PermissionError, OSError) as exc:
+            raise OpenVAError("Problem writing R script for InterVA.") from exc
 
     def smartVA_to_csv(self):
-        """Write two CSV files: (1) Entity Value Attribute blob pushed to DHIS2 (entityAttributeValue.csv)
-                                (2) table for transfer database (recordStorage.csv)
+        """Write two CSV files: (1) Entity Value Attribute blob pushed to
+                                    DHIS2 (entityAttributeValue.csv)
+                                (2) table for transfer database
+                                    (recordStorage.csv)
 
            Both CSV files are stored in the OpenVA folder.
         """
 
         inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
         outDir = os.path.join(self.dirOpenVA, self.runDate)
-        dfData    = read_csv(inFile)
+        dfData = read_csv(inFile)
         dfResults = read_csv(outDir +
-                    "/1-individual-cause-of-death/individual-cause-of-death.csv")
-        codeDF    = DataFrame(
+                             "/1-individual-cause-of-death/" +
+                             "individual-cause-of-death.csv")
+        codeDF = DataFrame(
             np.repeat(self.pipelineArgs.algorithmMetadataCode,
                       dfResults.shape[0]), columns=["metadataCode"]
         )
@@ -305,26 +321,25 @@ class OpenVA:
                                 right=dfData,
                                 right_on="Generalmodule-sid",
                                 how="right")
-        dfRecordStorage.rename(columns =
-                               {"meta-instanceID": "odkMetaInstanceID"},
-                               inplace = True
-        )
-        dfRecordStorage.drop(columns="sid", inplace = True)
+        dfRecordStorage.rename(columns={"meta-instanceID":
+                                        "odkMetaInstanceID"},
+                               inplace=True)
+        dfRecordStorage.drop(columns="sid", inplace=True)
         dfRecordStorage.insert(loc=0, column="ID",
                                value=dfRecordStorage["odkMetaInstanceID"])
-        dfRecordStorage.to_csv(self.dirOpenVA + "/recordStorage.csv", index = False)
+        dfRecordStorage.to_csv(self.dirOpenVA + "/recordStorage.csv",
+                               index=False)
 
         colsKeep = ["sid", "cause34", "metadataCode"]
-        dfTemp   = merge(left=dfResults[colsKeep],
-                         left_on="sid",
-                         right=dfData,
-                         right_on="Generalmodule-sid",
-                         how="right")
+        dfTemp = merge(left=dfResults[colsKeep],
+                       left_on="sid",
+                       right=dfData,
+                       right_on="Generalmodule-sid",
+                       how="right")
         dfTemp.dropna(subset=["cause34"])
         dfTemp.drop(columns="sid", inplace=True)
-        dfTemp.rename(columns = {"meta-instanceID": "odkMetaInstanceID"},
-                      inplace = True
-        )
+        dfTemp.rename(columns={"meta-instanceID": "odkMetaInstanceID"},
+                      inplace=True)
         dfTemp["ID"] = dfTemp["odkMetaInstanceID"]
         dfEVA = dfTemp.melt(id_vars=["ID"],
                             var_name="Attribute",
@@ -333,7 +348,8 @@ class OpenVA:
         dfEVA.to_csv(self.dirOpenVA + "/entityAttributeValue.csv", index=False)
 
     def getCOD(self):
-        """Create and execute R script to assign a COD with openVA; or call the SmartVA CLI to assign COD."""
+        """Create and execute R script to assign a COD with openVA; or call
+           the SmartVA CLI to assign COD."""
 
         if self.pipelineArgs.algorithm in ["InSilicoVA", "InterVA"]:
             rScriptIn = os.path.join(self.dirOpenVA, self.runDate,
@@ -342,50 +358,50 @@ class OpenVA:
                                       "Rscript_" + self.runDate + ".Rout")
             rArgs = ["R", "CMD", "BATCH", "--vanilla",
                      rScriptIn, rScriptOut]
-            completed = subprocess.run(args = rArgs,
-                                       stdin  = subprocess.PIPE,
-                                       stdout = subprocess.PIPE,
-                                       stderr = subprocess.PIPE)
-            if completed.returncode == 1:
-                self.successfulRun = False
-                raise OpenVAError("Error running R script:" + str(completed.stderr))
-            self.successfulRun = True
-            return(completed)
-
-        if self.pipelineArgs.algorithm == "SmartVA":
             try:
-                os.makedirs(
-                    os.path.join(self.dirOpenVA, self.runDate)
-                )
-            except PermissionError as e:
-                raise OpenVAError("Unable to create openVA dir" + str(e))
-
-            inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
-            outDir = os.path.join(self.dirOpenVA, self.runDate)
-            svaArgs = [self.cliSmartVA,
-                       "--country", "{}".format(self.vaArgs.SmartVA_country),
-                       "--hiv", "{}".format(self.vaArgs.SmartVA_hiv),
-                       "--malaria", "{}".format(self.vaArgs.SmartVA_malaria),
-                       "--hce", "{}".format(self.vaArgs.SmartVA_hce),
-                       "--freetext", "{}".format(self.vaArgs.SmartVA_freetext),
-                       "--figures", "{}".format(self.vaArgs.SmartVA_figures),
-                       "--language", "{}".format(self.vaArgs.SmartVA_language),
-                       inFile,
-                       outDir]
-
-            completed = subprocess.run(args = svaArgs,
-                                       stdin  = subprocess.PIPE,
-                                       stdout = subprocess.PIPE,
-                                       stderr = subprocess.PIPE)
-            if completed.returncode == 2:
-                self.successfulRun = False
-                raise SmartVAError \
-                    ("Error running SmartVA:" + str(completed.stderr))
-            stdOut = str(completed.stdout)
-            if "Country list" in stdOut:
-                self.successfulRun = False
-                raise SmartVAError("Problem with SmartVA country code")
-
-            self.smartVA_to_csv()
+                completed = subprocess.run(args=rArgs, capture_output=True,
+                                           check=True)
+            except subprocess.CalledProcessError as exc:
+                if exc.returncode == 1:
+                    self.successfulRun = False
+                    raise OpenVAError("Error running R script:" +
+                                      str(exc.stderr)) from exc
             self.successfulRun = True
-            return(completed)
+            return completed
+        # if not ["InSilicoVA", "InterVA"], then run SmartVA
+        try:
+            os.makedirs(
+                os.path.join(self.dirOpenVA, self.runDate)
+            )
+        except (PermissionError, OSError) as exc:
+            raise OpenVAError("Unable to create openVA dir" +
+                              str(exc)) from exc
+
+        inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
+        outDir = os.path.join(self.dirOpenVA, self.runDate)
+        svaArgs = [self.cliSmartVA,
+                   "--country", "{}".format(self.vaArgs.SmartVA_country),
+                   "--hiv", "{}".format(self.vaArgs.SmartVA_hiv),
+                   "--malaria", "{}".format(self.vaArgs.SmartVA_malaria),
+                   "--hce", "{}".format(self.vaArgs.SmartVA_hce),
+                   "--freetext", "{}".format(self.vaArgs.SmartVA_freetext),
+                   "--figures", "{}".format(self.vaArgs.SmartVA_figures),
+                   "--language", "{}".format(self.vaArgs.SmartVA_language),
+                   inFile,
+                   outDir]
+        try:
+            completed = subprocess.run(args=svaArgs, capture_output=True,
+                                       check=True)
+        except subprocess.CalledProcessError as exc:
+            if exc.returncode == 2:
+                self.successfulRun = False
+                raise SmartVAError("Error running SmartVA:" +
+                                   str(exc.stderr)) from exc
+            if "Country list" in exc.stdout:
+                self.successfulRun = False
+                raise SmartVAError("Problem with SmartVA " +
+                                   "country code") from exc
+
+        self.smartVA_to_csv()
+        self.successfulRun = True
+        return completed
