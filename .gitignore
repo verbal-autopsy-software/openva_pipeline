@@ -1,4 +1,4 @@
-tests/ODK-Briefcase-v1.12.2.jar
+tests/ODK-Briefcase-*.jar
 tests/smartva
 tests/*.log
 tests/.Rhistory
@@ -14,6 +14,10 @@ tests/OpenVAFiles/entityAttributeValue.csv
 tests/OpenVAFiles/recordStorage.csv
 tests/OpenVAFiles/newStorage.csv
 tests/DHIS/
+tests/copy_Pipeline.db
+tests/run_Pipeline.db
+tests/wrongFields_Pipeline.db
+tests/wrongTables_Pipeline.db
 
 openva_pipeline/.Rhistory
 # Compiled python modules.
@@ -30,3 +34,6 @@ build/
 
 # documentation
 docs/_build
+
+# tox
+.tox
