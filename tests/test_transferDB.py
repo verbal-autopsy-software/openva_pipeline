@@ -327,6 +327,14 @@ class Check_ODK_Conf(unittest.TestCase):
         """Test ODK_Conf table has valid odkLastRunDatePrev"""
         self.assertEqual(self.settingsODK.odkLastRunDatePrev, '1899/12/31')
 
+    def test_odkConf_odkUseCentral(self):
+        """Test ODK_Conf table has valid odkUseCentral"""
+        self.assertEqual(self.settingsODK.odkUseCentral, 'False')
+
+    def test_odkConf_odkProjectNumber(self):
+        """Test ODK_Conf table has valid odkProjectNumber"""
+        self.assertEqual(self.settingsODK.odkProjectNumber, '40')
+
     @classmethod
     def tearDownClass(cls):
 

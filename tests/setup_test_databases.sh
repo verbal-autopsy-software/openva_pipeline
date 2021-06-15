@@ -21,5 +21,5 @@ sqlcipher -cmd "pragma key = 'enilepiP'" wrongTables_Pipeline.db -init wrongTabl
 # sqlcipher -cmd "pragma key = 'enilepiP'" InterVA_Pipeline.db -init interva_pipelineDB.sql .exit
 
 # copy_smartVA_Pipeline.db
-# copy_smartVA_Pipeline.db
-# sqlcipher -cmd "pragma key = 'enilepiP'" copy_smartVA_Pipeline.db -init copy_smartva_pipelineDB.sql .exit
+[ -e copy_smartVA_Pipeline.db ] && rm copy_smartVA_Pipeline.db
+sqlcipher -cmd "pragma key = 'enilepiP'" copy_smartVA_Pipeline.db -init copy_smartva_pipelineDB.sql .exit

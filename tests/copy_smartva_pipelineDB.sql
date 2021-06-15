@@ -1,4 +1,4 @@
--- Set up Pipeline database for ODK, openVA/SmartVA, and DHIS2 configuration, and create table for an event log.
+-- Set up copy_smartVA_Pipeline database for ODK, openVA/SmartVA, and DHIS2 configuration, and create table for an event log.
 PRAGMA key = "enilepiP";
 
 -- Pipeline Configuration
@@ -12,7 +12,7 @@ CREATE TABLE Pipeline_Conf
 
 INSERT INTO Pipeline_Conf
   (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_5_1", "WHO", "InSilicoVA", ".");
+  VALUES("SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1", "Tariff", "SmartVA", ".");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage
@@ -46,7 +46,7 @@ CREATE TABLE ODK_Conf
 
 INSERT INTO ODK_Conf
   (odkURL, odkUser, odkPassword, odkFormID, odkLastRun, odkUseCentral, odkProjectNumber)
-  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_v1_5_1", "1900-01-01_00:00:01", "True", "40");
+  VALUES("https://odk.swisstph.ch/ODKAggregateOpenVa", "odk_openva", "openVA2018", "va_who_v1_5_1", "1900-01-01_00:00:01", "False", "40");
 
 -- openVA Configuration: algorithm-specific tables
 ---- InterVA

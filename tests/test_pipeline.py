@@ -46,7 +46,7 @@ class Check_Pipeline_config(unittest.TestCase):
         settingsPipeline.algorithmMetadataCode:"""
 
         self.assertEqual(self.settingsPipeline.algorithmMetadataCode,
-            'InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
+            'InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_5_1')
 
     def test_config_pipeline_codSource(self):
         """Test config method configuration of pipeline:
@@ -96,13 +96,25 @@ class Check_Pipeline_config(unittest.TestCase):
         settingsODK.odkFormID:"""
 
         self.assertEqual(self.settingsODK.odkFormID,
-                         'va_who_2016_11_03_v1_4_1')
+                         'va_who_v1_5_1')
 
     def test_config_odk_odkLastRun(self):
         """Test config method configuration of pipeline:
         settingsODK.odkLastRun:"""
 
         self.assertEqual(self.settingsODK.odkLastRun, '1900-01-01_00:00:01')
+
+    def test_config_odk_odkUseCentral(self):
+        """Test config method configuration of pipeline:
+        settingsODK.odkUseCentral:"""
+
+        self.assertEqual(self.settingsODK.odkUseCentral, 'False')
+
+    def test_config_odk_odkProjectNumber(self):
+        """Test config method configuration of pipeline:
+        settingsODK.odkProjectNumber:"""
+
+        self.assertEqual(self.settingsODK.odkProjectNumber, '40')
 
     def test_config_dhis_dhisURL(self):
         """Test config method configuration of pipeline:
@@ -148,10 +160,10 @@ class DownloadAppsTests(unittest.TestCase):
     def test_downloadBriefcase(self):
         """Check downloadBriefcase():"""
 
-        if os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
-            os.remove('ODK-Briefcase-v1.12.2.jar')
+        if os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
+            os.remove('ODK-Briefcase-v1.18.0.jar')
         downloadBriefcase()
-        self.assertTrue(os.path.isfile('ODK-Briefcase-v1.12.2.jar'))
+        self.assertTrue(os.path.isfile('ODK-Briefcase-v1.18.0.jar'))
 
     def test_downloadSmartVA(self):
         """Check downloadSmartVA():"""
@@ -179,7 +191,7 @@ class Check_runODK_clean(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
@@ -234,7 +246,7 @@ class Check_runODK_with_exports(unittest.TestCase):
         shutil.copy('ODKFiles/another_bc_export.csv', 'ODKFiles/odkBCExportNew.csv')
         self.old_mtimePrev = os.path.getmtime('ODKFiles/odkBCExportPrev.csv')
         self.old_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
@@ -319,7 +331,7 @@ class Check_storeResultsDB(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
-        if not os.path.isfile('ODK-Briefcase-v1.12.2.jar'):
+        if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
             downloadBriefcase()
 
         self.pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
@@ -390,9 +402,9 @@ class Check_runOpenVA(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
-        shutil.copy('ODKFiles/previous_bc_export.csv',
+        shutil.copy('ODKFiles/odkExport_prev_who_v151.csv',
             'ODKFiles/odkBCExportPrev.csv')
-        shutil.copy('ODKFiles/another_bc_export.csv',
+        shutil.copy('ODKFiles/odkExport_new_who_v151.csv',
             'ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
@@ -417,11 +429,12 @@ class Check_runOpenVA(unittest.TestCase):
         """Check that runOpenVA() includes all records:"""
 
         hasAll = True
-        with open('OpenVAFiles/openVA_input.csv') as fCombined:
+        # with open('OpenVAFiles/openVA_input.csv') as fCombined:
+        with open('OpenVAFiles/pycrossva_input.csv') as fCombined:
             fCombinedLines = fCombined.readlines()
-        with open('ODKFiles/previous_bc_export.csv') as fPrevious:
+        with open('ODKFiles/odkExport_prev_who_v151.csv') as fPrevious:
             fPreviousLines = fPrevious.readlines()
-        with open('ODKFiles/another_bc_export.csv') as fAnother:
+        with open('ODKFiles/odkExport_new_who_v151.csv') as fAnother:
             fAnotherLines = fAnother.readlines()
         for line in fPreviousLines:
             if line not in fCombinedLines:

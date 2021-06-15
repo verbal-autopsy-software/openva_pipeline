@@ -1,6 +1,6 @@
 OpenVA_Pipeline
 ===============
-[![image](https://img.shields.io/pypi/v/openva_pipeline.svg)](https://pypi.org/project/openva_pipeline/)
+[![image](https://img.shields.io/pypi/pyvversions/openva_pipeline.svg)](https://pypi.org/project/openva_pipeline/)
 [![image](http://readthedocs.org/projects/openva-pipeline/badge/)](http://openva-pipeline.readthedocs.io/)
 [![Travis-CI Build Status](https://travis-ci.org/verbal-autopsy-software/openva_pipeline.svg?branch=master)](https://travis-ci.org/verbal-autopsy-software/openva_pipeline)
 [![Build status](https://ci.appveyor.com/api/projects/status/gsxtxr40r21s0q79?svg=true)](https://ci.appveyor.com/project/jarathomas/openva-pipeline)
@@ -20,10 +20,10 @@ The documentation for the openVA Pipeline can be found at:
 
 ## Getting Started
 
-The OpenVA Pipeline has been designed for (and tested on) Ubuntu LTS 16.04.
+The OpenVA Pipeline has been designed for (and tested on) Ubuntu LTS 20.04.
 The steps to install and configure the pipeline can be found in
 `docs/setup.md`. To make the installation easier, there is also a bash shell
-script `install_software_ubuntu16_04.sh` that installs all of the necessary software (the
+script `install_software_ubuntu20_04.sh` that installs all of the necessary software (the
 script requires the `sudo` password).
 
 <!-- The documentation can also be found on [Read the Docs](https://openva-pipeline.readthedocs.io/en/latest/): -->
@@ -40,7 +40,7 @@ GNU General Public License v3.0
 ## Licenses for Dependencies (ODK Briefcase and SmartVA-Analyze)
 
 The openva-pipeline package makes use of two external programs:
-`ODK-Briefcase-v1.12.2.jar` and `smartva`.  [ODK Briefcase](https://github.com/opendatakit/briefcase) 
+`ODK-Briefcase-v1.18.0.jar` and `smartva`.  [ODK Briefcase](https://github.com/opendatakit/briefcase) 
 is a tool in the Open Data Kit (ODK) Software Suite, and is open-source software available 
 under the Apache 2.0 license (see 
 [ODK_Briefcase_LICENSE](https://github.com/opendatakit/briefcase/blob/master/LICENSE.md).
