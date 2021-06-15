@@ -164,7 +164,7 @@ class OpenVA:
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
                 f.write("odkMetaInstanceID <- as.character(raw_data$meta.instanceID) \n")
                 f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
-                f.write("names(records) <- tolower(names(records)) \n")
+                # f.write("names(records) <- tolower(names(records)) \n")
                 f.write("results <- insilico(data = records, \n")
                 f.write("\t data.type = '" + self.vaArgs.InSilicoVA_data_type + "', \n")
                 f.write("\t isNumeric = " + self.vaArgs.InSilicoVA_isNumeric + ", \n")
@@ -202,7 +202,7 @@ class OpenVA:
                 f.write("\t indiv.CI = " + self.vaArgs.InSilicoVA_indiv_CI + ", \n")
                 f.write("\t groupcode = " + self.vaArgs.InSilicoVA_no_is_missing + ") \n")
                 if self.vaArgs.InSilicoVA_data_type == "WHO2012":
-                    f.write("sex <- ifelse(tolower(records$male)=='y', 'Male', 'Female') \n")
+                    f.write("sex <- ifelse(tolower(records$MALE)=='y', 'Male', 'Female') \n")
                 if self.vaArgs.InSilicoVA_data_type == "WHO2016":
                     f.write("sex <- ifelse(tolower(records$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
@@ -359,7 +359,11 @@ class OpenVA:
             rArgs = ["R", "CMD", "BATCH", "--vanilla",
                      rScriptIn, rScriptOut]
             try:
-                completed = subprocess.run(args=rArgs, capture_output=True,
+                # capture_output=True not available in Python 3.6
+                completed = subprocess.run(args=rArgs,
+                                           stdin=subprocess.PIPE,
+                                           stdout=subprocess.PIPE,
+                                           stderr=subprocess.PIPE,
                                            check=True)
             except subprocess.CalledProcessError as exc:
                 if exc.returncode == 1:
@@ -390,7 +394,11 @@ class OpenVA:
                    inFile,
                    outDir]
         try:
-            completed = subprocess.run(args=svaArgs, capture_output=True,
+            # capture_output=True not available in Python 3.6
+            completed = subprocess.run(args=svaArgs,
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
                                        check=True)
         except subprocess.CalledProcessError as exc:
             if exc.returncode == 2:

@@ -501,7 +501,7 @@ class Check_Exceptions(unittest.TestCase):
             par = ('InSilicoVA', 'InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
             c.execute(sql, par)
             sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
-            par = ('WHO2016',)
+            par = ('WHO2012',)
             c.execute(sql, par)
         elif self.id() == 'test_openVA.Check_Exceptions.test_interva_exception':
             algorithm = 'InterVA'
@@ -509,7 +509,7 @@ class Check_Exceptions(unittest.TestCase):
             par = ('InterVA', 'InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1')
             c.execute(sql, par)
             sql = 'UPDATE InterVA_Conf SET version = ?'
-            par = ('5',)
+            par = ('4',)
             c.execute(sql, par)
         else:
             algorithm = 'SmartVA'
