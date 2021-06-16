@@ -13,6 +13,7 @@ tests/OpenVAFiles/2*
 tests/OpenVAFiles/entityAttributeValue.csv
 tests/OpenVAFiles/recordStorage.csv
 tests/OpenVAFiles/newStorage.csv
+tests/OpenVAFiles/pycrossva_input.csv
 tests/DHIS/
 tests/copy_Pipeline.db
 tests/run_Pipeline.db
