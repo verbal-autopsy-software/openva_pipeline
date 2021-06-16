@@ -220,15 +220,19 @@ class Check_runODK_clean(unittest.TestCase):
         odkProjectNumber = '1'
         bcArgs = ['java', '-jar', 'ODK-Briefcase-v1.18.0.jar',
                   '-plla',
-                  '--odk_url', str('"' + self.odkURL + '"'),
-                  '--odk_username', str('"' + self.odkUser + '"'),
-                  '--odk_password', str('"' + self.odkPassword + '"'),
-                  '--storage_directory', str(self.storageDir)]
+                  '--odk_url', str('"' + odkURL + '"'),
+                  '--odk_username', str('"' + odkUser + '"'),
+                  '--odk_password', str('"' + odkPassword + '"'),
+                  '--storage_directory', str(storageDir)]
 
         cls.odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, check=True)
-        print(os.listdir('ODKFiles/ODK Briefcase Storage'))
+        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms'))
+        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1'))
+        log = open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json')
+        for line in log:
+            print(line)
 
     def test_clean_runODK_returncode(self):
         """Check returncode with valid parameters:"""
