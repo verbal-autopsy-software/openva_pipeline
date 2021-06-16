@@ -207,7 +207,7 @@ class Check_runODK_clean(unittest.TestCase):
         odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
         odkUser = 'odk_openva'
         odkPassword = 'openVA2018'
-        odkFormID = 'va_who_v1_5_1'
+        odkFormID = 'va_who_2016_11_03_v1_4_1'
         odkLastRun = '1901-01-01_00:00:01'
         odkLastRunDate = datetime.datetime.strptime(
             odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
