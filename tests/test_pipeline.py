@@ -243,7 +243,7 @@ class Check_runODK_clean(unittest.TestCase):
                             odkUseCentral,
                             odkProjectNumber)
 
-        pipelineODK = odk.ODK(settingsODK, '.')
+        pipelineODK = ODK(settingsODK, '.')
         cls.odkBC = pipelineODK.briefcase()
 
     def test_clean_runODK_returncode(self):
