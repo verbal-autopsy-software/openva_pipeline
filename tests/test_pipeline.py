@@ -218,7 +218,7 @@ class Check_runODK_clean(unittest.TestCase):
         odkLastRunResult = 'fail'
         odkUseCentral = 'False'
         odkProjectNumber = '1'
-        bcArgs = ['java', '-jar', self.bcPath,
+        bcArgs = ['java', '-jar', 'ODK-Briefcase-v1.18.0.jar',
                   '-plla',
                   '--odk_url', str('"' + self.odkURL + '"'),
                   '--odk_username', str('"' + self.odkUser + '"'),
