@@ -202,49 +202,7 @@ class Check_runODK_clean(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        #cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
-        odkID = None
-        odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
-        odkUser = 'odk_openva'
-        odkPassword = 'openVA2018'
-        odkFormID = 'va_who_2016_11_03_v1_4_1'
-        odkLastRun = '1901-01-01_00:00:01'
-        odkLastRunDate = datetime.datetime.strptime(
-            odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
-        odkLastRunDatePrev = (
-            datetime.datetime.strptime(odkLastRunDate, '%Y/%m/%d') -
-            datetime.timedelta(days=1)
-        ).strftime('%Y/%m/%d')
-        odkLastRunResult = 'fail'
-        odkUseCentral = 'False'
-        odkProjectNumber = '1'
-
-        ntODK = collections.namedtuple('ntODK',
-                                       ['odkID',
-                                        'odkURL',
-                                        'odkUser',
-                                        'odkPassword',
-                                        'odkFormID',
-                                        'odkLastRun',
-                                        'odkLastRunResult',
-                                        'odkLastRunDate',
-                                        'odkLastRunDatePrev',
-                                        'odkUseCentral',
-                                        'odkProjectNumber'])
-        settingsODK = ntODK(odkID,
-                            odkURL,
-                            odkUser,
-                            odkPassword,
-                            odkFormID,
-                            odkLastRun,
-                            odkLastRunResult,
-                            odkLastRunDate,
-                            odkLastRunDatePrev,
-                            odkUseCentral,
-                            odkProjectNumber)
-
-        pipelineODK = ODK(settingsODK, '.')
-        cls.odkBC = pipelineODK.briefcase()
+        cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
 
     def test_clean_runODK_returncode(self):
         """Check returncode with valid parameters:"""
