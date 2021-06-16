@@ -223,7 +223,7 @@ class Check_runODK_clean(unittest.TestCase):
                   '--odk_url', str('"' + odkURL + '"'),
                   '--odk_username', str('"' + odkUser + '"'),
                   '--odk_password', str('"' + odkPassword + '"'),
-                  '--storage_directory', str(storageDir)]
+                  '--storage_directory', str('"ODKFiles"')]
 
         cls.odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
