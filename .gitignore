@@ -19,6 +19,7 @@ tests/copy_Pipeline.db
 tests/run_Pipeline.db
 tests/wrongFields_Pipeline.db
 tests/wrongTables_Pipeline.db
+tests/Pipeline.db
 
 openva_pipeline/.Rhistory
 # Compiled python modules.
