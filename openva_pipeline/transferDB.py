@@ -246,7 +246,8 @@ class TransferDB:
 
         This method searches for duplicate VA records in ODK Briefcase export
         file and the Tranfser DB.  If duplicates are found, a warning message
-        is logged to the EventLog table in the Transfer database.
+        is logged to the EventLog table in the Transfer database and the
+        duplicate records are removed from the ODK Briefcase export file.
 
         :param conn: A connection to the Transfer Database (e.g. the object
           returned from :meth:`TransferDB.connectDB() <connectDB>`.)
@@ -273,8 +274,8 @@ class TransferDB:
             nDuplicates = len(vaDuplicates)
             sqlXferDB = "INSERT INTO EventLog \
                          (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
-            eventDescPart1 = ["Duplicate record with ODK Meta-Instance ID: "] \
-                            * nDuplicates
+            eventDescPart1 = ["Removing duplicate records from ODK Export with" +
+                              "ODK Meta-Instance ID: "] * nDuplicates
             eventDescPart2 = list(vaDuplicates)
             eventDesc = [x + y for x, y in zip(eventDescPart1, eventDescPart2)]
             eventType = ["Warning"] * nDuplicates
@@ -282,6 +283,12 @@ class TransferDB:
             par = list(zip(eventDesc, eventType, eventTime))
             c.executemany(sqlXferDB, par)
             conn.commit()
+            df_no_duplicates = dfODK[~dfODK["meta-instanceID"].isin(list(vaDuplicates))]
+            try:
+                df_no_duplicates.to_csv(odkBCExportPath, index=False)
+            except (PermissionError, OSError) as exc:
+                raise PipelineError("Error trying to create new CSV file after " +
+                                    "removing duplicate records in ODK Export") from exc
 
     def configOpenVA(self, conn, algorithm, pipelineDir):
         """Query OpenVA configuration settings from database.

@@ -107,12 +107,12 @@ class ODK:
                   '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
                   '--overwrite_csv_export', '--exclude_media_export']
 
-        completed = subprocess.run(args = bcArgs,
-                                   stdin  = subprocess.PIPE,
-                                   stdout = subprocess.PIPE,
-                                   stderr = subprocess.PIPE)
-        if completed.returncode == 1:
-            raise ODKError(completed.stderr)
+        try:
+            completed = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE, check=True)
+        except subprocess.CalledProcessError as exc:
+            raise ODKError(str(exc.stderr)) from exc
         return(completed)
 
     def central(self):
