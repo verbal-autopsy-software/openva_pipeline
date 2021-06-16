@@ -186,7 +186,7 @@ class Check_runODK_clean(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -217,7 +217,7 @@ class Check_runODK_clean(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -237,7 +237,7 @@ class Check_runODK_with_exports(unittest.TestCase):
 
     def setUp(self):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -268,7 +268,7 @@ class Check_runODK_with_exports(unittest.TestCase):
 
     def tearDown(self):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -325,7 +325,7 @@ class Check_storeResultsDB(unittest.TestCase):
 
     def setUp(self):
 
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         shutil.rmtree('DHIS/blobs/', ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -380,7 +380,7 @@ class Check_storeResultsDB(unittest.TestCase):
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
         shutil.rmtree('DHIS/blobs/', ignore_errors = True)
-        shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
+        #shutil.rmtree('ODKFiles/ODK Briefcase Storage/', ignore_errors = True)
         self.conn.close()
 
     @classmethod
@@ -582,8 +582,8 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
-                      ignore_errors = True)
+        # shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
+        #               ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -663,8 +663,8 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
-                      ignore_errors = True)
+        # shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
+        #               ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
@@ -735,10 +735,10 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree(
-            os.path.join('OpenVAFiles', cls.pl.pipelineRunDate),
-            ignore_errors = True
-        )
+        # shutil.rmtree(
+        #     os.path.join('OpenVAFiles', cls.pl.pipelineRunDate),
+        #     ignore_errors = True
+        # )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
