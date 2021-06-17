@@ -94,18 +94,25 @@ class ODK:
         :raises: ODKError
         """
 
+        # bcArgs_plla = ['java', '-jar', self.bcPath,
+        #                '-plla',
+        #                '--odk_url', str('"' + self.odkURL + '"'),
+        #                '--odk_username', str('"' + self.odkUser + '"'),
+        #                '--odk_password', str('"' + self.odkPassword + '"'),
+        #                '--storage_directory', str(self.storageDir),
+        #                '--form_id', str('"' + self.odkFormID + '"'),
+        #                '-e',
+        #                '--export_directory', str(self.exportDir),
+        #                '--export_filename',  str(self.fileName),
+        #                '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
+        #                '--overwrite_csv_export', '--exclude_media_export']
         bcArgs_plla = ['java', '-jar', self.bcPath,
                        '-plla',
                        '--odk_url', str('"' + self.odkURL + '"'),
                        '--odk_username', str('"' + self.odkUser + '"'),
                        '--odk_password', str('"' + self.odkPassword + '"'),
                        '--storage_directory', str(self.storageDir),
-                       '--form_id', str('"' + self.odkFormID + '"'),
-                       '-e',
-                       '--export_directory', str(self.exportDir),
-                       '--export_filename',  str(self.fileName),
-                       '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
-                       '--overwrite_csv_export', '--exclude_media_export']
+                       '--form_id', str('"' + self.odkFormID + '"')]
         try:
             completed_plla = subprocess.run(args=bcArgs_plla,
                                             stdin=subprocess.PIPE,
