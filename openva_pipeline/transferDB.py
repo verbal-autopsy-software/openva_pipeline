@@ -1050,6 +1050,9 @@ class TransferDB:
 
         if self.workingDirectory == None:
             raise PipelineError("Need to run configPipeline.")
+        pcvaInputPath = os.path.join(self.workingDirectory,
+                                     "OpenVAFiles",
+                                     "pycrossva_input.csv")
         openVAInputPath = os.path.join(self.workingDirectory,
                                         "OpenVAFiles",
                                         "openVA_input.csv")
@@ -1062,6 +1065,8 @@ class TransferDB:
         evaPath = os.path.join(self.workingDirectory,
                                "OpenVAFiles",
                                "entityAttributeValue.csv")
+        if os.path.isfile(pcvaInputPath):
+            os.remove(pcvaInputPath)
         if os.path.isfile(openVAInputPath):
             os.remove(openVAInputPath)
         if os.path.isfile(recordStoragePath):
