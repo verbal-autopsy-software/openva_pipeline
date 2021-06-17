@@ -224,15 +224,10 @@ class Check_runODK_clean(unittest.TestCase):
                   '--odk_username', str('"' + odkUser + '"'),
                   '--odk_password', str('"' + odkPassword + '"'),
                   '--storage_directory', str('"ODKFiles"')]
-
-        cls.odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
+        odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE, check=True)
-        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms'))
-        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1'))
-        with open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json') as log:
-            for line in log:
-                print(line)
+
         cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
 
     def test_clean_runODK_returncode(self):
@@ -293,6 +288,32 @@ class Check_runODK_with_exports(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
+
+        odkID = None
+        odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
+        odkUser = 'odk_openva'
+        odkPassword = 'openVA2018'
+        odkFormID = 'va_who_v1_5_1'
+        odkLastRun = '1901-01-01_00:00:01'
+        odkLastRunDate = datetime.datetime.strptime(
+            odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
+        odkLastRunDatePrev = (
+            datetime.datetime.strptime(odkLastRunDate, '%Y/%m/%d') -
+            datetime.timedelta(days=1)
+        ).strftime('%Y/%m/%d')
+        odkLastRunResult = 'fail'
+        odkUseCentral = 'False'
+        odkProjectNumber = '1'
+        bcArgs = ['java', '-jar', 'ODK-Briefcase-v1.18.0.jar',
+                  '-plla',
+                  '--odk_url', str('"' + odkURL + '"'),
+                  '--odk_username', str('"' + odkUser + '"'),
+                  '--odk_password', str('"' + odkPassword + '"'),
+                  '--storage_directory', str('"ODKFiles"')]
+        odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, check=True)
+        
         self.odkBC = self.pl.runODK(settingsODK, settingsPipeline)
         self.new_mtimePrev = os.path.getmtime('ODKFiles/odkBCExportPrev.csv')
         self.new_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')
@@ -380,6 +401,31 @@ class Check_storeResultsDB(unittest.TestCase):
         self.conn.commit()
         self.c.execute('DELETE FROM VA_Storage;')
         self.conn.commit()
+
+        odkID = None
+        odkURL = 'https://odk.swisstph.ch/ODKAggregateOpenVa'
+        odkUser = 'odk_openva'
+        odkPassword = 'openVA2018'
+        odkFormID = 'va_who_v1_5_1'
+        odkLastRun = '1901-01-01_00:00:01'
+        odkLastRunDate = datetime.datetime.strptime(
+            odkLastRun, '%Y-%m-%d_%H:%M:%S').strftime('%Y/%m/%d')
+        odkLastRunDatePrev = (
+            datetime.datetime.strptime(odkLastRunDate, '%Y/%m/%d') -
+            datetime.timedelta(days=1)
+        ).strftime('%Y/%m/%d')
+        odkLastRunResult = 'fail'
+        odkUseCentral = 'False'
+        odkProjectNumber = '1'
+        bcArgs = ['java', '-jar', 'ODK-Briefcase-v1.18.0.jar',
+                  '-plla',
+                  '--odk_url', str('"' + odkURL + '"'),
+                  '--odk_username', str('"' + odkUser + '"'),
+                  '--odk_password', str('"' + odkPassword + '"'),
+                  '--storage_directory', str('"ODKFiles"')]
+        odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, check=True)
 
         self.odkBC = self.pl.runODK(self.settingsODK, self.settingsPipeline)
 
