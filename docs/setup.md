@@ -2,28 +2,27 @@
 
 Note: To make the installation process easier, all of the required software can be installed by downloading and running the bash script [install_software.sh](https://raw.githubusercontent.com/D4H-CRVS/OpenVA_Pipeline/master/install_software.sh) located in the main folder of this repository.
 
-1. The following software is required by the openVA pipeline: [Python 3.5.0 (or higher)]((https://www.python.org/downloads/)),
+1. The following software is required by the openVA pipeline: [Python 3.6 (or higher)]((https://www.python.org/downloads/)),
    [OpenJDK](http://openjdk.java.net) (or [Java JDK 7 or 8]()), [R](https://cran.r-project.org), [SQLite3](https://www.sqlite.org),
    and [SQLCipher](https://github.com/sqlcipher/sqlcipher).  For installation purposes, it is also useful to install
    [PIP](https://pypi.python.org/pypi/pip) (tool for installing Python packages).
-    - Installation on Ubuntu 16.04: run the following commands at a terminal promp (indicated by $)
+    - Installation on Ubuntu 20.04: run the following commands at a terminal promp (indicated by $)
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
     $ sudo apt update
-    $ sudo apt install python3-pip python3-dev openjdk-8-jre r-base r-cran-rjava sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev git -y
+    $ sudo apt install python3-pip openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev -y
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-1. [ODK Briefcase](https://github.com/opendatakit/briefcase/releases): Version v1.10.1 (previous versions may not work
-   with the pipeline). Download the `ODK-Briefcase-v1.10.1.jar` file to the same folder where _pipeline.py_
+1. [ODK Briefcase](https://github.com/opendatakit/briefcase/releases): Version v1.18.0 (previous versions may not work
+   with the pipeline). Download the `ODK-Briefcase-v1.18.0.jar` file to the same folder where _pipeline.py_
    is located.
-1. [R Packages](https://cran.r-project.org/web/packages/available_packages_by_name.html):
-[openVA](https://cran.r-project.org/web/packages/openVA/index.html),
-[CrossVA](https://cran.r-project.org/web/packages/CrossVA/index.html)
+1. [R Package](https://cran.r-project.org/web/packages/available_packages_by_name.html):
+[openVA](https://cran.r-project.org/web/packages/openVA/index.html)
 Within R (to start R, simply type ```R``` at a terminal prompt, or ```sudo R``` for system-wide installation of packages), the
 necessary packages can be installed (with internet connection) using the following command:
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.r}
-    > install.packages(c("openVA", "CrossVA"), dependencies=TRUE)
+    > install.packages("openVA")
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    Note that `>` in the previous command indicates the R prompt (not part of the actual command).  This command will
@@ -35,14 +34,13 @@ necessary packages can be installed (with internet connection) using the followi
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. [Python packages](https://pypi.org/) & updates
-    - installation for Ubuntu 16.04: Python is pre-installed, but additional packages and modules are needed, which can 
-      be installed with the following commands at a terminal:
+    - installation for Ubuntu 20.04: Python 3.8 is pre-installed, but additional packages and modules are needed, which can 
+      be installed with the following command at a terminal:
 
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
         $ pip3 install --upgrade pip --user
-        $ hash -d pip3
         $ pip3 install --upgrade setuptools --user
-        $ pip3 install requests pysqlcipher3 --user
+        $ pip3 install openva-pipeline --user
         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         
         Note: the first command: `pip3 install --upgrade pip --user` will produce a warning message:
@@ -56,15 +54,8 @@ necessary packages can be installed (with internet connection) using the followi
 is useful for configuring the SQLite Database and can be installed using the following commands:
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~{.bash}
-    $ sudo apt install build-essential git-core cmake libsqlite3-dev qt5-default qttools5-dev-tools \
-               libsqlcipher-dev -y
-    $ git clone https://github.com/sqlitebrowser/sqlitebrowser
-    $ cd sqlitebrowser
-    $ mkdir build
-    $ cd build
-    $ cmake -Dsqlcipher=1 -Wno-dev ..
-    $ make
-    $ sudo make install
+    $ sudo apt update
+    $ sudo apt install sqlitebrowser -y
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Pipeline Setup

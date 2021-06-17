@@ -18,7 +18,7 @@ are only a few steps needed to install and demonstrate the openVA Pipeline.
 
       $ mkdir -p $HOME/Pipeline
       $ cd $HOME/Pipeline
-      $ pipenv --python 3.5
+      $ pipenv --python 3.8
 
    The last (recommended) step uses
    `Pipenv <https://pipenv.readthedocs.io/en/latest/>`_ to create a virtual
@@ -70,7 +70,7 @@ are only a few steps needed to install and demonstrate the openVA Pipeline.
 
    #. ``ovaPL.downloadBriefcase()`` --  call the function that downloads the
       `ODK Briefcase app <https://github.com/opendatakit/briefcase/releases>`_
-      (version 12.2)
+      (version 1.18.0)
       from the `ODK GitHub page <https://github.com/opendatakit/briefcase>`_.
       The app will be downloaded to the current working directory.
 

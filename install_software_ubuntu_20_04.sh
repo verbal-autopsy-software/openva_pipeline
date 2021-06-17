@@ -6,7 +6,7 @@ sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran4
 
 #Install dependencies (R, Java, sqlcipher, etc.)
 sudo apt update
-sudo apt-get install -y python3-pip openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev git make
+sudo apt-get install -y python3-pip openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev git 
 
 #Install openva_pipeline
 #pip install openva-pipeline

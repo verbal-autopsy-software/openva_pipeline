@@ -34,3 +34,12 @@ test_script:
 - tox
 
 build: off
+
+skip_commits:
+  files:
+  - docs/*
+  - README.md
+  - install_software_ubuntu_20_04.sh
+  - LICENSE
+  - MANIFEST.in
+  - .gitignore
