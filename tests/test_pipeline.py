@@ -256,6 +256,11 @@ class Check_runODK_with_exports(unittest.TestCase):
         self.useDHIS = True
         self.pl = Pipeline(self.dbFileName, self.dbDirectory,
                            self.dbKey, self.useDHIS)
+        settings = self.pl.config()
+        settingsPipeline = settings['pipeline']
+        settingsODK = settings['odk']
+        settingsOpenVA = settings['openVA']
+        settingsDHIS = settings['dhis']
         self.odkBC = self.pl.runODK(settingsODK, settingsPipeline)
         self.new_mtimePrev = os.path.getmtime('ODKFiles/odkBCExportPrev.csv')
         self.new_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')

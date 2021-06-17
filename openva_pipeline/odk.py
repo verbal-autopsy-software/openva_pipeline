@@ -130,7 +130,7 @@ class ODK:
                          str('"' + self.odkLastRunDatePrev + '"'),
                          '--overwrite_csv_export', '--exclude_media_export']
         try:
-            completed_export = subprocess.run(args=bcArgs_plla,
+            completed_export = subprocess.run(args=bcArgs_export,
                                               stdin=subprocess.PIPE,
                                               stdout=subprocess.PIPE,
                                               stderr=subprocess.PIPE,
