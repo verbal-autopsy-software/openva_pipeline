@@ -230,12 +230,10 @@ class Check_runODK_clean(unittest.TestCase):
                                    stderr=subprocess.PIPE, check=True)
         print(os.listdir('ODKFiles/ODK Briefcase Storage/forms'))
         print(os.listdir('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1'))
-        log = open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json')
-        for line in log:
-            print(line)
-
+        with open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json') as log:
+            for line in log:
+                print(line)
         cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
-
 
     def test_clean_runODK_returncode(self):
         """Check returncode with valid parameters:"""
