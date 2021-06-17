@@ -9,7 +9,12 @@ sudo apt update
 sudo apt-get install -y python3-pip openjdk-11-jdk r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev git make
 
 #Install openva_pipeline
-pip install openva-pipeline
+#pip install openva-pipeline
+git clone https://github.com/verbal-autopsy-software/pyCrossVA -b pipeline GitHub/pycrossva
+git clone https://github.com/verbal-autopsy-software/openva_pipeline GitHub/openva_pipeline
+pip install -e GitHub/pycrossva
+pip install -e GitHub/openva_pipeline
+
 
 #Write Rscript to install packages, then run the R script
 sudo R CMD javareconf

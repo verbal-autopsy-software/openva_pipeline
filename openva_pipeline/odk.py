@@ -94,26 +94,43 @@ class ODK:
         :raises: ODKError
         """
 
-        bcArgs = ['java', '-jar', self.bcPath,
-                  '-plla',
-                  '--odk_url', str('"' + self.odkURL + '"'),
-                  '--odk_username', str('"' + self.odkUser + '"'),
-                  '--odk_password', str('"' + self.odkPassword + '"'),
-                  '--storage_directory', str(self.storageDir),
-                  '--form_id', str('"' + self.odkFormID + '"'),
-                  '-e',
-                  '--export_directory', str(self.exportDir),
-                  '--export_filename',  str(self.fileName),
-                  '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
-                  '--overwrite_csv_export', '--exclude_media_export']
-
+        bcArgs_plla = ['java', '-jar', self.bcPath,
+                       '-plla',
+                       '--odk_url', str('"' + self.odkURL + '"'),
+                       '--odk_username', str('"' + self.odkUser + '"'),
+                       '--odk_password', str('"' + self.odkPassword + '"'),
+                       '--storage_directory', str(self.storageDir),
+                       '--form_id', str('"' + self.odkFormID + '"'),
+                       '-e',
+                       '--export_directory', str(self.exportDir),
+                       '--export_filename',  str(self.fileName),
+                       '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
+                       '--overwrite_csv_export', '--exclude_media_export']
         try:
-            completed = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, check=True)
+            completed_plla = subprocess.run(args=bcArgs_plla,
+                                            stdin=subprocess.PIPE,
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE,
+                                            check=True)
         except subprocess.CalledProcessError as exc:
             raise ODKError(str(exc.stderr)) from exc
-        return(completed)
+        bcArgs_export = ['java', '-jar', self.bcPath, '-e',
+                         '--form_id', str('"' + self.odkFormID + '"'),
+                         '--storage_directory', str(self.storageDir),
+                         '--export_directory', str(self.exportDir),
+                         '--export_filename',  str(self.fileName),
+                         '--export_start_date',
+                         str('"' + self.odkLastRunDatePrev + '"'),
+                         '--overwrite_csv_export', '--exclude_media_export']
+        try:
+            completed_export = subprocess.run(args=bcArgs_plla,
+                                              stdin=subprocess.PIPE,
+                                              stdout=subprocess.PIPE,
+                                              stderr=subprocess.PIPE,
+                                              check=True)
+        except subprocess.CalledProcessError as exc:
+            raise ODKError(str(exc.stderr)) from exc
+        return(completed_export)
 
     def central(self):
         """Connects to ODK Central through api.
