@@ -242,9 +242,9 @@ class Check_runODK_clean(unittest.TestCase):
                   '--export_directory', str('"ODKFiles"'),
                   '--export_filename',  str('"odkBCExportNew.csv"'),
                   '--overwrite_csv_export', '--exclude_media_export']
-        odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, check=True)
+        cls.odkBC = subprocess.run(args=bcArgs, stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, check=True)
 
         # cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
 
