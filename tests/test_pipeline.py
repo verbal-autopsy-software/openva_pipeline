@@ -231,8 +231,8 @@ class Check_runODK_clean(unittest.TestCase):
         with open('briefcase.log') as f:
             for line in f:
                 print(line)
-        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json'))
-        with open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1') as f:
+        print(os.listdir('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1'))
+        with open('ODKFiles/ODK Briefcase Storage/forms/2016 WHO Verbal Autopsy Form 1_5_1/metadata.json') as f:
             for line in f:
                 print(line)
         bcArgs = ['java', '-jar', 'ODK-Briefcase-v1.18.0.jar',
