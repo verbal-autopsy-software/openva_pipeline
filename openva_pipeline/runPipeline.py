@@ -24,9 +24,6 @@ from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.exceptions import PipelineError
 from openva_pipeline.exceptions import DatabaseConnectionError
 from openva_pipeline.exceptions import PipelineConfigurationError
-from openva_pipeline.exceptions import ODKConfigurationError
-from openva_pipeline.exceptions import OpenVAConfigurationError
-from openva_pipeline.exceptions import DHISConfigurationError
 from openva_pipeline.exceptions import ODKError
 from openva_pipeline.exceptions import OpenVAError
 from openva_pipeline.exceptions import SmartVAError
@@ -103,8 +100,8 @@ def runPipeline(database_file_name,
     settingsDHIS = settings["dhis"]
 
     try:
-        odkOut = pl.runODK(settingsODK,
-                           settingsPipeline)
+        pl.runODK(settingsODK,
+                  settingsPipeline)
         pl.logEvent("ODK Export Completed Successfully", "Event")
     except ODKError as e:
         pl.logEvent(str(e), "Error")
@@ -126,8 +123,8 @@ def runPipeline(database_file_name,
 
     if (export_to_DHIS):
         try:
-            pipelineDHIS = pl.runDHIS(settingsDHIS,
-                                      settingsPipeline)
+            pl.runDHIS(settingsDHIS,
+                       settingsPipeline)
             pl.logEvent("Posted Events to DHIS2 Successfully", "Event")
         except DHISError as e:
             pl.logEvent(str(e), "Error")

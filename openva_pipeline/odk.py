@@ -11,9 +11,7 @@ import shutil
 import requests
 import csv
 import sys
-from pysqlcipher3 import dbapi2 as sqlcipher
 
-from .exceptions import PipelineError
 from .exceptions import ODKError
 
 class ODK:
@@ -114,11 +112,11 @@ class ODK:
                        '--storage_directory', str(self.storageDir),
                        '--form_id', str('"' + self.odkFormID + '"')]
         try:
-            completed_plla = subprocess.run(args=bcArgs_plla,
-                                            stdin=subprocess.PIPE,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE,
-                                            check=True)
+            subprocess.run(args=bcArgs_plla,
+                           stdin=subprocess.PIPE,
+                           stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE,
+                           check=True)
         except subprocess.CalledProcessError as exc:
             raise ODKError(str(exc.stderr)) from exc
         bcArgs_export = ['java', '-jar', self.bcPath, '-e',

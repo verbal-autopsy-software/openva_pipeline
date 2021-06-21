@@ -13,10 +13,8 @@ from pandas import DataFrame
 from pandas import concat
 from pandas import merge
 import numpy as np
-from pysqlcipher3 import dbapi2 as sqlcipher
 from pycrossva.transform import transform
 
-from .exceptions import PipelineError
 from .exceptions import OpenVAError
 from .exceptions import SmartVAError
 

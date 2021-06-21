@@ -8,8 +8,6 @@ This module defines the primary API for the openVA Pipeline.
 import os
 import csv
 import datetime
-import requests
-from pandas import read_csv
 
 from .transferDB import TransferDB
 from .transferDB import DatabaseConnectionError
@@ -88,7 +86,7 @@ class Pipeline:
                 with open(errorFile, "a", newline="") as f:
                     writer = csv.writer(f)
                     writer.writerow(errorMsg)
-            except:
+            except (PermissionError, OSError) as exc:
                 print("Can't write to dbErrorLog.csv")
                 print(errorMsg)
 

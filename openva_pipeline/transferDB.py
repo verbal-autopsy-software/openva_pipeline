@@ -97,14 +97,14 @@ class TransferDB:
 
         c = conn.cursor()
 
-        try:
-            c.execute("SELECT dhisCode from Algorithm_Metadata_Options;")
-            metadataQuery = c.fetchall()
-        except (sqlcipher.OperationalError) as e:
-            raise PipelineConfigurationError \
-                ("Problem in database table Algorithm_Metadata_Options..." +
-                 str(e)
-                )
+        # try:
+        #     c.execute("SELECT dhisCode from Algorithm_Metadata_Options;")
+        #     metadataQuery = c.fetchall()
+        # except (sqlcipher.OperationalError) as e:
+        #     raise PipelineConfigurationError \
+        #         ("Problem in database table Algorithm_Metadata_Options..." +
+        #          str(e)
+        #         )
 
         try:
             sqlPipeline = "SELECT algorithmMetadataCode, codSource, algorithm, \
@@ -255,7 +255,7 @@ class TransferDB:
         :raises: DatabaseConnectionError, PipelineError
         """
 
-        if self.workingDirectory == None:
+        if self.workingDirectory is None:
             raise PipelineError("Need to run configPipeline.")
         c = conn.cursor()
         odkBCExportPath = os.path.join(self.workingDirectory,
@@ -506,13 +506,11 @@ class TransferDB:
         if not insilicovaCondProbNum == "NULL":
             try:
                 floatCondProbNum = float(insilicovaCondProbNum)
-                validCondProbNum = (0 <= floatCondProbNum <= 1)
-            except:
-                validCondProbNum = False
+            except ValueError:
                 raise OpenVAConfigurationError \
                     ("Problem in database: InSilicoVA_Conf.CondProbNum \
                     (must be between '0' and '1').")
-            if not validCondProbNum:
+            if not (0 <= floatCondProbNum <= 1):
                 raise OpenVAConfigurationError \
                     ("Problem in database: InSilicoVA_Conf.CondProbNum \
                     (must be between '0' and '1').")
@@ -534,26 +532,22 @@ class TransferDB:
         insilicovaThin = queryAdvancedInSilicoVA[0][8]
         try:
             thinFloat = float(insilicovaThin)
-            validThin = (0 < thinFloat)
-        except:
-            validThin = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.thin \
                 (must be 'thin' > 0.")
-        if not validThin:
+        if thinFloat <= 0:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.thin \
                 (must be 'thin' > 0.")
         insilicovaBurnin = queryAdvancedInSilicoVA[0][9]
         try:
             burninFloat = float(insilicovaBurnin)
-            validBurnin = (0 < burninFloat)
-        except:
-            validBurnin = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.burnin \
                 (must be 'burnin' > 0.")
-        if not validBurnin:
+        if burninFloat <= 0:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.burnin \
                 (must be 'burnin' > 0.")
@@ -565,26 +559,22 @@ class TransferDB:
         insilicovaConvCSMF = queryAdvancedInSilicoVA[0][11]
         try:
             floatConvCSMF = float(insilicovaConvCSMF)
-            validConvCSMF = (0 <= floatConvCSMF <= 1)
-        except:
-            validConvCSMF = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.conv_csmf \
                 (must be between '0' and '1').")
-        if not validConvCSMF:
+        if not (0 <= floatConvCSMF <= 1):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.conv_csmf \
                 (must be between '0' and '1').")
         insilicovaJumpScale = queryAdvancedInSilicoVA[0][12]
         try:
             floatJumpScale = float(insilicovaJumpScale)
-            validJumpScale = (0 < floatJumpScale)
-        except:
-            validJumpScale = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.jump_scale \
                 (must be greater than '0').")
-        if not validJumpScale:
+        if floatJumpScale <= 0:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.jump_scale \
                 (must be greater than '0').")
@@ -596,39 +586,33 @@ class TransferDB:
         insilicovaLevelsStrength = queryAdvancedInSilicoVA[0][14]
         try:
             floatLevelsStrength = float(insilicovaLevelsStrength)
-            validLevelsStrength = (0 < floatLevelsStrength)
-        except:
-            validLevelsStrength = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.levels_strength \
                 (must be greater than '0').")
-        if not validLevelsStrength:
+        if floatLevelsStrength <= 0:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.levels_strength \
                 (must be greater than '0').")
         insilicovaTruncMin = queryAdvancedInSilicoVA[0][15]
         try:
             floatTruncMin = float(insilicovaTruncMin)
-            validTruncMin = (0 <= floatTruncMin <= 1)
-        except:
-            validTruncMin = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_min \
                 (must be between '0' and '1').")
-        if not validTruncMin:
+        if not (0 <= floatTruncMin <= 1):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_min \
                 (must be between '0' and '1').")
         insilicovaTruncMax = queryAdvancedInSilicoVA[0][16]
         try:
             floatTruncMax = float(insilicovaTruncMax)
-            validTruncMax = (0 <= floatTruncMax <= 1)
-        except:
-            validTruncMax = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_max \
                 (must be between '0' and '1').")
-        if not validTruncMax:
+        if not (0 <= floatTruncMax <= 1):
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.trunc_max \
                 (must be between '0' and '1').")
@@ -656,19 +640,17 @@ class TransferDB:
                 (should end with 'g' for gigabyts or 'm' for megabytes).")
         try:
             float_joMemSize = float(joMemSize)
-            valid_joMemSize = (0 < float_joMemSize)
-        except:
-            valid_joMemSize = False
+        except ValueError:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.java_option \
                 (should look like '-Xmx1g').")
-        if not valid_joMemSize:
+        if float_joMemSize <= 0:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.java_option \
                 (should look like '-Xmx1g').")
         insilicovaSeed = queryAdvancedInSilicoVA[0][19]
         try:
-            floatSeed = float(insilicovaSeed)
+            float(insilicovaSeed)
         except:
             raise OpenVAConfigurationError \
                 ("Problem in database: InSilicoVA_Conf.seed \
@@ -713,13 +695,11 @@ class TransferDB:
         if not insilicovaIndivCI == "NULL":
             try:
                 floatIndivCI = float(insilicovaIndivCI)
-                validIndivCI = (0 < floatIndivCI < 1)
-            except:
-                validIndivCI = False
+            except ValueError:
                 raise OpenVAConfigurationError \
                     ("Problem in database: InSilicoVA_Conf.indiv_CI \
                     (must be between '0' and '1').")
-            if not validIndivCI:
+            if not (0 < floatIndivCI < 1):
                 raise OpenVAConfigurationError \
                     ("Problem in database: InSilicoVA_Conf.indiv_CI \
                     (must be between '0' and '1').")
@@ -925,15 +905,15 @@ class TransferDB:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisURL")
         dhisUser = queryDHIS[0][1]
-        if dhisUser == "" or dhisUser == None:
+        if dhisUser == "" or dhisUser is None:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisUser (is empty)")
         dhisPassword = queryDHIS[0][2]
-        if dhisPassword == "" or dhisPassword == None:
+        if dhisPassword == "" or dhisPassword is None:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisPassword (is empty)")
         dhisOrgUnit = queryDHIS[0][3]
-        if dhisOrgUnit == "" or dhisOrgUnit == None:
+        if dhisOrgUnit == "" or dhisOrgUnit is None:
             raise DHISConfigurationError \
                 ("Problem in database: DHIS_Conf.dhisOrgUnit (is empty)")
 
@@ -963,14 +943,13 @@ class TransferDB:
         :raises: PipelineError, DatabaseConnectionError
         """
 
-        if self.workingDirectory == None:
+        if self.workingDirectory is None:
             raise PipelineError("Need to run configPipeline.")
         c = conn.cursor()
         newStoragePath = os.path.join(self.workingDirectory,
                                       "OpenVAFiles",
                                       "newStorage.csv")
         dfNewStorage = read_csv(newStoragePath)
-        dfNewStorageID = dfNewStorage["odkMetaInstanceID"]
         timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         try:
             for row in dfNewStorage.itertuples():
@@ -1031,7 +1010,7 @@ class TransferDB:
     def cleanODK(self):
         """Remove ODK Briefcase Export files."""
 
-        if self.workingDirectory == None:
+        if self.workingDirectory is None:
             raise PipelineError("Need to run configPipeline.")
         odkExportNewPath = os.path.join(self.workingDirectory,
                                         "ODKFiles",
@@ -1048,7 +1027,7 @@ class TransferDB:
     def cleanOpenVA(self):
         """Remove openVA files with COD results."""
 
-        if self.workingDirectory == None:
+        if self.workingDirectory is None:
             raise PipelineError("Need to run configPipeline.")
         pcvaInputPath = os.path.join(self.workingDirectory,
                                      "OpenVAFiles",
@@ -1079,7 +1058,7 @@ class TransferDB:
     def cleanDHIS(self):
         """Remove DHIS2 blob files."""
 
-        if self.workingDirectory == None:
+        if self.workingDirectory is None:
             raise PipelineError("Need to run configPipeline.")
         shutil.rmtree(
             os.path.join(self.workingDirectory, "DHIS", "blobs")
