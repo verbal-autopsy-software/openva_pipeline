@@ -37,5 +37,6 @@ build/
 # documentation
 docs/_build
 
-# tox
+# misc
 .tox
+.coverage
