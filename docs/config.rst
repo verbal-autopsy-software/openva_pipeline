@@ -101,7 +101,7 @@ Pipeline Configuration
         application, *ODK-Briefcase-v1.10.1.jar*) are stored.  Note that the pipeline will create new folders and files in this working directory,
         and must be run by a user with privileges for writing files to this location.   
 
-      * *openVA\_Algorithm* -- currently, there are only three acceptable values for the alogrithm: ``Insilico``, ``InterVA`` or ``SmartVA``
+      * *algorithm* -- currently, there are only three acceptable values for the alogrithm: ``Insilico``, ``InterVA`` or ``SmartVA``
 
       * *algorithmMetadataCode* -- this column captures the necessary inputs for producing a COD, namely the VA questionnaire, the
         algorithm, and the symptom-cause information (SCI) (for more details, see the section: :ref:`SCI`).  Note that there are also
