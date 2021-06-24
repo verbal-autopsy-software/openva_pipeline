@@ -3,6 +3,8 @@ OpenVA_Pipeline
 [![image](https://img.shields.io/pypi/pyversions/openva_pipeline)](https://pypi.org/project/openva_pipeline/)
 [![image](http://readthedocs.org/projects/openva-pipeline/badge/)](http://openva-pipeline.readthedocs.io/)
 [![Build status](https://ci.appveyor.com/api/projects/status/gsxtxr40r21s0q79?svg=true)](https://ci.appveyor.com/project/jarathomas/openva-pipeline)
+[![Coverage](https://codecov.io/gh/verbal-autopsy-software/openva_pipeline/branch/master/graph/badge.svg?token=307LFXDUJ2)](https://codecov.io/gh/verbal-autopsy-software/openva_pipeline)
+
 
 Automates the processing of verbal autopsy (VA) data from an ODK Aggregate
 server, through the openVA Pipeline middleware, and ending with a DHIS2 server

@@ -14,6 +14,7 @@ import sys
 
 from .exceptions import ODKError
 
+
 class ODK:
     """Manages Pipeline's interaction with ODK Aggregate.
 
@@ -104,38 +105,61 @@ class ODK:
         #                '--export_filename',  str(self.fileName),
         #                '--export_start_date', str('"' + self.odkLastRunDatePrev + '"'),
         #                '--overwrite_csv_export', '--exclude_media_export']
-        bcArgs_plla = ['java', '-jar', self.bcPath,
-                       '-plla',
-                       '--odk_url', str('"' + self.odkURL + '"'),
-                       '--odk_username', str('"' + self.odkUser + '"'),
-                       '--odk_password', str('"' + self.odkPassword + '"'),
-                       '--storage_directory', str(self.storageDir),
-                       '--form_id', str('"' + self.odkFormID + '"')]
+        bcArgs_plla = [
+            "java",
+            "-jar",
+            self.bcPath,
+            "-plla",
+            "--odk_url",
+            str('"' + self.odkURL + '"'),
+            "--odk_username",
+            str('"' + self.odkUser + '"'),
+            "--odk_password",
+            str('"' + self.odkPassword + '"'),
+            "--storage_directory",
+            str(self.storageDir),
+            "--form_id",
+            str('"' + self.odkFormID + '"'),
+        ]
         try:
-            subprocess.run(args=bcArgs_plla,
-                           stdin=subprocess.PIPE,
-                           stdout=subprocess.PIPE,
-                           stderr=subprocess.PIPE,
-                           check=True)
+            subprocess.run(
+                args=bcArgs_plla,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
         except subprocess.CalledProcessError as exc:
             raise ODKError(str(exc.stderr)) from exc
-        bcArgs_export = ['java', '-jar', self.bcPath, '-e',
-                         '--form_id', str('"' + self.odkFormID + '"'),
-                         '--storage_directory', str(self.storageDir),
-                         '--export_directory', str(self.exportDir),
-                         '--export_filename',  str(self.fileName),
-                         '--export_start_date',
-                         str('"' + self.odkLastRunDatePrev + '"'),
-                         '--overwrite_csv_export', '--exclude_media_export']
+        bcArgs_export = [
+            "java",
+            "-jar",
+            self.bcPath,
+            "-e",
+            "--form_id",
+            str('"' + self.odkFormID + '"'),
+            "--storage_directory",
+            str(self.storageDir),
+            "--export_directory",
+            str(self.exportDir),
+            "--export_filename",
+            str(self.fileName),
+            "--export_start_date",
+            str('"' + self.odkLastRunDatePrev + '"'),
+            "--overwrite_csv_export",
+            "--exclude_media_export",
+        ]
         try:
-            completed_export = subprocess.run(args=bcArgs_export,
-                                              stdin=subprocess.PIPE,
-                                              stdout=subprocess.PIPE,
-                                              stderr=subprocess.PIPE,
-                                              check=True)
+            completed_export = subprocess.run(
+                args=bcArgs_export,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=True,
+            )
         except subprocess.CalledProcessError as exc:
             raise ODKError(str(exc.stderr)) from exc
-        return(completed_export)
+        return completed_export
 
     def central(self):
         """Connects to ODK Central through api.
@@ -148,19 +172,32 @@ class ODK:
         :raises: ODKError
         """
         exportFile_new = os.path.join(self.exportDir, self.fileName)
-        url = os.path.join(self.odkURL, "v1/projects", self.odkProjectNumber,
-                           "forms", self.odkFormID, "submissions.csv")
-        data_filter = "?$filter=__system/submissionDate%20ge%20" + self.odkLastRunDate.replace("/", "-")
+        url = os.path.join(
+            self.odkURL,
+            "v1/projects",
+            self.odkProjectNumber,
+            "forms",
+            self.odkFormID,
+            "submissions.csv",
+        )
+        data_filter = (
+            "?$filter=__system/submissionDate%20ge%20"
+            + self.odkLastRunDate.replace("/", "-")
+        )
         username = self.odkUser
         password = self.odkPassword
         try:
             r = requests.get(url + data_filter, auth=(username, password))
         except requests.exceptions.SSLError as e:
             raise ODKError(
-                "Unable to connect to ODK Central (using requests): {0}".format(e))
+                "Unable to connect to ODK Central (using requests): {0}".format(e)
+            )
         except:
             raise ODKError(
-                "Unable to connect to ODK Central (unexpected error): {0}".format(sys.exc_info()))
+                "Unable to connect to ODK Central (unexpected error): {0}".format(
+                    sys.exc_info()
+                )
+            )
 
         if r.status_code != 200:
             raise ODKError("Error getting data from ODK Central: {0}".format(r.text))
@@ -171,4 +208,4 @@ class ODK:
         with open(exportFile_new, "w") as f:
             writer = csv.writer(f)
             writer.writerows(odk_data)
-        return("SUCCESS! Downloaded {} records".format(n_records))
+        return "SUCCESS! Downloaded {} records".format(n_records)

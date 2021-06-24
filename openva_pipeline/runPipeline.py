@@ -1,4 +1,4 @@
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
 #    Copyright (C) 2018  Jason Thomas, Samuel J. Clark, & Martin Bratschi
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
 
 import sys
 import os
@@ -29,9 +29,8 @@ from openva_pipeline.exceptions import OpenVAError
 from openva_pipeline.exceptions import SmartVAError
 from openva_pipeline.exceptions import DHISError
 
-def createTransferDB(database_file_name,
-                     database_directory,
-                     database_key):
+
+def createTransferDB(database_file_name, database_directory, database_key):
     """Create the (SQLite encrypted) Transfer Database.
 
     :param database_file_name: File name for the Transfer Database.
@@ -50,23 +49,24 @@ def createTransferDB(database_file_name,
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
         raise DatabaseConnectionError("Unable to create database..." + str(e))
     try:
-        parSetKey = "\"" + database_key + "\""
+        parSetKey = '"' + database_key + '"'
         conn.execute("PRAGMA key = " + parSetKey)
         # c = conn.cursor()
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
         raise DatabaseConnectionError("Unable to set encryption key..." + str(e))
     try:
-        with open(sqlPath, "r", newline = "\n", encoding="utf-8") as sqlScript:
+        with open(sqlPath, "r", newline="\n", encoding="utf-8") as sqlScript:
             # c.executescript(sqlScript.read())
             conn.executescript(sqlScript.read())
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
-        raise DatabaseConnectionError \
-            ("Problem running script (pipelineDB.sql)..." + str(e))
+        raise DatabaseConnectionError(
+            "Problem running script (pipelineDB.sql)..." + str(e)
+        )
 
-def runPipeline(database_file_name,
-                database_directory,
-                database_key,
-                export_to_DHIS = True):
+
+def runPipeline(
+    database_file_name, database_directory, database_key, export_to_DHIS=True
+):
     """Runs through all steps of the OpenVA Pipeline
 
     This function is a wrapper for the Pipeline class, which
@@ -84,10 +84,12 @@ def runPipeline(database_file_name,
     :type export_to_DHIS: (Boolean)
     """
 
-    pl = Pipeline(dbFileName = database_file_name,
-                  dbDirectory = database_directory,
-                  dbKey = database_key,
-                  useDHIS = export_to_DHIS)
+    pl = Pipeline(
+        dbFileName=database_file_name,
+        dbDirectory=database_directory,
+        dbKey=database_key,
+        useDHIS=export_to_DHIS,
+    )
     try:
         settings = pl.config()
     except PipelineConfigurationError as e:
@@ -100,31 +102,28 @@ def runPipeline(database_file_name,
     settingsDHIS = settings["dhis"]
 
     try:
-        pl.runODK(settingsODK,
-                  settingsPipeline)
+        pl.runODK(settingsODK, settingsPipeline)
         pl.logEvent("ODK Export Completed Successfully", "Event")
     except ODKError as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
     try:
-        rOut = pl.runOpenVA(settingsOpenVA,
-                            settingsPipeline,
-                            settingsODK.odkID,
-                            pl.pipelineRunDate)
+        rOut = pl.runOpenVA(
+            settingsOpenVA, settingsPipeline, settingsODK.odkID, pl.pipelineRunDate
+        )
         pl.logEvent("OpenVA Analysis Completed Successfully", "Event")
     except (OpenVAError, SmartVAError) as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
-    if (rOut["zeroRecords"] == True):
+    if rOut["zeroRecords"] == True:
         pl.logEvent("No new VA records from ODK (now exiting)", "Event")
         sys.exit(0)
 
-    if (export_to_DHIS):
+    if export_to_DHIS:
         try:
-            pl.runDHIS(settingsDHIS,
-                       settingsPipeline)
+            pl.runDHIS(settingsDHIS, settingsPipeline)
             pl.logEvent("Posted Events to DHIS2 Successfully", "Event")
         except DHISError as e:
             pl.logEvent(str(e), "Error")
@@ -133,8 +132,7 @@ def runPipeline(database_file_name,
     try:
         pl.storeResultsDB()
         pl.logEvent("Stored Records to Xfer Database Successfully", "Event")
-    except (PipelineError, DatabaseConnectionError,
-            PipelineConfigurationError) as e:
+    except (PipelineError, DatabaseConnectionError, PipelineConfigurationError) as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
 
@@ -144,6 +142,7 @@ def runPipeline(database_file_name,
     except (DatabaseConnectionError, DatabaseConnectionError) as e:
         pl.logEvent(str(e), "Error")
         sys.exit(1)
+
 
 def downloadBriefcase():
     """Download the ODK Briefcase (v1.18.0) jar file from Git Hub."""
@@ -157,10 +156,13 @@ def downloadBriefcase():
     except (requests.RequestException, IOError) as e:
         raise ODKError("Error downloading Briefcase: {}".format(str(e)))
 
+
 def downloadSmartVA():
     """Download the smartva (linux) binary application file from Git Hub."""
 
-    smartvaURL = "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
+    smartvaURL = (
+        "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
+    )
     try:
         with open("smartva", "wb") as smartvaBinary:
             r = requests.get(smartvaURL)
@@ -168,6 +170,7 @@ def downloadSmartVA():
         os.chmod("smartva", 0o777)
     except (requests.RequestException, IOError) as e:
         raise SmartVAError("Error downloading smartva: {}".format(str(e)))
+
 
 # if __name__ == "__main__":
 #     runPipeline(database_file_name= "run_Pipeline.db",
