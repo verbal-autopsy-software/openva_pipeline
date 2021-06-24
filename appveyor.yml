@@ -35,8 +35,10 @@ test_script:
 
 build: off
 
-after_build:
-- bash <(curl -s https://codecov.io/bash)
+# after_build:
+# - bash <(curl -s https://codecov.io/bash)
+on_success:
+- codecov
 
 skip_commits:
   files:
