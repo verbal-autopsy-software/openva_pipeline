@@ -11,9 +11,8 @@ server, through the openVA Pipeline middleware, and ending with a DHIS2 server
 (with the [VA module](https://github.com/SwissTPH/dhis2_va_draft)). VA data are
 analyzed using the [openVA
 package](https://github.com/verbal-autopsy-software/openVA) in **R**, which is
-demonstrated with code for an RShiny app in the [OpenVA_RShiny
-repository](https://github.com/verbal-autopsy-software/shinyVA) and described in a
-[vignette](https://github.com/verbal-autopsy-software/shinyVA/blob/master/shiny-openVA-vignette.pdf).
+demonstrated with code for an RShiny app in the [openVA_App](https://github.com/verbal-autopsy-software/openVA_App) and described in
+the video tutorials: [Installation Guide (Windows)](https://youtu.be/C2EPOpTzJTk) and [Analysis Guide](https://youtu.be/K1wkSbTwxkg).
 
 
 The documentation for the openVA Pipeline can be found at:
