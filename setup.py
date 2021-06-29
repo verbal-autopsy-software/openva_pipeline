@@ -24,11 +24,14 @@ setup(
     license=about["__license__"],
     packages=find_packages(),
     include_package_data=True,
+    package_data={
+        "openva_pipeline": ["data/*"],
+    },
     install_requires=[
-        'pandas',
-        'pysqlcipher3',
-        'requests',
-        'pycrossva @ git+https://github.com/verbal-autopsy-software/pyCrossVA@pipeline',
+        "pandas",
+        "pysqlcipher3",
+        "requests",
+        "pycrossva",
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
