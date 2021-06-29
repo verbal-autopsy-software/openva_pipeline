@@ -4,13 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"pysqlcipher3" = ">=1.0.4"
+pysqlcipher3 = ">=1.0.4"
 pandas = ">=1.2.4"
 requests = ">=2.25.1"
 urllib3 = ">=1.26.5"
 numpy = ">=1.20.3"
+pycrossva = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.7"
+python_version = "3.8"
+
+[pipenv]
+allow_prereleases = true
