@@ -14,6 +14,7 @@ from pandas import concat
 from pandas import merge
 import numpy as np
 from pycrossva.transform import transform
+from .data.spanish import COD_SPANISH
 
 from .exceptions import OpenVAError
 from .exceptions import SmartVAError
@@ -291,6 +292,10 @@ class OpenVA:
                 f.write("date() \n")
         except (PermissionError, OSError) as exc:
             raise OpenVAError("Problem writing R script for InterVA.") from exc
+
+    def results_to_spanish(self):
+        print(COD_SPANISH)
+         
 
     def smartVA_to_csv(self):
         """Write two CSV files: (1) Entity Value Attribute blob pushed to
