@@ -204,7 +204,8 @@ class ODK:
 
         odk_text = r.text.splitlines()
         n_records = len(odk_text) - 1
-        odk_data = [i.split(",") for i in odk_text]
+        odk_reader = csv.reader(odk_text, delimiter=',', quotechar='"')
+        odk_data = [row for row in odk_reader]
         with open(exportFile_new, "w") as f:
             writer = csv.writer(f)
             writer.writerows(odk_data)
