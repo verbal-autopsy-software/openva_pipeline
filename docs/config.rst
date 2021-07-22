@@ -94,6 +94,8 @@ Pipeline Configuration
       Similarly, edit the *odkUser*, *odkPass*, and *odkFormID* columns so they contain a valid user name, password, and Form ID
       (see Form Management on ODK Aggregate server) of the VA questionnaire of your ODK Aggregate server.
 
+.. _targ-conf-openva-config:
+
    #. **openVA Configuration**: The pipeline configuration for openVA is stored in the *Pipeline\_Conf* table. Follow the steps described
       above (in the ODK Aggregate Configuration section) and edit the following columns:
 
@@ -114,6 +116,8 @@ Pipeline Configuration
 
       * *codSource* -- both the InterVA and InSilicoVA algorithms return CODs from a list produced by the WHO, and thus this column should
         be left at the default value of ``WHO``.
+
+.. _targ-conf-dhis2-conf:
 
    #. **DHIS2 Configuration**: The pipeline configuration for DHIS2 is located in the *DHIS\_Conf* table, and the following columns should
       be edited with appropriate values for your DHIS2 server.

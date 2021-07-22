@@ -135,13 +135,117 @@ are only a few steps needed to install and demonstrate the openVA Pipeline.
 
 
 
+
+**Working with APIs for each Step**
+-----------------------------------
+
+
+*Create & Configure the Transfer Database from Command Line*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. The configuration settings for the Pipeline are stored in an SQLite database
+   referred to as the Transfer Database.  The openva_pipeline Python package
+   includes a function for creating the Transfer Database preloaded with default
+   settings.  The following will create the db in the current working directory.
+
+       >>> import openva_pipeline as ovaPL
+       >>> ovaPL.createTransferDB(database_file_name="Pipeline.db",
+       ... database_directory=".",
+       ... database_key="enilepiP")
+       >>> quit()
+  
+#. In a terminal open the Tranfer Database with SQLCipher as shown in the following
+   example session:
+
+   .. code:: bash
+
+       $ sqlcipher Pipeline.db
+
+   .. code:: sql
+
+       SQLite version 3.34.1 2021-01-20 14:10:07 (SQLCipher 4.4.3 community)
+       Enter ".help" for usage hints.
+       sqlite> pragma key = "enilepiP";
+       ok
+       sqlite> .tables
+       Advanced_InSilicoVA_Conf    InterVA_Conf              
+       Advanced_InterVA_Conf       ODK_Conf                  
+       Algorithm_Metadata_Options  Pipeline_Conf             
+       COD_Codes_DHIS              SmartVA_Conf              
+       DHIS_Conf                   SmartVA_Country           
+       EventLog                    VA_Storage                
+       InSilicoVA_Conf  
+
+#. Configure the ODK_Conf table to point to an ODK Central Server and use
+   the appropriate user ID, password, form ID, and project number:
+
+   .. code:: sql
+
+       sqlite> .schema ODK_Conf
+       CREATE TABLE ODK_Conf
+       (
+         odkID            char(50),
+         odkURL           char(50),
+         odkUser          char(50),
+         odkPassword      char(50),
+         odkFormID        char(50),
+         odkLastRun       date,
+         odkUseCentral    char(5) NOT NULL CHECK (odkUseCentral IN ("True", "False")),
+         odkProjectNumber char(6)
+       );
+       sqlite> select * from ODK_Conf;
+       |https://odk.swisstph.ch/ODKAggregateOpenVa|odk_openva|openVA2018|va_who_v1_5_1|1900-01-01_00:00:01|False|40
+       sqlite> update ODK_Conf set odkURL="https://my.odkCentral.server", odkUser="myuserid@mail.com",
+                 odkPassword="Liverpool_FC!!!", odkFormID="who_2016_v1_5_3", odkUseCentral="True", odkProjectNumber="20";
+       sqlite> select * from ODK_Conf;
+       |https://my.odkCentral.server|myuserid@mail.com|Liverpool_FC!!!|who_2016_v1_5_3|1900-01-01_00:00:01|True|20
+
+   You may also need to configure the Pipeline_Conf and DHIS_Conf tables (see
+   :ref:`openVA Configuration <targ-conf-openva-config>` and :ref:`DHIS2 Configuration <targ-conf-dhis2-conf>` for more details).
+
+*Pipeline Run Each Step of the Pipeline*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#. Start a Python session, load the openVA Pipline package, and configure the Pipeline:
+
+       >>> import openva_pipeline as ovaPL
+       >>> import os
+       >>> os.listdir()
+       ['.Pipeline.db']
+       >>> pl = ovaPL.Pipeline(dbFileName = "pipeline.db",
+       ... dbDirectory = ".",
+       ... dbKey = "enilepiP",
+       ... useDHIS = "True")
+       >>> settings = pl.config()
+       >>> settingsPipeline = settings["pipeline"]
+       >>> settingsODK = settings["odk"]
+       >>> settingsOpenVA = settings["openVA"]
+       >>> settingsDHIS = settings["dhis"]
+
+#. Check configuration settings for ODK Central, download records, and check for CSV file with data.
+
+       >>> settingsODK
+       >>> odkOut = pl.runODK(settingsODK,
+       ... settingsPipeline)
+       >>> os.listdir('ODKFiles')
+
+#. Check configuration settings for openVA, run openVA, check for output files.
+
+       >>> settingsOpenVA
+       >>> rOut = pl.runOpenVA(settingsOpenVA,
+       ... settingsPipeline,
+       ... settingsODK.odkID,
+       ... pl.pipelineRunDate)
+       >>> os.listdir('OpenVAFiles')
+
+#. Check configuration settings for DHIS2, connect & upload results.
+
+       >>> settingsDHIS
+       >>> pipelineDHIS = pl.runDHIS(settingsDHIS,
+       ... settingsPipeline)
+       >>> pipelineDHIS
+
 ..
-   **Working with APIs for each Step**
-   -----------------------------------
-
-   *Configure the Pipeline*
-   ~~~~~~~~~~~~~~~~~~~~~~~~
-
    *ODK Aggregate & Briefcase*
    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
