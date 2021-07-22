@@ -36,7 +36,10 @@ class OpenVA:
 
         self.vaArgs = vaArgs
         self.pipelineArgs = pipelineArgs
-        self.odkID = odkID
+        if odkID is None:
+            self.odkID = "meta-instanceID"
+        else:
+            self.odkID = odkID
         self.runDate = runDate
 
         dirOpenVA = os.path.join(pipelineArgs.workingDirectory, "OpenVAFiles")
@@ -80,11 +83,6 @@ class OpenVA:
         else:
             pcva_input = "2016WHOv151"
 
-        if self.odkID is None:
-            odk_data_col_id = "meta-instanceID"
-        else:
-            odk_data_col_id = self.odkID
-
         if isExportFile_new and not isExportFile_prev:
             with open(exportFile_new, "r", newline="") as fNew:
                 fNewLines = fNew.readlines()
@@ -97,7 +95,7 @@ class OpenVA:
             else:
                 final_data = transform(mapping=(pcva_input, "InterVA5"),
                                        raw_data=pycvaInput,
-                                       raw_data_id=odk_data_col_id,
+                                       raw_data_id=self.odkID,
                                        verbose=0)
                 final_data.to_csv(openVAInputFile, index=False)
 
@@ -121,7 +119,7 @@ class OpenVA:
             else:
                 final_data = transform(mapping=(pcva_input, "InterVA5"),
                                        raw_data=pycvaInput,
-                                       raw_data_id=odk_data_col_id,
+                                       raw_data_id=self.odkID,
                                        verbose=0)
                 final_data.to_csv(openVAInputFile, index=False)
         return zeroRecords
@@ -152,7 +150,7 @@ class OpenVA:
         whoInstrumentVersion = algorithmMetadata[5]
         raw_data_file = os.path.join(self.dirOpenVA, "pycrossva_input.csv")
 
-        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
+        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1", "v1_5_3"]:
             raise OpenVAError("pyCrossVA not able to process WHO " +
                               "instrument version: " + whoInstrumentVersion)
         try:
@@ -161,10 +159,11 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                f.write("odkMetaInstanceID <- as.character(raw_data$meta.instanceID) \n")
-                f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
-                # f.write("names(records) <- tolower(names(records)) \n")
-                f.write("results <- insilico(data = records, \n")
+                odk_id_for_r = self.odkID.replace("-", ".")
+                f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
+                f.write("data_from_pycrossva <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
+                f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
+                f.write("results <- insilico(data = records_sorted, \n")
                 f.write("\t data.type = '" + self.vaArgs.InSilicoVA_data_type + "', \n")
                 f.write("\t isNumeric = " + self.vaArgs.InSilicoVA_isNumeric + ", \n")
                 f.write("\t updateCondProb = " + self.vaArgs.InSilicoVA_updateCondProb + ", \n")
@@ -173,8 +172,6 @@ class OpenVA:
                 f.write("\t CondProbNum = " + self.vaArgs.InSilicoVA_CondProbNum + ", \n")
                 f.write("\t datacheck = " + self.vaArgs.InSilicoVA_datacheck + ", \n")
                 f.write("\t datacheck.missing = " + self.vaArgs.InSilicoVA_datacheck_missing + ", \n")
-                # f.write("\t warning.write = " + self.vaArgs.InSilicoVA_warning_write + ", \n")
-                # f.write("\t directory = " + self.vaArgs.InSilicoVA_directory + ", \n")
                 f.write("\t warning.write = TRUE, \n")
                 f.write("\t directory = '" + os.path.join(self.dirOpenVA, self.runDate) + "', \n")
                 f.write("\t external.sep = " + self.vaArgs.InSilicoVA_external_sep + ", \n")
@@ -201,26 +198,27 @@ class OpenVA:
                 f.write("\t indiv.CI = " + self.vaArgs.InSilicoVA_indiv_CI + ", \n")
                 f.write("\t groupcode = " + self.vaArgs.InSilicoVA_no_is_missing + ") \n")
                 if self.vaArgs.InSilicoVA_data_type == "WHO2012":
-                    f.write("sex <- ifelse(tolower(records$MALE)=='y', 'Male', 'Female') \n")
+                    f.write("sex <- ifelse(tolower(records_sorted$MALE)=='y', 'Male', 'Female') \n")
                 if self.vaArgs.InSilicoVA_data_type == "WHO2016":
-                    f.write("sex <- ifelse(tolower(records$i019a)=='y', 'Male', 'Female') \n")
+                    f.write("sex <- ifelse(tolower(records_sorted$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
-                # f.write("hasCOD <- as.character(records$id) %in% as.character(levels(cod$ID)) \n")
-                f.write("hasCOD <- as.character(records$ID) %in% as.character(cod$ID) \n")
-                f.write("dob <- as.Date(as.character(raw_data$consented.deceased_CRVS.info_on_deceased.Id10021), '%Y-%m-%d') \n")
-                f.write("dod <- as.Date(as.character(raw_data$consented.deceased_CRVS.info_on_deceased.Id10023), '%Y-%m-%d') \n")
-                f.write("age <- floor(raw_data$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
+                f.write("names(cod) <- toupper(names(cod)) \n")
+                f.write("dob <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10021), '%Y-%m-%d') \n")
+                f.write("dod <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10023), '%Y-%m-%d') \n")
+                f.write("age <- floor(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
                 f.write("## create matrices for DHIS2 blob (records2) and transfer database (records3) \n")
                 f.write("## first column must be ID \n")
                 f.write("metadataCode <- '" + self.pipelineArgs.algorithmMetadataCode + "'\n")
-                f.write("cod2 <- rep('MISSING', nrow(records)); cod2[hasCOD] <- as.character(cod[,2]) \n")
-                f.write("records2 <- cbind(records[,-1], cod2, metadataCode) \n")
-                f.write("names(records2) <- c(names(records[,-1]), 'Cause of Death', 'Metadata') \n")
-                f.write("evaBlob <- cbind(rep(as.character(records[,1]), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
+                f.write("records2 <- merge(cod, records_sorted, by = 'ID', all = TRUE, sort = TRUE) \n")
+                f.write("records2[is.na(records2[, 'CAUSE']), 'CAUSE'] <- 'MISSING' \n")
+                f.write("cod2 <- records2[, 'CAUSE'] \n")
+                f.write("names(records2)[which(names(records2) == 'CAUSE')] <- 'Cause of Death' \n")
+                f.write("records2$Metadata <- metadataCode \n")
+                f.write("evaBlob <- cbind(rep(as.character(records2[,'ID']), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dirOpenVA + "/entityAttributeValue.csv', row.names=FALSE, na='') \n\n")
-                f.write("records3 <- cbind(as.character(records[,1]), sex, dob, dod, age, cod2, metadataCode, odkMetaInstanceID, records[,-1]) \n")
-                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records[,-1])) \n")
+                f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
         except (PermissionError, OSError) as exc:
@@ -237,7 +235,7 @@ class OpenVA:
         whoInstrumentVersion = algorithmMetadata[5]
         raw_data_file = os.path.join(self.dirOpenVA, "pycrossva_input.csv")
 
-        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1"]:
+        if whoInstrumentVersion not in ["v1_4_1", "v1_5_1", "v1_5_3"]:
             raise OpenVAError("pyCrossVA not able to process WHO " +
                               "instrument version: " + whoInstrumentVersion)
         try:
@@ -246,12 +244,14 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                f.write("odkMetaInstanceID <- as.character(raw_data$meta.instanceID) \n")
-                f.write("records <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
+                odk_id_for_r = self.odkID.replace("-", ".")
+                f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
+                f.write("data_from_pycrossva <- read.csv('" + self.dirOpenVA + "/openVA_input.csv') \n")
+                f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
                 if self.vaArgs.InterVA_Version == "4":
-                    f.write("results <- InterVA(Input = records, \n")
+                    f.write("results <- InterVA(Input = records_sorted, \n")
                 else:
-                    f.write("results <- InterVA5(Input = records, \n")
+                    f.write("results <- InterVA5(Input = records_sorted, \n")
                 f.write("\t HIV = '" + self.vaArgs.InterVA_HIV + "', \n")
                 f.write("\t Malaria = '" + self.vaArgs.InterVA_Malaria + "', \n")
                 f.write("\t output = '" + self.vaArgs.InterVA_output + "', \n")
@@ -260,34 +260,31 @@ class OpenVA:
                     f.write("\t replicate.bug1 = " + self.vaArgs.InterVA_replicate_bug1 + ", \n")
                     f.write("\t replicate.bug2 = " + self.vaArgs.InterVA_replicate_bug2 + ", \n")
                 f.write("\t groupcode = " + self.vaArgs.InterVA_groupcode + ", \n")
-                # f.write("\t write = " + self.vaArgs.InterVA_write + ", \n")
-                # f.write("\t directory = '" + self.vaArgs.InterVA_directory + "', \n")
-                # f.write("\t filename = '" +
-                #         self.vaArgs.InterVA_filename + "_" + self.runDate + "') \n")
                 f.write("\t write = TRUE, \n")
                 f.write("\t directory = '" + os.path.join(self.dirOpenVA, self.runDate) + "', \n")
                 f.write("\t filename = 'warnings_" + self.runDate + "') \n")
                 if self.vaArgs.InterVA_Version == "4":
-                    f.write("sex <- ifelse(tolower(records$MALE)=='y', 'Male', 'Female') \n")
+                    f.write("sex <- ifelse(tolower(records_sorted$MALE)=='y', 'Male', 'Female') \n")
                 if self.vaArgs.InterVA_Version == "5":
-                    f.write("sex <- ifelse(tolower(records$i019a)=='y', 'Male', 'Female') \n")
+                    f.write("sex <- ifelse(tolower(records_sorted$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
-                # f.write("hasCOD <- as.character(records$ID) %in% as.character(levels(cod$ID)) \n")
-                f.write("hasCOD <- as.character(records$ID) %in% as.character(cod$ID) \n")
-                f.write("dob <- as.Date(as.character(raw_data$consented.deceased_CRVS.info_on_deceased.Id10021), '%Y-%m-%d') \n")
-                f.write("dod <- as.Date(as.character(raw_data$consented.deceased_CRVS.info_on_deceased.Id10023), '%Y-%m-%d') \n")
-                f.write("age <- floor(raw_data$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
+                f.write("names(cod) <- toupper(names(cod)) \n")
+                f.write("dob <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10021), '%Y-%m-%d') \n")
+                f.write("dod <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10023), '%Y-%m-%d') \n")
+                f.write("age <- floor(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.ageInDays/365.25) \n")
                 f.write("## create matrices for DHIS2 blob (data2) and transfer database (data3) \n")
                 f.write("## first column must be ID \n")
                 f.write("metadataCode <- '" + self.pipelineArgs.algorithmMetadataCode + "'\n")
-                f.write("cod2 <- rep('MISSING', nrow(records)); cod2[hasCOD] <- as.character(cod[,2]) \n")
-                f.write("records2 <- cbind(records[,-1], cod2, metadataCode) \n")
-                f.write("names(records2) <- c(names(records[,-1]), 'Cause of Death', 'Metadata') \n")
-                f.write("evaBlob <- cbind(rep(as.character(records[,1]), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
+                f.write("records2 <- merge(cod, records_sorted, by = 'ID', all = TRUE, sort = TRUE) \n")
+                f.write("records2[is.na(records2[, 'CAUSE']), 'CAUSE'] <- 'MISSING' \n")
+                f.write("cod2 <- records2[, 'CAUSE'] \n")
+                f.write("names(records2)[which(names(records2) == 'CAUSE')] <- 'Cause of Death' \n")
+                f.write("records2$Metadata <- metadataCode \n")
+                f.write("evaBlob <- cbind(rep(as.character(records2[,'ID']), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dirOpenVA + "/entityAttributeValue.csv', row.names=FALSE, na='') \n\n")
-                f.write("records3 <- cbind(as.character(records[,1]), sex, dob, dod, age, cod2, metadataCode, odkMetaInstanceID, records[,-1]) \n")
-                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records[,-1])) \n")
+                f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dirOpenVA + "/recordStorage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
         except (PermissionError, OSError) as exc:
