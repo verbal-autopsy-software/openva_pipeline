@@ -223,7 +223,7 @@ class Pipeline:
             completed = pipelineOpenVA.getCOD()
             # rOut["completed"] = completed
             rOut["returncode"] = completed.returncode
-        if argsPipeline["Language"] == "Spanish":
+        if argsPipeline.language == "Spanish":
             pipelineOpenVA.results_to_spanish()
         return rOut
 

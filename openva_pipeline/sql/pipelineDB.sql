@@ -4,7 +4,7 @@ CREATE TABLE Pipeline_Conf
   codSource             char ( 6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff")),
   algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "InSilicoVA", "SmartVA")),
   workingDirectory      char(100),
-  language              char ( 6) NOT NULL CHECK (language IN ("English", "Spanish")),
+  language              char ( 6) NOT NULL CHECK (language IN ("English", "Spanish"))
 );
 
 INSERT INTO Pipeline_Conf
