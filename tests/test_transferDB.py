@@ -245,6 +245,7 @@ class Check_Pipeline_Conf(unittest.TestCase):
         validWD = os.path.isdir(self.settingsPipeline.workingDirectory)
 
         self.assertTrue(validWD)
+
     def test_pipelineConf_workingDirectory_Exception(self):
         """configPipeline should fail with invalid workingDirectory."""
 
@@ -255,6 +256,13 @@ class Check_Pipeline_Conf(unittest.TestCase):
         self.assertRaises(PipelineConfigurationError,
                           self.copy_xferDB.configPipeline, self.copy_conn)
         self.copy_conn.rollback()
+
+    def test_pipelineConf_language(self):
+        """Test Pipeline_Conf table has valid language"""
+
+        validcodSource = self.settingsPipeline.language in \
+            ('English', 'Spanish')
+        self.assertTrue(validcodSource)
 
     @classmethod
     def tearDownClass(cls):

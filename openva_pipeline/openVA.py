@@ -309,9 +309,28 @@ class OpenVA:
             raise OpenVAError("Problem writing R script for InterVA.") from exc
 
     def results_to_spanish(self):
-        print(COD_SPANISH)
-         
+        """Translate assigned CODs in output CSV files from English to Spanish."""
+        
+        spanish_keys, spanish_values = zip(*COD_SPANISH.items())
+        
+        eva_results = self.dirOpenVA + "/entityAttributeValue.csv"
+        eva_spanish = self.dirOpenVA + "/entityAttributeValue_spanish.csv"
+        record_storage_results = self.dirOpenVA + "/recordStorage.csv"
+        record_storage_spanish = self.dirOpenVA + "/recordStorage_spanish.csv"
+        
+        df_eva = read_csv(eva_results)
+        df_eva["Value"].replace(list(spanish_keys),
+                                list(spanish_values),
+                                inplace=True)
+        df_eva.to_csv(eva_spanish, index=False)
 
+        df_records = read_csv(record_storage_results)
+        df_records["cod"].replace(list(spanish_keys),
+                                  list(spanish_values),
+                                  inplace=True)
+        df_records.to_csv(record_storage_spanish, index=False)
+        
+        
     def smartVA_to_csv(self):
         """Write two CSV files: (1) Entity Value Attribute blob pushed to
                                     DHIS2 (entityAttributeValue.csv)

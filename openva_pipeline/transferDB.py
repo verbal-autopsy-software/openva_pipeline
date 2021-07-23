@@ -93,6 +93,7 @@ class TransferDB:
           codSource - attribute detailing the source of the Cause of Death list
           algorithm - attribute indicating which VA algorithm to use
           workingDirectory - attribute indicating the working directory
+          language - attribute selecting the translation for assigned Causes of Death
         :rtype: tuple
         :raises: PipelineConfigurationError
         """
@@ -111,7 +112,7 @@ class TransferDB:
         try:
             sqlPipeline = (
                 "SELECT algorithmMetadataCode, codSource, algorithm, "
-                "workingDirectory FROM Pipeline_Conf;"
+                "workingDirectory, language FROM Pipeline_Conf;"
             )
             queryPipeline = c.execute(sqlPipeline).fetchall()
         except (sqlcipher.OperationalError) as e:
@@ -138,13 +139,20 @@ class TransferDB:
             raise PipelineConfigurationError(
                 "Problem in database: Pipeline_Conf.workingDirectory"
             )
+        language = queryPipeline[0][4]
+        if language not in ("English", "Spanish"):
+            raise PipelineConfigurationError(
+                "Problem in database: Pipeline_Conf.language"
+            )
 
         ntPipeline = collections.namedtuple(
             "ntPipeline",
-            ["algorithmMetadataCode", "codSource", "algorithm", "workingDirectory"],
+            ["algorithmMetadataCode", "codSource", "algorithm",
+             "workingDirectory", "language"],
         )
         settingsPipeline = ntPipeline(
-            algorithmMetadataCode, codSource, algorithm, workingDirectory
+            algorithmMetadataCode, codSource, algorithm,
+            workingDirectory, language
         )
         self.workingDirectory = workingDirectory
         return settingsPipeline
