@@ -7,12 +7,13 @@ CREATE TABLE Pipeline_Conf
   algorithmMetadataCode char(100),
   codSource             char ( 6) NOT NULL CHECK (codSource IN ("ICD10", "WHO", "Tariff")),
   algorithm             char(  8) NOT NULL CHECK (algorithm IN ("InterVA", "InSilicoVA", "SmartVA")),
-  workingDirectory      char(100)
+  workingDirectory      char(100),
+  language              char ( 6) NOT NULL CHECK (language IN ("English", "Spanish"))
 );
 
 INSERT INTO Pipeline_Conf
-  (algorithmMetadataCode, codSource, algorithm, workingDirectory)
-  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_5_1", "WHO", "InSilicoVA", "tests");
+  (algorithmMetadataCode, codSource, algorithm, workingDirectory, language)
+  VALUES("InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_5_1", "WHO", "InSilicoVA", "tests", "English");
 
 -- VA record storage (might want to add columns for CoD, Algorithm (but these are included in blob))
 CREATE TABLE VA_Storage

@@ -487,9 +487,9 @@ class Check_Exceptions_InSilicoVA(unittest.TestCase):
         shutil.copy('ODKFiles/odkExport_phmrc-2.csv',
                     'ODKFiles/odkBCExportNew.csv')
 
-       
+
     def setUp(self):
-        
+
         staticRunDate = datetime.datetime(
             2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
         xferDB = TransferDB(dbFileName='copy_Pipeline.db',
@@ -521,7 +521,7 @@ class Check_Exceptions_InSilicoVA(unittest.TestCase):
 
     def test_insilico_exception(self):
         """getCOD() raises exception with faulty R script for InSilicoVA."""
-        
+
         self.assertRaises(OpenVAError, self.rOpenVA.getCOD)
 
     def tearDown(self):
@@ -534,7 +534,7 @@ class Check_Exceptions_InSilicoVA(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-    
+
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):

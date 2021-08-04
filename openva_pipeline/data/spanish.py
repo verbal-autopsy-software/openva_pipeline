@@ -23,7 +23,7 @@ COD_SPANISH = {
     "Severe malnutrition": "Desnutrici\u00f3n severa",
     "Diabetes mellitus": "Diabetes mellitus",
     "Acute cardiac disease": "Enfermedades isquemica aguda del coraz\u00f3n",
-    "Stroke": "Accidente cerebrovacular",
+    "Stroke": "Accidente cerebrovascular",
     "Sickle cell with crisis": "Anemia drepanoc\u00edtica con crisis",
     "Other and unspecified cardiac dis": "Otras enfermedades card\u00edacas y las no especificadas",
     "Chronic obstructive pulmonary dis": "Enfermedad pulmonar obstructiva cr\u00f3nica",

@@ -22,9 +22,11 @@ tests/wrongTables_Pipeline.db
 tests/Pipeline.db
 
 openva_pipeline/.Rhistory
+
 # Compiled python modules.
 openva_pipeline/*.pyc
 openva_pipeline/__pycache__/
+openva_pipeline/data/__pycache__/
 
 # Setuptools distribution folder.
 dist/
@@ -40,3 +42,4 @@ docs/_build
 # misc
 .tox
 .coverage
+coverage.xml
