@@ -224,8 +224,7 @@ are only a few steps needed to install and demonstrate the openVA Pipeline.
 #. Check configuration settings for openVA, run openVA, check for output files.
 
        >>> settingsOpenVA
-       >>> rOut = pl.runOpenVA(settingsOpenVA, settingsPipeline, settingsODK.odkID,
-       ... pl.pipelineRunDate)
+       >>> rOut = pl.runOpenVA(settingsOpenVA, settingsPipeline, settingsODK.odkID, pl.pipelineRunDate)
        >>> os.listdir('OpenVAFiles')
 
 #. Check configuration settings for DHIS2, connect & upload results.

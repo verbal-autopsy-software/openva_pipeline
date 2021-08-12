@@ -308,12 +308,12 @@ class OpenVA:
             raise OpenVAError("Problem writing R script for InterVA.") from exc
 
     def smartVA_to_csv(self):
-        """Write two CSV files: (1) Entity Value Attribute blob pushed to
-                                    DHIS2 (entityAttributeValue.csv)
-                                (2) table for transfer database
-                                    (recordStorage.csv)
+        """
+        Write two CSV files: 
+        (1) Entity Value Attribute blob pushed to DHIS2 (entityAttributeValue.csv)     
+        (2) table for transfer database (recordStorage.csv)
 
-           Both CSV files are stored in the OpenVA folder.
+        Both CSV files are stored in the OpenVA folder.
         """
 
         inFile = os.path.join(self.dirOpenVA, "openVA_input.csv")
