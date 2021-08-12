@@ -288,7 +288,6 @@ class DHIS:
         self.dhisUser = dhisArgs[0].dhisUser
         self.dhisPassword = dhisArgs[0].dhisPassword
         self.dhisOrgUnit = dhisArgs[0].dhisOrgUnit
-        # self.dhisCODCodes = dhisArgs.dhisCODCodes
         self.dhisCODCodes = dhisArgs[1]
         self.dirDHIS = os.path.join(workingDirectory, "DHIS")
         self.dirOpenVA = os.path.join(workingDirectory, "OpenVAFiles")
@@ -379,7 +378,6 @@ class DHIS:
         dfRecordStorage = read_csv(recordStoragePath)
 
         with open(newStoragePath, "w", newline="") as csvOut:
-            # writer = csv.writer(csvOut, lineterminator="\n")
             writer = csv.writer(csvOut)
 
             header = list(dfRecordStorage)
@@ -418,21 +416,19 @@ class DHIS:
                             sex = "refused to answer"
                     else:
                         sex = row[1].lower()
-                    # dob = row[2]
-                    # if row[2] =="":
                     if isnull(row[2]):
                         dob = datetime.date(9999, 9, 9)
                     else:
                         dobTemp = datetime.datetime.strptime(row[2], "%Y-%m-%d")
                         dob = datetime.date(dobTemp.year, dobTemp.month, dobTemp.day)
-                    # if row[3] =="":
                     if isnull(row[3]):
                         eventDate = datetime.date(9999, 9, 9)
                     else:
                         dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
                         eventDate = datetime.date(dod.year, dod.month, dod.day)
-                    # age = int(row[4])
-                    if type(row[4]) == float and not isnan(row[4]):
+                    if type(row[4]) == int:
+                        age = row[4]
+                    elif type(row[4]) == float and not isnan(row[4]):
                         age = int(row[4])
                     else:
                         age = "MISSING"
