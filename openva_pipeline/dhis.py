@@ -248,7 +248,7 @@ def getCODCode(myDict, searchFor):
     :rtype: str
     """
     for i in range(len(myDict.keys())):
-        match = re.search(searchFor, list(myDict.keys())[i])
+        match = re.search(re.escape(searchFor), list(myDict.keys())[i])
         if match:
             return list(myDict.values())[i]
 

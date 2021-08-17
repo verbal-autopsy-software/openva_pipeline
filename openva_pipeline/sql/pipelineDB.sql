@@ -421,7 +421,7 @@ INSERT INTO COD_Codes_DHIS
   VALUES
     ("WHO", "1.01", "01.01 Sepsis (non-obstetric)", "jH7NEsolXEA"),
     ("WHO", "1.02", "01.02 Acute respiratory infection, including pneumonia", "x8emxOen5lP"),
-    ("WHO", "1.02", "01.02 Acute resp infect, incl pneumonia", "x8emxOen5lP"),
+    ("WHO", "1.02", "01.02 Acute resp infect incl pneumonia", "x8emxOen5lP"),
     ("WHO", "1.03", "01.03 HIV/AIDS related death", "lGHuF0M8LBS"),
     ("WHO", "1.04", "01.04 Diarrhoeal diseases", "MDFiWekbno2"),
     ("WHO", "1.05", "01.05 Malaria", "MSLASIFt6GZ"),
@@ -440,6 +440,7 @@ INSERT INTO COD_Codes_DHIS
     ("WHO", "2.03", "02.03 Respiratory neoplasms", "smKSu5z9cUu"),
     ("WHO", "2.04", "02.04 Breast neoplasms", "SPo6aQHfYCj"),
     ("WHO", "02.05 02.06", "02.05 02.06 Reproductive neoplasms M, F", "yB0qmB07G1A"),
+    ("WHO", "02.05 02.06", "02.05 02.06 Reproductive neoplasms MF", "yB0qmB07G1A"),
     ("WHO", "2.99", "02.99 Other and unspecified neoplasms", "UYG5jp5ZgfL"),
     ("WHO", "3.01", "03.01 Severe anaemia", "QtULEnwuqko"),
     ("WHO", "3.02", "03.02 Severe malnutrition", "pHvz4D5OqIu"),
