@@ -18,7 +18,7 @@ Pipeline Configuration
 
       .. code:: python
 
-         >>> import openva_pipline as ovaPL
+         >>> import openva_pipeline as ovaPL
          >>> ovaPL.createTransferDB('Pipeline.db', '.', 'enilepiP')
          >>> quit()
 
@@ -37,7 +37,7 @@ Pipeline Configuration
 
           $ sqlcipher
           sqlite> .open Pipeline.db
-          sqlite> PRAGMA key=encryption_key;
+          sqlite> PRAGMA key="encryption_key";
           sqlite> .read "pipelineDB.sql"
           sqlite> .tables
           sqlite> -- take a look --
@@ -57,10 +57,13 @@ Pipeline Configuration
 
           sqlite> PRAGMA key = "encryption_key";
           sqlite> .tables
+          sqlite> -- update tables as follows --
+          sqlite> INSERT INTO ODK_Conf (odkURL, odkUser) VALUES ("http://your.odk.server.address", "your_odk_user_name");
+          sqlite> -- look at changes --
+          sqlite> SELECT odkURL, odkUser from ODK_Conf;
           sqlite> .quit
 
-
-#. **Configure Pipeline**: The pipeline connects to ODK Aggregate and DHIS2 servers and thus requires usernames, passwords, and URLs.
+#. **Configure Pipeline**: The pipeline connects to ODK Central (or Aggregate) and DHIS2 servers and thus requires usernames, passwords, and URLs.
    Arguments for openVA should also be supplied. We will use
    `DB Browser for SQLite <https://github.com/sqlitebrowser/sqlitebrowser/blob/master/BUILDING.md>`_ to configure these settings. Start
    by launching DB Browser from the terminal, which should open the window below ``$ sqlitebrowser``
@@ -78,7 +81,7 @@ Pipeline Configuration
 
       .. image:: Screenshots/dbBrowser_encryption.png
     
-   #. **ODK Configuration**: To configure the pipeline connection to ODK Aggregate, click on the *Browse Data* tab and select the
+   - **ODK Configuration**: To configure the pipeline connection to ODK Aggregate, click on the *Browse Data* tab and select the
       ODK\_Conf table as shown below.
 
          .. image:: Screenshots/dbBrowser_browseData.png
@@ -94,9 +97,23 @@ Pipeline Configuration
       Similarly, edit the *odkUser*, *odkPass*, and *odkFormID* columns so they contain a valid user name, password, and Form ID
       (see Form Management on ODK Aggregate server) of the VA questionnaire of your ODK Aggregate server.
 
-.. _targ-conf-openva-config:
+      * *Configure ODK\_Conf table from a Terminal*:  
+          (note that the ``$`` is the terminal prompt and ``sqlite>`` is the SQLite prompt, i.e., not part of the commands).
 
-   #. **openVA Configuration**: The pipeline configuration for openVA is stored in the *Pipeline\_Conf* table. Follow the steps described
+       .. code:: bash
+
+          $ sqlcipher
+          sqlite> .open Pipeline.db
+          sqlite> PRAGMA key="encryption_key";
+          sqlite> .read "pipelineDB.sql"
+          sqlite> .tables
+          sqlite> -- take a look --
+          sqlite> .schema ODK_Conf
+          sqlite> SELECT odkURL from ODK_Conf;
+          sqlite> .quit
+       .. _targ-conf-openva-config: 
+
+   - **openVA Configuration**: The pipeline configuration for openVA is stored in the *Pipeline\_Conf* table. Follow the steps described
       above (in the ODK Aggregate Configuration section) and edit the following columns:
 
       * *workingDirectory* -- the directory where the pipeline files (i.e., *pipeline.py*, *Pipeline.db* and the ODK Briefcase
@@ -117,9 +134,9 @@ Pipeline Configuration
       * *codSource* -- both the InterVA and InSilicoVA algorithms return CODs from a list produced by the WHO, and thus this column should
         be left at the default value of ``WHO``.
 
-.. _targ-conf-dhis2-conf:
+        .. _targ-conf-dhis2-conf:
 
-   #. **DHIS2 Configuration**: The pipeline configuration for DHIS2 is located in the *DHIS\_Conf* table, and the following columns should
+   - **DHIS2 Configuration**: The pipeline configuration for DHIS2 is located in the *DHIS\_Conf* table, and the following columns should
       be edited with appropriate values for your DHIS2 server.
 
       * *dhisURL* --  the URL for your DHIS2 server 

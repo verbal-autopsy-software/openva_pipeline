@@ -78,12 +78,21 @@ The following instructions guide the installation of the openVA Pipeline on Ubun
      $ exit
 
 
-#. Install DB Browser for SQLite with the commands
+#. Install DB Browser for SQLite with the commands (the following commands are taken from the
+   `sqlitebrowser GitHub repository <https://github.com/sqlitebrowser/sqlitebrowser/blob/master/BUILDING.md#ubuntu--debian-linux>`_):
 
    .. code:: bash
 
-      $ sudo apt install sqlitebrowser -y
-
+      $ sudo apt install build-essential git-core cmake libsqlite3-dev qt5-default qttools5-dev-tools \
+          libsqlcipher-dev qtbase5-dev libqt5scintilla2-dev libqcustomplot-dev qttools5-dev
+      $ git clone https://github.com/sqlitebrowser/sqlitebrowser
+      $ cd sqlitebrowser
+      $ mkdir build
+      $ cd build
+      $ cmake -Dsqlcipher=1 -Wno-dev ..
+      $ make
+      $ sudo make install
+      
 
 Alternative Installation Options
 --------------------------------
