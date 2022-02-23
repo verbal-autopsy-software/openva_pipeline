@@ -47,7 +47,7 @@ class CompleteFreshRun(unittest.TestCase):
         odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
-                                       ['odkID',
+                                       ['odk_id',
                                         'odkURL',
                                         'odkUser',
                                         'odkPassword',
@@ -86,9 +86,9 @@ class CompleteFreshRun(unittest.TestCase):
         self.assertTrue(os.path.isfile('ODKFiles/odkBCExportNew.csv'))
 
     def test_mergeToPrevExport(self):
-        """Check mergeToPrevExport() moves odkBCExportNew.csv to odkBCExportPrev.csv"""
+        """Check merge_to_prev_export() moves odkBCExportNew.csv to odkBCExportPrev.csv"""
 
-        self.pipelineODK.mergeToPrevExport()
+        self.pipelineODK.merge_to_prev_export()
         self.assertTrue(os.path.isfile('ODKFiles/odkBCExportPrev.csv'))
 
     @classmethod
@@ -135,7 +135,7 @@ class ProperMergeWithExistingExports(unittest.TestCase):
         odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
-                                       ['odkID',
+                                       ['odk_id',
                                         'odkURL',
                                         'odkUser',
                                         'odkPassword',
@@ -162,10 +162,10 @@ class ProperMergeWithExistingExports(unittest.TestCase):
         shutil.copy('ODKFiles/another_bc_export.csv', 'ODKFiles/odkBCExportNew.csv')
 
         pipelineODK = odk.ODK(settingsODK, '.')
-        pipelineODK.mergeToPrevExport()
+        pipelineODK.merge_to_prev_export()
 
     def test_unique_records_are_preserved(self):
-        """Check mergeToPrevExport() includes all VA records from ODK BC export files."""
+        """Check merge_to_prev_export() includes all VA records from ODK BC export files."""
 
         hasAll = True
         with open('ODKFiles/odkBCExportPrev.csv') as fCombined:
@@ -183,7 +183,7 @@ class ProperMergeWithExistingExports(unittest.TestCase):
         self.assertTrue(hasAll)
 
     def test_mergeToPrevExport(self):
-        """Check mergeToPrevExport() moves odkBCExportNew.csv to odkBCExportPrev.csv"""
+        """Check merge_to_prev_export() moves odkBCExportNew.csv to odkBCExportPrev.csv"""
 
         self.assertFalse(os.path.isfile('ODKFiles/odkBCExportNew.csv'))
 
@@ -231,7 +231,7 @@ class InvalidConnection(unittest.TestCase):
         odkProjectNumber = '1'
 
         ntODK = collections.namedtuple('ntODK',
-                                       ['odkID',
+                                       ['odk_id',
                                         'odkURL',
                                         'odkUser',
                                         'odkPassword',
@@ -257,7 +257,7 @@ class InvalidConnection(unittest.TestCase):
         cls.pipelineODK = odk.ODK(badSettingsODK, '.')
 
     def test_ODK_bad_odkID(self):
-        """Check for error if odkID parameter is invalid."""
+        """Check for error if odk_id parameter is invalid."""
 
         self.assertRaises(odk.ODKError, self.pipelineODK.briefcase)
 

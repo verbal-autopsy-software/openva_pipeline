@@ -16,7 +16,7 @@ from openva_pipeline.dhis import DHIS
 from openva_pipeline.dhis import API
 from openva_pipeline.dhis import VerbalAutopsyEvent
 from openva_pipeline.odk import ODK
-from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.transfer_db import TransferDB
 from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.runPipeline import downloadBriefcase
 from openva_pipeline.runPipeline import downloadSmartVA
@@ -68,9 +68,9 @@ class Check_Pipeline_config(unittest.TestCase):
 
     def test_config_odk_odkID(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkID:"""
+        settingsODK.odk_id:"""
 
-        self.assertEqual(self.settingsODK.odkID, None)
+        self.assertEqual(self.settingsODK.odk_id, None)
 
     def test_config_odk_odkURL(self):
         """Test config method configuration of pipeline:
@@ -180,7 +180,7 @@ class DownloadAppsTests(unittest.TestCase):
 
 
 class Check_runODK_clean(unittest.TestCase):
-    """Check runODK method on initial run:"""
+    """Check run_odk method on initial run:"""
 
 
     @classmethod
@@ -202,7 +202,7 @@ class Check_runODK_clean(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        cls.odkBC = pl.runODK(settingsODK, settingsPipeline)
+        cls.odkBC = pl.run_odk(settingsODK, settingsPipeline)
 
     def test_clean_runODK_returncode(self):
         """Check returncode with valid parameters:"""
@@ -226,7 +226,7 @@ class Check_runODK_clean(unittest.TestCase):
 
 
 class Check_runODK_with_exports(unittest.TestCase):
-    """Check runODK method with existing ODK exports:"""
+    """Check run_odk method with existing ODK exports:"""
 
 
     @classmethod
@@ -261,7 +261,7 @@ class Check_runODK_with_exports(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        self.odkBC = self.pl.runODK(settingsODK, settingsPipeline)
+        self.odkBC = self.pl.run_odk(settingsODK, settingsPipeline)
         self.new_mtimePrev = os.path.getmtime('ODKFiles/odkBCExportPrev.csv')
         self.new_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')
 
@@ -289,7 +289,7 @@ class Check_runODK_with_exports(unittest.TestCase):
         self.assertTrue(self.new_mtimeNew > self.old_mtimeNew)
 
     def test_runODK_mergeToPrevExport_with_previous_exports(self):
-        """Check mergeToPrevExport() keeps all records from BC export files:"""
+        """Check merge_to_prev_export() keeps all records from BC export files:"""
 
         hasAll = True
         with open('ODKFiles/odkBCExportPrev.csv') as fCombined:
@@ -313,7 +313,7 @@ class Check_runODK_with_exports(unittest.TestCase):
 
 
 class Check_storeResultsDB(unittest.TestCase):
-    """Check storeResultsDB method marks duplicate records:"""
+    """Check store_results_db method marks duplicate records:"""
 
 
     @classmethod
@@ -339,34 +339,34 @@ class Check_storeResultsDB(unittest.TestCase):
         self.settingsOpenVA = self.settings['openVA']
         self.settingsDHIS = self.settings['dhis']
 
-        self.xferDB = TransferDB(dbFileName = 'Pipeline.db', dbDirectory = '.',
-                                 dbKey = 'enilepiP', plRunDate = True)
-        self.conn = self.xferDB.connectDB()
+        self.xferDB = TransferDB(db_file_name='Pipeline.db', db_directory='.',
+                                 db_key='enilepiP', pl_run_date= True)
+        self.conn = self.xferDB.connect_db()
         self.c = self.conn.cursor()
         self.c.execute('DELETE FROM EventLog;')
         self.conn.commit()
         self.c.execute('DELETE FROM VA_Storage;')
         self.conn.commit()
-        self.odkBC = self.pl.runODK(self.settingsODK, self.settingsPipeline)
+        self.odkBC = self.pl.run_odk(self.settingsODK, self.settingsPipeline)
 
     def test_runODK_checkDuplicates(self):
-        """Check checkDuplicates() method:"""
+        """Check check_duplicates() method:"""
 
         vaRecords = read_csv('ODKFiles/odkBCExportNew.csv')
         nVA = vaRecords.shape[0]
-        rOut = self.pl.runOpenVA(self.settingsOpenVA,
-                                 self.settingsPipeline,
-                                 self.settingsODK.odkID,
-                                 self.pl.pipelineRunDate)
-        pipelineDHIS = self.pl.runDHIS(self.settingsDHIS,
-                                       self.settingsPipeline)
-        self.pl.storeResultsDB()
+        rOut = self.pl.run_openva(self.settingsOpenVA,
+                                  self.settingsPipeline,
+                                  self.settingsODK.odk_id,
+                                  self.pl.pipeline_run_date)
+        pipelineDHIS = self.pl.run_dhis(self.settingsDHIS,
+                                        self.settingsPipeline)
+        self.pl.store_results_db()
         os.remove('ODKFiles/odkBCExportNew.csv')
         os.remove('OpenVAFiles/pycrossva_input.csv')
         os.remove('OpenVAFiles/openVA_input.csv')
-        odkBC2 = self.pl.runODK(self.settingsODK,
-                                self.settingsPipeline)
-        self.c.execute('SELECT eventDesc FROM EventLog;')
+        odkBC2 = self.pl.run_odk(self.settingsODK,
+                                 self.settingsPipeline)
+        self.c.execute('SELECT event_desc FROM EventLog;')
         query = self.c.fetchall()
         nDuplicates = [i[0] for i in query if 'duplicate' in i[0]]
         self.assertEqual(len(nDuplicates), nVA)
@@ -388,7 +388,7 @@ class Check_storeResultsDB(unittest.TestCase):
 
 
 class Check_runOpenVA(unittest.TestCase):
-    """Check runOpenVA method sets up files correctly"""
+    """Check run_openva method sets up files correctly"""
 
 
     @classmethod
@@ -413,18 +413,18 @@ class Check_runOpenVA(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        cls.rOut = pl.runOpenVA(settingsOpenVA, settingsPipeline,
-                                settingsODK.odkID, pl.pipelineRunDate)
+        cls.rOut = pl.run_openva(settingsOpenVA, settingsPipeline,
+                                 settingsODK.odk_id, pl.pipeline_run_date)
 
     def test_creates_openVA_input_csv(self):
-        """Check that runOpenVA() brings in new file:"""
+        """Check that run_openva() brings in new file:"""
 
         self.assertTrue(
             os.path.isfile('OpenVAFiles/openVA_input.csv')
         )
 
     def test_merges_records(self):
-        """Check that runOpenVA() includes all records:"""
+        """Check that run_openva() includes all records:"""
 
         hasAll = True
         # with open('OpenVAFiles/openVA_input.csv') as fCombined:
@@ -443,7 +443,7 @@ class Check_runOpenVA(unittest.TestCase):
         self.assertTrue(hasAll)
 
     def test_zeroRecords_false(self):
-        """Check that runOpenVA() returns zeroRecords = FALSE"""
+        """Check that run_openva() returns zeroRecords = FALSE"""
 
         self.assertFalse(self.rOut['zeroRecords'])
 
@@ -460,7 +460,7 @@ class Check_runOpenVA(unittest.TestCase):
 
 
 class Check_runOpenVA_zeroRecords(unittest.TestCase):
-    """Check runOpenVA method sets up files correctly"""
+    """Check run_openva method sets up files correctly"""
 
 
     @classmethod
@@ -483,18 +483,18 @@ class Check_runOpenVA_zeroRecords(unittest.TestCase):
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        cls.rOut = plZero.runOpenVA(settingsOpenVA,
+        cls.rOut = plZero.run_openva(settingsOpenVA,
                                      settingsPipeline,
-                                     settingsODK.odkID,
-                                     plZero.pipelineRunDate)
+                                     settingsODK.odk_id,
+                                     plZero.pipeline_run_date)
 
     def test_zeroRecords_true(self):
-        """Check that runOpenVA() returns zeroRecords == True:"""
+        """Check that run_openva() returns zeroRecords == True:"""
 
         self.assertTrue(self.rOut['zeroRecords'])
 
     def test_zeroRecords_no_input_csv(self):
-        """Check that runOpenVA() doesn't create new file if zeroRecords:"""
+        """Check that run_openva() doesn't create new file if zeroRecords:"""
 
         self.assertFalse(
             os.path.isfile('OpenVAFiles/openVA_input.csv')
@@ -512,7 +512,7 @@ class Check_runOpenVA_zeroRecords(unittest.TestCase):
 
 
 class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
-    """Check runOpenVA method runs InSilicoVA"""
+    """Check run_openva method runs InSilicoVA"""
 
 
     @classmethod
@@ -520,9 +520,9 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
 
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db', dbDirectory = '.',
-                            dbKey = 'enilepiP', plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='copy_Pipeline.db', db_directory='.',
+                            db_key='enilepiP', pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
 
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
@@ -553,34 +553,34 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
 
-        cls.rOut = cls.pl.runOpenVA(settingsOpenVA, settingsPipeline,
-                                    settingsODK.odkID, cls.pl.pipelineRunDate)
+        cls.rOut = cls.pl.run_openva(settingsOpenVA, settingsPipeline,
+                                     settingsODK.odk_id, cls.pl.pipeline_run_date)
 
     def test_runOpenVA_InSilico_R(self):
-        """Check that runOpenVA() creates an R script for InSilicoVA:"""
+        """Check that run_openva() creates an R script for InSilicoVA:"""
 
         rScriptFile = os.path.join('OpenVAFiles',
-                                   self.pl.pipelineRunDate,
-                                   'Rscript_' + self.pl.pipelineRunDate + '.R')
+                                   self.pl.pipeline_run_date,
+                                   'Rscript_' + self.pl.pipeline_run_date + '.R')
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InSilico_Rout(self):
-        """Check that runOpenVA() runs R script for InSilicoVA:"""
+        """Check that run_openva() runs R script for InSilicoVA:"""
 
         rScriptFile = os.path.join('OpenVAFiles',
-                                   self.pl.pipelineRunDate,
-                                   'Rscript_' + self.pl.pipelineRunDate + '.Rout')
+                                   self.pl.pipeline_run_date,
+                                   'Rscript_' + self.pl.pipeline_run_date + '.Rout')
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InSilico_completed(self):
-        """Check that runOpenVA() creates an R script for InSilicoVA:"""
+        """Check that run_openva() creates an R script for InSilicoVA:"""
 
         self.assertEqual(self.rOut['returncode'], 0)
 
     @classmethod
     def tearDownClass(cls):
 
-        # shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
+        # shutil.rmtree('OpenVAFiles/' + cls.pl.pipeline_run_date,
         #               ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -593,7 +593,7 @@ class Check_Pipeline_runOpenVA_InSilicoVA(unittest.TestCase):
 
 
 class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
-    """Check runOpenVA method runs InterVA"""
+    """Check run_openva method runs InterVA"""
 
 
     @classmethod
@@ -604,9 +604,9 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
         createTransferDB('InterVA_Pipeline.db', '.', 'enilepiP')
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'InterVA_Pipeline.db', dbDirectory = '.',
-                            dbKey = 'enilepiP', plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='InterVA_Pipeline.db', db_directory='.',
+                            db_key='enilepiP', pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
         c = conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?'
         par = ('InterVA', 'InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1')
@@ -634,34 +634,34 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
         if os.path.isfile('OpenVAFiles/entityAttributeValue.csv'):
             os.remove('OpenVAFiles/entityAttributeValue.csv')
 
-        cls.rOut = cls.pl.runOpenVA(settingsOpenVA, settingsPipeline,
-                                    settingsODK.odkID, cls.pl.pipelineRunDate)
+        cls.rOut = cls.pl.run_openva(settingsOpenVA, settingsPipeline,
+                                     settingsODK.odk_id, cls.pl.pipeline_run_date)
 
     def test_runOpenVA_InterVA_R(self):
-        """Check that runOpenVA() creates an R script for InterVA:"""
+        """Check that run_openva() creates an R script for InterVA:"""
 
         rScriptFile = os.path.join('OpenVAFiles',
-                                   self.pl.pipelineRunDate,
-                                   'Rscript_' + self.pl.pipelineRunDate + '.R')
+                                   self.pl.pipeline_run_date,
+                                   'Rscript_' + self.pl.pipeline_run_date + '.R')
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InterVA_Rout(self):
-        """Check that runOpenVA() runs R script for InterVA:"""
+        """Check that run_openva() runs R script for InterVA:"""
 
         rScriptFile = os.path.join('OpenVAFiles',
-                                   self.pl.pipelineRunDate,
-                                   'Rscript_' + self.pl.pipelineRunDate + '.Rout')
+                                   self.pl.pipeline_run_date,
+                                   'Rscript_' + self.pl.pipeline_run_date + '.Rout')
         self.assertTrue(os.path.isfile(rScriptFile))
 
     def test_runOpenVA_InterVA_completed(self):
-        """Check that runOpenVA() creates an R script for InterVA:"""
+        """Check that run_openva() creates an R script for InterVA:"""
 
         self.assertEqual(self.rOut['returncode'], 0)
 
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('OpenVAFiles/' + cls.pl.pipelineRunDate,
+        shutil.rmtree('OpenVAFiles/' + cls.pl.pipeline_run_date,
                       ignore_errors = True)
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
             os.remove('ODKFiles/odkBCExportNew.csv')
@@ -676,7 +676,7 @@ class Check_Pipeline_runOpenVA_InterVA(unittest.TestCase):
 
 
 class Check_runOpenVA_SmartVA(unittest.TestCase):
-    """Check runOpenVA method runs SmartVA"""
+    """Check run_openva method runs SmartVA"""
 
 
     @classmethod
@@ -702,31 +702,31 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
 
-        cls.rOut = cls.pl.runOpenVA(settingsOpenVA, settingsPipeline,
-                                    settingsODK.odkID, cls.pl.pipelineRunDate)
+        cls.rOut = cls.pl.run_openva(settingsOpenVA, settingsPipeline,
+                                     settingsODK.odk_id, cls.pl.pipeline_run_date)
         cls.svaOut = os.path.join(
             'OpenVAFiles',
-            cls.pl.pipelineRunDate,
+            cls.pl.pipeline_run_date,
             '1-individual-cause-of-death/individual-cause-of-death.csv'
         )
 
     def test_runOpenVA_SmartVA_results(self):
-        """Check that runOpenVA() executes SmartVA cli"""
+        """Check that run_openva() executes SmartVA cli"""
 
         self.assertTrue(os.path.isfile(self.svaOut))
 
     def test_runOpenVA_SmartVA_eva(self):
-        """Check that runOpenVA() creates EAV output for SmartVA """
+        """Check that run_openva() creates EAV output for SmartVA """
 
         self.assertTrue(os.path.isfile('OpenVAFiles/entityAttributeValue.csv'))
 
     def test_runOpenVA_SmartVA_recordStorage(self):
-        """Check that runOpenVA() creates recordStorage.csv for SmartVA"""
+        """Check that run_openva() creates recordStorage.csv for SmartVA"""
 
         self.assertTrue(os.path.isfile('OpenVAFiles/recordStorage.csv'))
 
     def test_runOpenVA_SmartVA_completed(self):
-        """Check runOpenVA() returncoe for SmartVA:"""
+        """Check run_openva() returncoe for SmartVA:"""
 
         self.assertEqual(self.rOut['returncode'], 0)
 
@@ -734,7 +734,7 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
     def tearDownClass(cls):
 
         shutil.rmtree(
-            os.path.join('OpenVAFiles', cls.pl.pipelineRunDate),
+            os.path.join('OpenVAFiles', cls.pl.pipeline_run_date),
             ignore_errors = True
         )
         if os.path.isfile('ODKFiles/odkBCExportNew.csv'):
@@ -748,7 +748,7 @@ class Check_runOpenVA_SmartVA(unittest.TestCase):
  
 
 class Check_Pipeline_runDHIS(unittest.TestCase):
-    """Check runDHIS method"""
+    """Check run_dhis method"""
 
 
     @classmethod
@@ -769,18 +769,18 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
 
         pl = Pipeline('Pipeline.db', '.', 'enilepiP', True)
-        plRunDate = pl.pipelineRunDate
+        plRunDate = pl.pipeline_run_date
         settings = pl.config()
         settingsPipeline = settings['pipeline']
         settingsODK = settings['odk']
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
-        cls.pipelineDHIS = pl.runDHIS(settingsDHIS, settingsPipeline)
+        cls.pipelineDHIS = pl.run_dhis(settingsDHIS, settingsPipeline)
 
     def test_runDHIS_vaProgramUID(self):
         """Verify VA program is installed:"""
 
-        self.assertEqual(self.pipelineDHIS['vaProgramUID'], 'sv91bCroFFx')
+        self.assertEqual(self.pipelineDHIS['va_program_uid'], 'sv91bCroFFx')
 
     def test_runDHIS_postVA(self):
         """Post VA records to DHIS2:"""
@@ -794,7 +794,7 @@ class Check_Pipeline_runDHIS(unittest.TestCase):
 
         dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
         nPushed = sum(dfNewStorage['pipelineOutcome'] == 'Pushed to DHIS2')
-        self.assertEqual(nPushed, self.pipelineDHIS['nPostedRecords'])
+        self.assertEqual(nPushed, self.pipelineDHIS['n_posted_records'])
 
     @classmethod
     def tearDownClass(cls):
@@ -826,11 +826,11 @@ class Check_Pipeline_depositResults(unittest.TestCase):
                     'OpenVAFiles/newStorage.csv')
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='Pipeline.db',
+                            db_directory='.',
+                            db_key='enilepiP',
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
         c = conn.cursor()
         c.execute('DELETE FROM VA_Storage;')
         conn.commit()
@@ -842,13 +842,13 @@ class Check_Pipeline_depositResults(unittest.TestCase):
         settingsOpenVA = settings['openVA']
         settingsDHIS = settings['dhis']
 
-        pl.storeResultsDB()
+        pl.store_results_db()
 
-        xferDB = TransferDB(dbFileName = 'Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='Pipeline.db',
+                            db_directory='.',
+                            db_key='enilepiP',
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
         c = conn.cursor()
         sql = 'SELECT id FROM VA_Storage'
         c.execute(sql)
@@ -906,13 +906,13 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
         nowDate = datetime.datetime.now()
         pipelineRunDate = nowDate.strftime('%Y-%m-%d_%H:%M:%S')
         cls.pl = Pipeline('copy_Pipeline.db', '.', 'enilepiP', True)
-        cls.pl.closePipeline()
+        cls.pl.close_pipeline()
 
-        xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
-        cls.conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                            db_directory='.',
+                            db_key='enilepiP',
+                            pl_run_date= pipelineRunDate)
+        cls.conn = xferDB.connect_db()
         cls.c = cls.conn.cursor()
 
     def test_cleanPipeline_rmFiles(self):
@@ -946,7 +946,7 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
         self.c.execute('SELECT odkLastRun FROM ODK_Conf;')
         sqlQuery = self.c.fetchone()
         results = [i for i in sqlQuery]
-        self.assertEqual(results[0], self.pl.pipelineRunDate)
+        self.assertEqual(results[0], self.pl.pipeline_run_date)
 
     @classmethod
     def tearDownClass(cls):

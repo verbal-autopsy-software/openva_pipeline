@@ -10,7 +10,7 @@ from sys import path
 source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
 import context
-from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.transfer_db import TransferDB
 from openva_pipeline.runPipeline import createTransferDB
 from openva_pipeline.exceptions import DatabaseConnectionError
 from openva_pipeline.exceptions import PipelineConfigurationError
@@ -31,9 +31,9 @@ class Check_DB_Has_Tables(unittest.TestCase):
         if not os.path.isfile('Pipeline.db'):
             createTransferDB('Pipeline.db', '.', 'enilepiP')
         pipelineRunDate = datetime.datetime.now()
-        xferDB = TransferDB(dbFileName = 'Pipeline.db', dbDirectory = '.',
-                            dbKey = 'enilepiP', plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
+        xferDB = TransferDB(db_file_name='Pipeline.db', db_directory='.',
+                            db_key='enilepiP', pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
         c = conn.cursor()
         sqlTestConnection = "SELECT name FROM SQLITE_MASTER where type = 'table';"
         c.execute(sqlTestConnection)
@@ -111,17 +111,17 @@ class Check_DB_Connection_Exceptions(unittest.TestCase):
 
         badPath = '/invalid/path/to/pipelineDB'
         pipelineRunDate = datetime.datetime.now()
-        xferDB = TransferDB(dbFileName = 'Pipeline.db', dbDirectory = badPath,
-                            dbKey = 'enilepiP', plRunDate = pipelineRunDate)
-        self.assertRaises(DatabaseConnectionError, xferDB.connectDB)
+        xferDB = TransferDB(db_file_name='Pipeline.db', db_directory= badPath,
+                            db_key='enilepiP', pl_run_date= pipelineRunDate)
+        self.assertRaises(DatabaseConnectionError, xferDB.connect_db)
 
     def test_wrongKey_exception(self):
         """Pipeline should raise an error when the wrong key is used."""
 
         pipelineRunDate = datetime.datetime.now()
-        xferDB = TransferDB(dbFileName = 'Pipeline.db', dbDirectory = '.',
-                            dbKey = 'wrong_dbKey', plRunDate = pipelineRunDate)
-        self.assertRaises(DatabaseConnectionError, xferDB.connectDB)
+        xferDB = TransferDB(db_file_name='Pipeline.db', db_directory='.',
+                            db_key='wrong_dbKey', pl_run_date= pipelineRunDate)
+        self.assertRaises(DatabaseConnectionError, xferDB.connect_db)
 
 
 class Check_Pipeline_Conf(unittest.TestCase):
@@ -138,52 +138,54 @@ class Check_Pipeline_Conf(unittest.TestCase):
         dbDirectory = '.'
         pipelineRunDate = datetime.datetime.now()
 
-        cls.xferDB = TransferDB(dbFileName = dbFileName,
-                                dbDirectory = dbDirectory,
-                                dbKey = dbKey,
-                                plRunDate = pipelineRunDate)
-        cls.conn = cls.xferDB.connectDB()
+        cls.xferDB = TransferDB(db_file_name= dbFileName,
+                                db_directory= dbDirectory,
+                                db_key= dbKey,
+                                pl_run_date= pipelineRunDate)
+        cls.conn = cls.xferDB.connect_db()
         c = cls.conn.cursor()
         c.execute('SELECT dhisCode from Algorithm_Metadata_Options;')
         cls.metadataQuery = c.fetchall()
-        cls.settingsPipeline = cls.xferDB.configPipeline(cls.conn)
+        cls.settingsPipeline = cls.xferDB.config_pipeline(cls.conn)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
         # parameters for connecting to DB with wrong Tables
         wrongTables_dbFileName = 'wrongTables_Pipeline.db'
-        cls.wrongTables_xferDB = TransferDB(dbFileName = wrongTables_dbFileName,
-                                            dbDirectory = dbDirectory,
-                                            dbKey = dbKey,
-                                            plRunDate = pipelineRunDate)
-        cls.wrongTables_conn = cls.wrongTables_xferDB.connectDB()
+        cls.wrongTables_xferDB = TransferDB(
+            db_file_name= wrongTables_dbFileName,
+            db_directory= dbDirectory,
+            db_key= dbKey,
+            pl_run_date= pipelineRunDate)
+        cls.wrongTables_conn = cls.wrongTables_xferDB.connect_db()
         cls.wrongTables_c = cls.wrongTables_conn.cursor()
 
         # parameters for connecting to DB with wrong fields
         wrongFields_dbFileName = 'wrongFields_Pipeline.db'
-        cls.wrongFields_xferDB = TransferDB(dbFileName = wrongFields_dbFileName,
-                                            dbDirectory = dbDirectory,
-                                            dbKey = dbKey,
-                                            plRunDate = pipelineRunDate)
-        cls.wrongFields_conn = cls.wrongFields_xferDB.connectDB()
+        cls.wrongFields_xferDB = TransferDB(
+            db_file_name= wrongFields_dbFileName,
+            db_directory= dbDirectory,
+            db_key= dbKey,
+            pl_run_date= pipelineRunDate)
+        cls.wrongFields_conn = cls.wrongFields_xferDB.connect_db()
 
     def test_pipelineConf_Exception_noTable(self):
         """Test that Pipeline raises error if no Pipeline_Conf table."""
         self.assertRaises(PipelineConfigurationError,
-                          self.wrongTables_xferDB.configPipeline,
+                          self.wrongTables_xferDB.config_pipeline,
                           self.wrongTables_conn
-        )
+                          )
 
     def test_pipelineConf_Exception_noField(self):
         """Test that Pipeline raises error if no Pipeline_Conf table."""
         self.assertRaises(PipelineConfigurationError,
-                          self.wrongFields_xferDB.configPipeline,
+                          self.wrongFields_xferDB.config_pipeline,
                           self.wrongFields_conn
-        )
+                          )
 
     # Thinking about removing this check -- 2021-06-09 (jt)
     # def test_pipelineConf_algorithmMetadataCode(self):
@@ -194,14 +196,14 @@ class Check_Pipeline_Conf(unittest.TestCase):
     #     self.assertTrue(validMetadataCode)
 
     # def test_pipelineConf_algorithmMetadataCode_Exception_value(self):
-    #     """configPipeline should fail with invalid algorithmMetadataCode."""
+    #     """config_pipeline should fail with invalid algorithmMetadataCode."""
 
     #     c = self.copy_conn.cursor()
     #     sql = 'UPDATE Pipeline_Conf SET algorithmMetadataCode = ?'
     #     par = ('wrong',)
     #     c.execute(sql, par)
     #     self.assertRaises(PipelineConfigurationError,
-    #                       self.copy_xferDB.configPipeline, self.copy_conn)
+    #                       self.copy_xferDB.config_pipeline, self.copy_conn)
     #     self.copy_conn.rollback()
 
     def test_pipelineConf_codSource(self):
@@ -211,14 +213,14 @@ class Check_Pipeline_Conf(unittest.TestCase):
             ('ICD10', 'WHO', 'Tariff')
         self.assertTrue(validcodSource)
     def test_pipelineConf_codSource_Exception(self):
-        """configPipeline should fail with invalid codSource."""
+        """config_pipeline should fail with invalid codSource."""
 
         c = self.copy_conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET codSource = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(PipelineConfigurationError,
-                          self.copy_xferDB.configPipeline, self.copy_conn)
+                          self.copy_xferDB.config_pipeline, self.copy_conn)
         self.copy_conn.rollback()
 
     def test_pipelineConf_algorithm(self):
@@ -229,14 +231,14 @@ class Check_Pipeline_Conf(unittest.TestCase):
 
         self.assertTrue(validAlgorithm)
     def test_pipelineConf_algorithm_Exception(self):
-        """configPipeline should fail with invalid algorithm."""
+        """config_pipeline should fail with invalid algorithm."""
 
         c = self.copy_conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET algorithm = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(PipelineConfigurationError,
-                          self.copy_xferDB.configPipeline, self.copy_conn)
+                          self.copy_xferDB.config_pipeline, self.copy_conn)
         self.copy_conn.rollback()
 
     def test_pipelineConf_workingDirectory(self):
@@ -246,14 +248,14 @@ class Check_Pipeline_Conf(unittest.TestCase):
 
         self.assertTrue(validWD)
     def test_pipelineConf_workingDirectory_Exception(self):
-        """configPipeline should fail with invalid workingDirectory."""
+        """config_pipeline should fail with invalid workingDirectory."""
 
         c = self.copy_conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET workingDirectory = ?'
         par = ('/wrong/path',)
         c.execute(sql, par)
         self.assertRaises(PipelineConfigurationError,
-                          self.copy_xferDB.configPipeline, self.copy_conn)
+                          self.copy_xferDB.config_pipeline, self.copy_conn)
         self.copy_conn.rollback()
 
     @classmethod
@@ -276,31 +278,31 @@ class Check_ODK_Conf(unittest.TestCase):
         dbDirectory = '.'
         pipelineRunDate = datetime.datetime.now()
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.settingsODK = xferDB.configODK(conn)
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.settingsODK = xferDB.config_odk(conn)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_odkConf_odkURL(self):
         """Test ODK_Conf table has valid odkURL"""
         self.assertEqual(self.settingsODK.odkURL,
                          'https://odk.swisstph.ch/ODKAggregateOpenVa')
     def test_odkConf_odkURL_Exception(self):
-        """configODK should fail with invalid url."""
+        """config_odk should fail with invalid url."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE ODK_Conf SET odkURL = ?'
         par = ('wrong.url',)
         c.execute(sql, par)
         self.assertRaises(ODKConfigurationError,
-                          self.copy_xferDB.configODK, self.copy_conn)
+                          self.copy_xferDB.config_odk, self.copy_conn)
         self.copy_conn.rollback()
 
     def test_odkConf_odkUser(self):
@@ -355,33 +357,33 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
         dbDirectory = '.'
         pipelineRunDate = datetime.datetime.now()
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.settingsPipeline = xferDB.configPipeline(conn)
-        cls.settingsOpenVA = xferDB.configOpenVA(conn,
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.settingsPipeline = xferDB.config_pipeline(conn)
+        cls.settingsOpenVA = xferDB.config_openva(conn,
                                                  'InterVA',
-                                                 cls.settingsPipeline.workingDirectory)
+                                                  cls.settingsPipeline.workingDirectory)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_openvaConf_InterVA_Version(self):
         """Test InterVA_Conf table has valid version"""
         self.assertIn(self.settingsOpenVA.InterVA_Version, ('4', '5'))
     def test_openvaConf_InterVA_Version_Exception(self):
-        """configOpenVA should fail with invalid InterVA_Conf.Version value."""
+        """config_openva should fail with invalid InterVA_Conf.Version value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE InterVA_Conf SET version = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -390,13 +392,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
         """Test InterVA_Conf table has valid HIV"""
         self.assertIn(self.settingsOpenVA.InterVA_HIV, ('v', 'l', 'h'))
     def test_openvaConf_InterVA_HIV_Exception(self):
-        """configOpenVA should fail with invalid InterVA_Conf.HIV value."""
+        """config_openva should fail with invalid InterVA_Conf.HIV value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE InterVA_Conf SET HIV = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -405,13 +407,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
         """Test InterVA_Conf table has valid Malaria"""
         self.assertIn(self.settingsOpenVA.InterVA_Malaria, ('v', 'l', 'h'))
     def test_openvaConf_InterVA_Malaria_Exception(self):
-        """configOpenVA should fail with invalid InterVA_Conf.Malaria value."""
+        """config_openva should fail with invalid InterVA_Conf.Malaria value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE InterVA_Conf SET Malaria = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -422,13 +424,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('classic', 'extended')
         )
     def test_openvaConf_InterVA_output_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.output value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.output value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET output = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -439,13 +441,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InterVA_append_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.append value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.append value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET append = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -456,13 +458,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InterVA_groupcode_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.groupcode value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.groupcode value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET groupcode = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -473,13 +475,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InterVA_replicate_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.replicate value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET replicate = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -490,13 +492,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InterVA_replicate_bug1_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate_bug1 value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.replicate_bug1 value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET replicate_bug1 = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -507,13 +509,13 @@ class Check_OpenVA_Conf_InterVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InterVA_replicate_bug2_Exception(self):
-        """configOpenVA should fail with invalid Advanced_InterVA_Conf.replicate_bug2 value."""
+        """config_openva should fail with invalid Advanced_InterVA_Conf.replicate_bug2 value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InterVA_Conf SET replicate_bug2 = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InterVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -538,21 +540,21 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         dbDirectory = '.'
         pipelineRunDate = datetime.datetime.now()
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.settingsPipeline = xferDB.configPipeline(conn)
-        cls.settingsOpenVA = xferDB.configOpenVA(conn,
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.settingsPipeline = xferDB.config_pipeline(conn)
+        cls.settingsOpenVA = xferDB.config_openva(conn,
                                                  'InSilicoVA',
-                                                 cls.settingsPipeline.workingDirectory)
+                                                  cls.settingsPipeline.workingDirectory)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_openvaConf_InSilicoVA_data_type(self):
         """Test InSilicoVA_Conf table has valid data_type"""
@@ -560,13 +562,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('WHO2012', 'WHO2016')
         )
     def test_openvaConf_InSilicoVA_data_type_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.data_type value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.data_type value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE InSilicoVA_Conf SET data_type = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -575,13 +577,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid Nsim"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_Nsim, '4000')
     def test_openvaConf_InSilicoVA_Nsim_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.Nsim value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.Nsim value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE InSilicoVA_Conf SET Nsim = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -592,13 +594,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_isNumeric_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.isNumeric value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.isNumeric value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET isNumeric = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -609,13 +611,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_updateCondProb_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.updateCondProb value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.updateCondProb value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET updateCondProb = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -626,13 +628,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_keepProbbase_level_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.keepProbbase_level value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.keepProbbase_level value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET keepProbbase_level = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -641,13 +643,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid CondProb"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_CondProb, 'NULL')
     def test_openvaConf_InSilicoVA_CondProb_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.CondProb value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.CondProb value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET CondProb = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -656,24 +658,24 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid CondProbNum"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_CondProbNum, 'NULL')
     def test_openvaConf_InSilicoVA_CondProbNum2(self):
-        """configOpenVA should accept InSilicoVA_Conf.CondProbNum '.35'."""
+        """config_openva should accept InSilicoVA_Conf.CondProbNum '.35'."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET CondProbNum = ?'
         par = ('.35',)
         c.execute(sql, par)
-        newTest = self.copy_xferDB.configOpenVA(self.copy_conn,
+        newTest = self.copy_xferDB.config_openva(self.copy_conn,
                                                 'InSilicoVA',
-                                                self.settingsPipeline.workingDirectory)
+                                                 self.settingsPipeline.workingDirectory)
         self.assertEqual(newTest.InSilicoVA_CondProbNum, '.35')
         self.copy_conn.rollback()
     def test_openvaConf_InSilicoVA_CondProbNum_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.CondProbNum value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.CondProbNum value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET CondProbNum = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -684,13 +686,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_datacheck_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.datacheck value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.datacheck value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET datacheck = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -701,13 +703,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_datacheck_missing_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.datacheck_missing value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.datacheck_missing value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET datacheck_missing = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -718,13 +720,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_external_sep_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.external_sep value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.external_sep value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET external_sep = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -732,13 +734,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_thin(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_thin, '10')
     def test_openvaConf_InSilicoVA_thin_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.thin value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.thin value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET thin = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -747,13 +749,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid burnin"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_burnin, '2000')
     def test_openvaConf_InSilicoVA_burnin_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.burnin value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.burnin value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET burnin = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -764,13 +766,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_auto_length_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.auto_length value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.auto_length value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET auto_length = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -779,13 +781,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid conv_csmf"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_conv_csmf, '0.02')
     def test_openvaConf_InSilicoVA_conv_csmf_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.conv_csmf value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.conv_csmf value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET conv_csmf = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -794,13 +796,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
         """Test InSilicoVA_Conf table has valid jump_scale"""
         self.assertEqual(self.settingsOpenVA.InSilicoVA_jump_scale, '0.1')
     def test_openvaConf_InSilicoVA_jump_scale_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.jump_scale value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.jump_scale value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET jump_scale = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -808,13 +810,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_levels_prior(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_levels_prior, 'NULL')
     def test_openvaConf_InSilicoVA_levels_prior_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.levels_prior value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.levels_prior value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET levels_prior = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -822,13 +824,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_levels_strength(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_levels_strength, '1')
     def test_openvaConf_InSilicoVA_levels_strength_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.levels_strength value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.levels_strength value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET levels_strength = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -836,13 +838,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_trunc_min(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_trunc_min, '0.0001')
     def test_openvaConf_InSilicoVA_trunc_min_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.trunc_min value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.trunc_min value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET trunc_min = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -850,13 +852,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_trunc_max(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_trunc_max, '0.9999')
     def test_openvaConf_InSilicoVA_trunc_max_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.trunc_max value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.trunc_max value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET trunc_max = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -864,13 +866,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_subpop(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_subpop, 'NULL')
     def test_openvaConf_InSilicoVA_subpop_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.subpop value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.subpop value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET subpop = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -878,13 +880,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_java_option(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_java_option, '-Xmx1g')
     def test_openvaConf_InSilicoVA_java_option_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.java_option value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.java_option value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET java_option = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -892,13 +894,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_seed(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_seed, '1')
     def test_openvaConf_InSilicoVA_seed_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.seed value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.seed value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET seed = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -906,13 +908,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_phy_code(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_phy_code, 'NULL')
     def test_openvaConf_InSilicoVA_phy_code_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.phy_code value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.phy_code value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET phy_code = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -920,13 +922,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_phy_cat(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_phy_cat, 'NULL')
     def test_openvaConf_InSilicoVA_phy_cat_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.phy_cat value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.phy_cat value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET phy_cat = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -934,13 +936,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_phy_unknown(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_phy_unknown, 'NULL')
     def test_openvaConf_InSilicoVA_phy_unknown_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.phy_unknown value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.phy_unknown value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET phy_unknown = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -948,13 +950,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_phy_external(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_phy_external, 'NULL')
     def test_openvaConf_InSilicoVA_phy_external_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.phy_external value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.phy_external value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET phy_external = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -962,13 +964,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_phy_debias(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_phy_debias, 'NULL')
     def test_openvaConf_InSilicoVA_phy_debias_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.phy_debias value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.phy_debias value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET phy_debias = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -978,13 +980,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('subset', 'all', 'InterVA', 'none')
         )
     def test_openvaConf_InSilicoVA_exclude_impossible_cause_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.exclude_impossible_cause value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.exclude_impossible_cause value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET exclude_impossible_cause = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -994,13 +996,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
                       ('TRUE', 'FALSE')
         )
     def test_openvaConf_InSilicoVA_no_is_missing_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.no_is_missing value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.no_is_missing value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET no_is_missing = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1008,13 +1010,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_indiv_CI(self):
         self.assertEqual(self.settingsOpenVA.InSilicoVA_indiv_CI, 'NULL')
     def test_openvaConf_InSilicoVA_indiv_CI_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.indiv_CI value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.indiv_CI value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET indiv_CI = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1022,13 +1024,13 @@ class Check_OpenVA_Conf_InSilicoVA(unittest.TestCase):
     def test_openvaConf_InSilicoVA_groupcode(self):
         self.assertIn(self.settingsOpenVA.InSilicoVA_groupcode, ('TRUE', 'FALSE'))
     def test_openvaConf_InSilicoVA_groupcode_Exception(self):
-        """configOpenVA should fail with invalid InSilicoVA_Conf.groupcode value."""
+        """config_openva should fail with invalid InSilicoVA_Conf.groupcode value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Advanced_InSilicoVA_Conf SET groupcode = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'InSilicoVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1053,33 +1055,33 @@ class Check_SmartVA_Conf(unittest.TestCase):
         dbDirectory = '.'
         pipelineRunDate = datetime.datetime.now()
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.settingsPipeline = xferDB.configPipeline(conn)
-        cls.settingsSmartva = xferDB.configOpenVA(conn,
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.settingsPipeline = xferDB.config_pipeline(conn)
+        cls.settingsSmartva = xferDB.config_openva(conn,
                                                   'SmartVA',
-                                                  cls.settingsPipeline.workingDirectory)
+                                                   cls.settingsPipeline.workingDirectory)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_smartvaConf_country(self):
         """Test SmartVA_Conf table has valid country"""
         self.assertEqual(self.settingsSmartva.SmartVA_country, 'Unknown')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.country value."""
+        """config_openva should fail with invalid SmartVA_Conf.country value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET country = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1088,13 +1090,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid hiv"""
         self.assertEqual(self.settingsSmartva.SmartVA_hiv, 'False')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.hiv value."""
+        """config_openva should fail with invalid SmartVA_Conf.hiv value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET hiv = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1103,13 +1105,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid malaria"""
         self.assertEqual(self.settingsSmartva.SmartVA_malaria, 'False')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.malaria value."""
+        """config_openva should fail with invalid SmartVA_Conf.malaria value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET malaria = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1118,13 +1120,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid hce"""
         self.assertEqual(self.settingsSmartva.SmartVA_hce, 'False')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.hce value."""
+        """config_openva should fail with invalid SmartVA_Conf.hce value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET hce = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1133,13 +1135,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid freetext"""
         self.assertEqual(self.settingsSmartva.SmartVA_freetext, 'False')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.freetext value."""
+        """config_openva should fail with invalid SmartVA_Conf.freetext value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET freetext = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1148,13 +1150,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid figures"""
         self.assertEqual(self.settingsSmartva.SmartVA_figures, 'False')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.figures value."""
+        """config_openva should fail with invalid SmartVA_Conf.figures value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET figures = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1163,13 +1165,13 @@ class Check_SmartVA_Conf(unittest.TestCase):
         """Test SmartVA_Conf table has valid language"""
         self.assertEqual(self.settingsSmartva.SmartVA_language, 'english')
     def test_smartvaConf_data_type_Exception(self):
-        """configOpenVA should fail with invalid SmartVA_Conf.language value."""
+        """config_openva should fail with invalid SmartVA_Conf.language value."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE SmartVA_Conf SET language = ?'
         par = ('wrong',)
         c.execute(sql, par)
         self.assertRaises(OpenVAConfigurationError,
-                          self.copy_xferDB.configOpenVA,
+                          self.copy_xferDB.config_openva,
                           self.copy_conn, 'SmartVA',
                           self.settingsPipeline.workingDirectory)
         self.copy_conn.rollback()
@@ -1195,31 +1197,31 @@ class Check_DHIS_Conf(unittest.TestCase):
         pipelineRunDate = datetime.datetime.now()
         cls.algorithm = 'InterVA'
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.settingsDHIS = xferDB.configDHIS(conn, cls.algorithm)
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.settingsDHIS = xferDB.config_dhis(conn, cls.algorithm)
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_dhisConf_dhisURL(self):
         """Test DHIS_Conf table has valid dhisURL"""
         self.assertEqual(self.settingsDHIS[0].dhisURL,
                          'https://va30se.swisstph-mis.ch')
     def test_dhisConf_dhisURL_Exception(self):
-        """configDHIS should fail with invalid url."""
+        """config_dhis should fail with invalid url."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE DHIS_Conf SET dhisURL = ?'
         par = ('wrong.url',)
         c.execute(sql, par)
         self.assertRaises(DHISConfigurationError,
-                          self.copy_xferDB.configDHIS,
+                          self.copy_xferDB.config_dhis,
                           self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
@@ -1227,13 +1229,13 @@ class Check_DHIS_Conf(unittest.TestCase):
         """Test DHIS_Conf table has valid dhisUser"""
         self.assertEqual(self.settingsDHIS[0].dhisUser, 'va-demo')
     def test_dhisConf_dhisUser_Exception(self):
-        """configDHIS should fail with invalid dhisUser."""
+        """config_dhis should fail with invalid dhisUser."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE DHIS_Conf SET dhisUser = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(DHISConfigurationError,
-                          self.copy_xferDB.configDHIS,
+                          self.copy_xferDB.config_dhis,
                           self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
@@ -1241,13 +1243,13 @@ class Check_DHIS_Conf(unittest.TestCase):
         """Test DHIS_Conf table has valid dhisPassword"""
         self.assertEqual(self.settingsDHIS[0].dhisPassword, 'VerbalAutopsy99!')
     def test_dhisConf_dhisPassword_Exception(self):
-        """configDHIS should fail with invalid dhisPassword."""
+        """config_dhis should fail with invalid dhisPassword."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE DHIS_Conf SET dhisPassword = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(DHISConfigurationError,
-                          self.copy_xferDB.configDHIS,
+                          self.copy_xferDB.config_dhis,
                           self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
@@ -1255,13 +1257,13 @@ class Check_DHIS_Conf(unittest.TestCase):
         """Test DHIS_Conf table has valid dhisOrgUnit"""
         self.assertEqual(self.settingsDHIS[0].dhisOrgUnit, 'SCVeBskgiK6')
     def test_dhisConf_dhisOrgUnit_Exception(self):
-        """configDHIS should fail with invalid dhisOrgUnit."""
+        """config_dhis should fail with invalid dhisOrgUnit."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE DHIS_Conf SET dhisOrgUnit = ?'
         par = ('',)
         c.execute(sql, par)
         self.assertRaises(DHISConfigurationError,
-                          self.copy_xferDB.configDHIS,
+                          self.copy_xferDB.config_dhis,
                           self.copy_conn, self.algorithm)
         self.copy_conn.rollback()
 
@@ -1288,17 +1290,17 @@ class Check_DHIS_storeVA(unittest.TestCase):
         wrong_dbKey = 'wrongKey'
         dbDirectory = '.'
 
-        cls.xferDB = TransferDB(dbFileName = dbFileName,
-                                dbDirectory = dbDirectory,
-                                dbKey = dbKey,
-                                plRunDate = pipelineRunDate)
-        cls.conn = cls.xferDB.connectDB()
-        cls.xferDB.configPipeline(cls.conn)
+        cls.xferDB = TransferDB(db_file_name= dbFileName,
+                                db_directory= dbDirectory,
+                                db_key= dbKey,
+                                pl_run_date= pipelineRunDate)
+        cls.conn = cls.xferDB.connect_db()
+        cls.xferDB.config_pipeline(cls.conn)
 
     def test_DHIS_storeVA(self):
         """Check that VA records get stored in Transfer DB."""
 
-        self.xferDB.storeVA(self.conn)
+        self.xferDB.store_va(self.conn)
         c = self.conn.cursor()
         sql = 'SELECT id FROM VA_Storage'
         c.execute(sql)
@@ -1331,20 +1333,20 @@ class Check_updateODKLastRun(unittest.TestCase):
         pipelineRunDate = datetime.datetime.now()
         algorithm = 'InterVA'
 
-        cls.copy_xferDB = TransferDB(dbFileName = 'copy_Pipeline.db',
-                                     dbDirectory = dbDirectory,
-                                     dbKey = dbKey,
-                                     plRunDate = pipelineRunDate)
-        cls.copy_conn = cls.copy_xferDB.connectDB()
-        cls.settingsODK = cls.copy_xferDB.configODK(cls.copy_conn)
+        cls.copy_xferDB = TransferDB(db_file_name='copy_Pipeline.db',
+                                     db_directory= dbDirectory,
+                                     db_key= dbKey,
+                                     pl_run_date= pipelineRunDate)
+        cls.copy_conn = cls.copy_xferDB.connect_db()
+        cls.settingsODK = cls.copy_xferDB.config_odk(cls.copy_conn)
         cls.newRunDate = '3000-01-01_00:00:01'
 
     def test_method(self):
-        """updateODKLastRun should change the date."""
+        """update_odk_last_run should change the date."""
 
         oldRunDate = self.settingsODK.odkLastRun
 
-        self.copy_xferDB.updateODKLastRun(self.copy_conn, self.newRunDate)
+        self.copy_xferDB.update_odk_last_run(self.copy_conn, self.newRunDate)
         c = self.copy_conn.cursor()
         sql = 'SELECT odkLastRun FROM ODK_Conf'
         c.execute(sql)
@@ -1352,7 +1354,7 @@ class Check_updateODKLastRun(unittest.TestCase):
         for i in sqlQuery:
             updatedRunDate = i[0]
         self.assertEqual(updatedRunDate, self.newRunDate)
-        self.copy_xferDB.updateODKLastRun(self.copy_conn, oldRunDate)
+        self.copy_xferDB.update_odk_last_run(self.copy_conn, oldRunDate)
 
     @classmethod
     def tearDownClass(cls):

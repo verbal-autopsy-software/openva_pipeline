@@ -8,9 +8,10 @@ This module defines the primary API for the openVA Pipeline.
 import os
 import csv
 import datetime
+import sys
 
-from .transferDB import TransferDB
-from .transferDB import DatabaseConnectionError
+from .transfer_db import TransferDB
+from .transfer_db import DatabaseConnectionError
 from .odk import ODK
 from .openVA import OpenVA
 from .dhis import DHIS
@@ -25,121 +26,235 @@ class Pipeline:
     with assigned causes to either/both a DHIS server (using the DHIS class) or
     the Transfer database -- a local database which also contains configuration
     settings for the pipeline.  The TransferDB class performs the final step of
-    storing the results locally as well as accessing the configuration settings.
+    storing the results locally as well as accessing the configuration
+    settings.
 
-    :param dbFileName: File name of the Tranfser database.
-    :type dbFileName: string
-    :param dbDirectory: str
+    :param db_file_name: File name of the Transfer database.
+    :type db_file_name: string
+    :param db_directory: str
         Path of folder containing the Transfer database.
-    :type dbDirectory: string
-    :param dbKey: Encryption key for the Transfer database.
-    :type dbKey: string
+    :type db_directory: string
+    :param db_key: Encryption key for the Transfer database.
+    :type db_key: string
     """
 
-    def __init__(self, dbFileName, dbDirectory, dbKey, useDHIS=True):
+    def __init__(self, db_file_name, db_directory, db_key, use_dhis=True):
 
-        self.dbFileName = dbFileName
-        self.dbDirectory = dbDirectory
-        self.dbKey = dbKey
-        self.dbPath = os.path.join(dbDirectory, dbFileName)
-        nowDate = datetime.datetime.now()
-        self.pipelineRunDate = nowDate.strftime("%Y-%m-%d_%H:%M:%S")
-        self.useDHIS = useDHIS
+        self.db_file_name = db_file_name
+        self.db_directory = db_directory
+        self.db_key = db_key
+        self.db_path = os.path.join(db_directory, db_file_name)
+        now_date = datetime.datetime.now()
+        self.pipeline_run_date = now_date.strftime("%Y-%m-%d_%H:%M:%S")
+        self.use_dhis = use_dhis
 
-    def logEvent(self, eventDesc, eventType):
-        """Commit event or error message into EventLog table of transfer database.
+    def log_event(self, event_desc, event_type):
+        """Commit event or error message into EventLog table of transfer
+        database.
 
-        :param eventDesc: Description of the event.
-        :type eventDesc: string
-        :param eventType: Type of event (error or information)
-        :type evenType: string
+        :param event_desc: Description of the event.
+        :type event_desc: string
+        :param event_type: Type of event (error or information)
+        :type event_type: string
         """
 
-        errorFile = os.path.join(self.dbDirectory, "dbErrorLog.csv")
-        timeFMT = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        if os.path.isfile(errorFile) == False:
+        error_file = os.path.join(self.db_directory, "dbErrorLog.csv")
+        time_fmt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        if not os.path.isfile(error_file):
             try:
-                with open(errorFile, "w", newline="") as f:
+                with open(error_file, "w", newline="") as f:
                     writer = csv.writer(f)
                     writer.writerow(
                         ["Date"] + ["Description"] + ["Additional Information"]
                     )
-            except (OSError) as e:
+            except OSError as e:
                 print(str(e) + "...Can't create dbErrorLog.csv")
                 sys.exit(1)
         try:
-            xferDB = TransferDB(
-                dbFileName=self.dbFileName,
-                dbDirectory=self.dbDirectory,
-                dbKey=self.dbKey,
-                plRunDate=self.pipelineRunDate,
+            xfer_db = TransferDB(
+                db_file_name=self.db_file_name,
+                db_directory=self.db_directory,
+                db_key=self.db_key,
+                pl_run_date=self.pipeline_run_date,
             )
-            conn = xferDB.connectDB()
+            conn = xfer_db.connect_db()
             c = conn.cursor()
             sql = "INSERT INTO EventLog \
-                   (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
-            par = (eventDesc, eventType, timeFMT)
+                   (event_desc, event_type, eventTime) VALUES (?, ?, ?)"
+            par = (event_desc, event_type, time_fmt)
             c.execute(sql, par)
             conn.commit()
             conn.close()
-        except (DatabaseConnectionError) as e:
-            errorMsg = [timeFMT, str(e), "Committed by Pipeline.logEvent"]
+        except DatabaseConnectionError as e:
+            error_msg = [time_fmt, str(e), "Committed by Pipeline.log_event"]
             try:
-                with open(errorFile, "a", newline="") as f:
+                with open(error_file, "a", newline="") as f:
                     writer = csv.writer(f)
-                    writer.writerow(errorMsg)
+                    writer.writerow(error_msg)
             except (PermissionError, OSError) as exc:
                 print("Can't write to dbErrorLog.csv")
-                print(errorMsg)
+                print(error_msg.append(str(exc)))
 
     def config(self):
         """Fetch configuration settings from Transfer DB.
 
         This method queries the Transfer database (DB) and returns objects that
         can be used as the arguments for other methods in this class, i.e.,
-        :meth:`Pipeline.runODK() <runODK>`,
-        :meth:`Pipeline.runOpenVA() <runOpenVA>`, and
-        :meth:`Pipeline.runDHIS() <runDHIS>`.
-
-        :param dbFileName: File name of the Transfer DB.
-          (e.g., Pipeline.db)
-        :type dbFileName: str
-        :param dbDirectory: Path to the location of the Transfer DB.
-        :type dbDirectory: str
-        :param dbKey: Encryption key for the Transfer DB
-        :type dbKey: str
-        :param plRunDate: Date when pipeline started latest
-          run (YYYY-MM-DD_hh:mm:ss).
-        :type plRunDate: date
+        :meth:`Pipeline.run_odk() <run_odk>`,
+        :meth:`Pipeline.run_openva() <run_openva>`, and
+        :meth:`Pipeline.run_dhis() <run_dhis>`.
         :returns: Configuration settings for pipeline steps (e.g. connecting
           to ODK Aggregate, running openVA, or posting records to DHIS)
         :rtype: dictionary
         """
 
-        xferDB = TransferDB(
-            dbFileName=self.dbFileName,
-            dbDirectory=self.dbDirectory,
-            dbKey=self.dbKey,
-            plRunDate=self.pipelineRunDate,
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
         )
-        conn = xferDB.connectDB()
-        settingsPipeline = xferDB.configPipeline(conn)
-        settingsODK = xferDB.configODK(conn)
-        settingsOpenVA = xferDB.configOpenVA(
-            conn, settingsPipeline.algorithm, settingsPipeline.workingDirectory
-        )
+        conn = xfer_db.connect_db()
+        settings_pipeline = xfer_db.config_pipeline(conn)
+        settings_odk = xfer_db.config_odk(conn)
+        settings_openva = xfer_db.config_openva(
+            conn, settings_pipeline.algorithm)
         settings = {
-            "pipeline": settingsPipeline,
-            "odk": settingsODK,
-            "openVA": settingsOpenVA,
+            "pipeline": settings_pipeline,
+            "odk": settings_odk,
+            "openva": settings_openva,
         }
-        if self.useDHIS:
-            settingsDHIS = xferDB.configDHIS(conn, settingsPipeline.algorithm)
-            settings["dhis"] = settingsDHIS
-            conn.close()
-            return settings
+        if self.use_dhis:
+            settings_dhis = xfer_db.config_dhis(conn,
+                                                settings_pipeline.algorithm)
+            settings["dhis"] = settings_dhis
+        conn.close()
+        return settings
 
-    def runODK(self, argsODK, argsPipeline):
+    def _update_odk(self, field, value):
+        """Update ODK_Conf.field(s) with value(s) in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        xfer_db.update_odk_conf(conn, field, value)
+        conn.close()
+
+    def _update_dhis(self, field, value):
+        """Update dhis_Conf.field(s) with value(s) in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        xfer_db.update_dhis_conf(conn, field, value)
+        conn.close()
+
+    def _update_pipeline(self, field, value):
+        """Update pipeline_Conf.field(s) with value(s) in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        xfer_db.update_pipeline_conf(conn, field, value)
+        conn.close()
+
+    def _get_odk_conf(self):
+        """Get values from ODK_Conf table in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        odk_conf_values = xfer_db.get_odk_conf(conn)
+        conn.close()
+        return odk_conf_values
+
+    def _get_dhis_conf(self):
+        """Get values from dhis_Conf table in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        dhis_conf_values = xfer_db.get_dhis_conf(conn)
+        conn.close()
+        return dhis_conf_values
+
+    def _get_pipeline_conf(self):
+        """Get values from pipeline_Conf table in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        pipeline_conf_values = xfer_db.get_pipeline_conf(conn)
+        conn.close()
+        return pipeline_conf_values
+
+    def _get_tables(self):
+        """Get table names from Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        tables = xfer_db.get_tables(conn)
+        conn.close()
+        return tables
+
+    def _get_fields(self, table):
+        """Get field names from table in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        fields = xfer_db.get_fields(conn, table)
+        conn.close()
+        return fields
+
+    def _get_schema(self, table):
+        """Get schema of table in Transfer DB."""
+
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        schema = xfer_db.get_schema(conn, table)
+        conn.close()
+        return schema
+
+    def run_odk(self, settings):
         """Run check duplicates, copy file, and briefcase.
 
         This method downloads data from either (1) an ODK Central server,
@@ -150,162 +265,167 @@ class Pipeline:
         configuration settings are taken from the argument
         argsODK (see :meth:`Pipeline.config() <config>`)
         , and downloads verbal autopsy (VA)
-        records as a (csv) export from an ODK Central/Aggregate server.  If there
-        is a previous ODK export file, this method merges the files by
+        records as a (csv) export from an ODK Central/Aggregate server.
+        If there is a previous ODK export file, this method merges the files by
         keeping only the unique VA records.
 
-        :param argsODK: Arguments passed to connect and download records
-          from the ODK Central/Aggregate server.
-        :type argsODK: named tuple
-        :param argsPipeline: Arguments for configuration the openva pipeline.
-        :type argsPipeline: named tuple
+        :param settings: Configuration settings for pipeline steps (which is
+        returned from :meth:`Pipeline.config() <config>`).
+        :type settings: dictionary of named tuples
         :return: Return value from method subprocess.run()
         :rtype: subprocess.CompletedProcess
         """
 
-        pipelineODK = ODK(argsODK, argsPipeline.workingDirectory)
-        pipelineODK.mergeToPrevExport()
-        if argsODK.odkUseCentral == "True":
-            odkCentral = pipelineODK.central()
+        args_odk = settings['odk']
+        args_pipeline = settings['pipeline']
+        pipeline_odk = ODK(args_odk, args_pipeline.working_directory)
+        pipeline_odk.merge_to_prev_export()
+        if args_odk.odk_use_central == "True":
+            odk_central = pipeline_odk.central()
         else:
-            odkBC = pipelineODK.briefcase()
-        xferDB = TransferDB(
-            dbFileName=self.dbFileName,
-            dbDirectory=self.dbDirectory,
-            dbKey=self.dbKey,
-            plRunDate=self.pipelineRunDate,
+            odk_bc = pipeline_odk.briefcase()
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
         )
-        conn = xferDB.connectDB()
-        xferDB.configPipeline(conn)
-        xferDB.checkDuplicates(conn)
+        conn = xfer_db.connect_db()
+        xfer_db.config_pipeline(conn)
+        xfer_db.check_duplicates(conn)
         conn.close()
-        if argsODK.odkUseCentral == "True":
-            return odkCentral
+        if args_odk.odk_use_central == "True":
+            return odk_central
         else:
-            return odkBC
+            return odk_bc
 
-    def runOpenVA(self, argsOpenVA, argsPipeline, odkID, runDate):
+    def run_openva(self, settings):
         """Create & run script or run smartva.
 
         This method runs the through the suite of methods in the
         :class:`OpenVA <openva_pipeline.openVA.OpenVA>`.
         class.  The list of tasks performed (in order) are: (1) call the method
-        :meth:`OpenVA.copyVA() <openva_pipeline.openVA.OpenVA.copyVA>`
+        :meth:`OpenVA.copy_va() <openva_pipeline.openVA.OpenVA.copy_va>`
         to copy over CSV files with VA data (retrieved from ODK Aggregate);
         (2) use the method
-        :meth:`OpenVA.rScript() <openva_pipeline.openVA.OpenVA.rScript>`
+        :meth:`OpenVA.r_script() <openva_pipeline.openVA.OpenVA.r_script>`
         to create an R script; and (3) call the method
-        :meth:`OpenVA.getCOD() <openva_pipeline.openVA.OpenVA.getCOD>` to
+        :meth:`OpenVA.get_cod() <openva_pipeline.openVA.OpenVA.get_cod>` to
         run the R script that estimates the causes of death and stores the
         results in "OpenVAFiles/recordStorage.csv" and
         "OpenVAFiles/entityAttributeValue.csv" (the former serving as the
         blob posted to DHIS2).
 
-        :param argsOpenVA: Configuration settings for openVA.
-        :type argsOpenVA: named tuple
-        :param argsPipeline: Configuration settings for OpenVA Pipeline
-        :type argsPipeline: named tuple
-        :param odkID: column/variable name of VA record ID in ODK export
-        :type odkID: string
-        :param runDate: date and time when OpenVA Pipeline ran
-        :type runDate: nowDate.strftime("%Y-%m-%d_%H:%M:%S")
+        :param settings: Configuration settings for pipeline steps (which is
+        returned from :meth:`Pipeline.config() <config>`).
+        :type settings: dictionary of named tuples
         :return: an indicator of zero VA records in the ODK export
         :rtype: dictionary
         """
 
-        pipelineOpenVA = OpenVA(
-            vaArgs=argsOpenVA, pipelineArgs=argsPipeline, odkID=odkID, runDate=runDate
+        args_openva = settings['openva']
+        args_pipeline = settings['pipeline']
+        args_odk = settings['odk']
+        pipeline_openva = OpenVA(
+            va_args=args_openva,
+            pipeline_args=args_pipeline,
+            odk_id=args_odk.odk_id,
+            run_date=self.pipeline_run_date,
         )
-        zeroRecords = pipelineOpenVA.copyVA()
-        rOut = {"zeroRecords": zeroRecords}
-        if not zeroRecords:
-            pipelineOpenVA.rScript()
-            completed = pipelineOpenVA.getCOD()
-            # rOut["completed"] = completed
-            rOut["returncode"] = completed.returncode
-        return rOut
+        zero_records = pipeline_openva.copy_va()
+        r_out = {"zero_records": zero_records}
+        if not zero_records:
+            pipeline_openva.r_script()
+            completed = pipeline_openva.get_cod()
+            # r_out["completed"] = completed
+            r_out["returncode"] = completed.returncode
+        return r_out
 
-    def runDHIS(self, argsDHIS, argsPipeline):
+    def run_dhis(self, settings):
         """Connect to API and post events.
 
         This method first calls the method
         :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`
         to establish a connection with a DHIS2 server and, second
         calls the method
-        :meth:`DHIS.postVA() <openva_pipeline.dhis.DHIS.postVA>` to
+        :meth:`DHIS.post_va() <openva_pipeline.dhis.DHIS.post_va>` to
         post VA data, the assigned causes of death, and associated
         metadata (concerning cause assignment).
 
-        :param argsDHIS: Configuration settings for connecting to DHIS2 server.
-        :type argsOpenVA: named tuple
-        :param argsPipeline: Configuration settings for OpenVA Pipeline
-        :type argsPipeline: named tuple
+        :param settings: Configuration settings for pipeline steps (which is
+        returned from :meth:`Pipeline.config() <config>`).
+        :type settings: dictionary of named tuples
         :return: VA Program ID from the DHIS2 server, the log from
           the DHIS2 connection, and the number of records posted to DHIS2
         :rtype: dictionary
         """
 
-        pipelineDHIS = DHIS(argsDHIS, argsPipeline.workingDirectory)
-        apiDHIS = pipelineDHIS.connect()
-        postLog = pipelineDHIS.postVA(apiDHIS)
-        pipelineDHIS.verifyPost(postLog, apiDHIS)
+        args_dhis = settings['dhis']
+        args_pipeline = settings['pipeline']
+        pipeline_dhis = DHIS(args_dhis, args_pipeline.workingDirectory)
+        api_dhis = pipeline_dhis.connect()
+        post_log = pipeline_dhis.post_va(api_dhis)
+        pipeline_dhis.verify_post(post_log, api_dhis)
 
-        dhisOut = {
-            "vaProgramUID": pipelineDHIS.vaProgramUID,
-            "postLog": postLog,
-            "nPostedRecords": pipelineDHIS.nPostedRecords,
+        dhis_out = {
+            "va_program_uid": pipeline_dhis.va_program_uid,
+            "post_log": post_log,
+            "n_posted_records": pipeline_dhis.n_posted_records,
         }
-        return dhisOut
+        return dhis_out
 
-    def storeResultsDB(self):
+    def store_results_db(self):
         """Store VA results in Transfer database."""
 
-        xferDB = TransferDB(
-            dbFileName=self.dbFileName,
-            dbDirectory=self.dbDirectory,
-            dbKey=self.dbKey,
-            plRunDate=self.pipelineRunDate,
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
         )
-        conn = xferDB.connectDB()
-        xferDB.configPipeline(conn)
-        xferDB.storeVA(conn)
+        conn = xfer_db.connect_db()
+        xfer_db.config_pipeline(conn)
+        xfer_db.store_va(conn)
         conn.close()
 
-    def closePipeline(self):
+    def close_pipeline(self):
         """Update ODK_Conf ODKLastRun in Transfer DB and clean up files.
 
         This method calls methods in the
         :class:`TransferDB <openva_pipeline.transferDB.TransferDB>`
         class to remove the data files created at each step of the
         pipeline.  More specifically, it runs
-        :meth:`TransferDB.cleanODK() <openva_pipeline.transferDB.TransferDB.cleanODK>`
+        :meth:`TransferDB.clean_odk()
+        <openva_pipeline.transferDB.TransferDB.clean_odk>`
         to remove the ODK Briefcase export files ("ODKFiles/odkBCExportNew.csv"
         and "ODKFiles/odkBCExportPrev.csv") if they exist;
-        :meth:`TransferDB.cleanOpenVA() <openva_pipeline.transferDB.TransferDB.cleanOpenVA>`
+        :meth:`TransferDB.clean_openva()
+        <openva_pipeline.transferDB.TransferDB.clean_openva>`
         to remove the input data file ("OpenVAFiles/openVA_input.csv") and the
         output files ("OpenVAFiles/recordStorage.csv",
         "OpenVAFiles/newStorage.csv", and
         "OpenVAFiles/entityAttributeValue.csv") -- note that all of these
         results are stored in either/both of the Transfer DB and the DHIS2
         server's VA program; and, third, the method
-        :meth:`TransferDB.cleanDHIS() <openva_pipeline.transferDB.TransferDB.cleanDHIS>`
-        is called to remove the blobs posted to the DHIS2 server and stored in the
-        folder "DHIS/blobs".  Finally, this method updates the Transfer DB's
-        value in the ODK_Conf table's variable odkLastRun so the next ODK
+        :meth:`TransferDB.clean_dhis()
+        <openva_pipeline.transferDB.TransferDB.clean_dhis>`
+        is called to remove the blobs posted to the DHIS2 server and stored in
+        the folder "DHIS/blobs".  Finally, this method updates the Transfer
+        DB's value in the ODK_Conf table's variable odkLastRun so the next ODK
         Export file does not include VA records already processed through the
         pipeline.
         """
 
-        xferDB = TransferDB(
-            dbFileName=self.dbFileName,
-            dbDirectory=self.dbDirectory,
-            dbKey=self.dbKey,
-            plRunDate=self.pipelineRunDate,
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
         )
-        conn = xferDB.connectDB()
-        xferDB.configPipeline(conn)
-        xferDB.cleanODK()
-        xferDB.cleanOpenVA()
-        xferDB.cleanDHIS()
-        xferDB.updateODKLastRun(conn, self.pipelineRunDate)
+        conn = xfer_db.connect_db()
+        xfer_db.config_pipeline(conn)
+        xfer_db.clean_odk()
+        xfer_db.clean_openva()
+        xfer_db.clean_dhis()
+        xfer_db.update_odk_last_run(conn, self.pipeline_run_date)
         conn.close()

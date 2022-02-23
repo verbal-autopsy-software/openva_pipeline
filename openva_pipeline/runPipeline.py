@@ -30,33 +30,31 @@ from openva_pipeline.exceptions import SmartVAError
 from openva_pipeline.exceptions import DHISError
 
 
-def createTransferDB(database_file_name, database_directory, database_key):
+def create_transfer_db(database_file_name, database_directory, database_key):
     """Create the (SQLite encrypted) Transfer Database.
 
     :param database_file_name: File name for the Transfer Database.
     :param database_directory: Path of the Transfer Database.
-    :param datatbase_key: Encryption key for the Transfer Database
-    :param export_to_DHIS: Indicator for posting VA records to a DHIS2 server.
+    :param database_key: Encryption key for the Transfer Database
     """
 
-    dbPath = os.path.join(database_directory, database_file_name)
+    db_path = os.path.join(database_directory, database_file_name)
 
-    sqlPath = os.path.abspath(
+    sql_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "sql/pipelineDB.sql")
     )
     try:
-        conn = sqlcipher.connect(dbPath)
+        conn = sqlcipher.connect(db_path)
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
         raise DatabaseConnectionError("Unable to create database..." + str(e))
     try:
-        parSetKey = '"' + database_key + '"'
-        conn.execute("PRAGMA key = " + parSetKey)
-        # c = conn.cursor()
+        par_set_key = '"' + database_key + '"'
+        conn.execute("PRAGMA key = " + par_set_key)
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
-        raise DatabaseConnectionError("Unable to set encryption key..." + str(e))
+        raise DatabaseConnectionError("Unable to set encryption key..." +
+                                      str(e))
     try:
-        with open(sqlPath, "r", newline="\n", encoding="utf-8") as sqlScript:
-            # c.executescript(sqlScript.read())
+        with open(sql_path, "r", newline="\n", encoding="utf-8") as sqlScript:
             conn.executescript(sqlScript.read())
     except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
         raise DatabaseConnectionError(
@@ -64,9 +62,9 @@ def createTransferDB(database_file_name, database_directory, database_key):
         )
 
 
-def runPipeline(
-    database_file_name, database_directory, database_key, export_to_DHIS=True
-):
+def run_pipeline(
+        database_file_name, database_directory, database_key,
+        export_to_dhis=True):
     """Runs through all steps of the OpenVA Pipeline
 
     This function is a wrapper for the Pipeline class, which
@@ -79,98 +77,93 @@ def runPipeline(
 
     :param database_file_name: File name for the Transfer Database.
     :param database_directory: Path of the Transfer Database.
-    :param datatbase_key: Encryption key for the Transfer Database
-    :param export_to_DHIS: Indicator for posting VA records to a DHIS2 server.
-    :type export_to_DHIS: (Boolean)
+    :param database_key: Encryption key for the Transfer Database
+    :param export_to_dhis: Indicator for posting VA records to a DHIS2 server.
+    :type export_to_dhis: (Boolean)
     """
 
     pl = Pipeline(
-        dbFileName=database_file_name,
-        dbDirectory=database_directory,
-        dbKey=database_key,
-        useDHIS=export_to_DHIS,
+        db_file_name=database_file_name,
+        db_directory=database_directory,
+        db_key=database_key,
+        use_dhis=export_to_dhis,
     )
     try:
         settings = pl.config()
     except PipelineConfigurationError as e:
-        pl.logEvent(str(e), "Error")
+        pl.log_event(str(e), "Error")
         sys.exit(1)
 
-    settingsPipeline = settings["pipeline"]
-    settingsODK = settings["odk"]
-    settingsOpenVA = settings["openVA"]
-    settingsDHIS = settings["dhis"]
-
     try:
-        pl.runODK(settingsODK, settingsPipeline)
-        pl.logEvent("ODK Export Completed Successfully", "Event")
+        pl.run_odk(settings)
+        pl.log_event("ODK Export Completed Successfully", "Event")
     except ODKError as e:
-        pl.logEvent(str(e), "Error")
+        pl.log_event(str(e), "Error")
         sys.exit(1)
 
     try:
-        rOut = pl.runOpenVA(
-            settingsOpenVA, settingsPipeline, settingsODK.odkID, pl.pipelineRunDate
-        )
-        pl.logEvent("OpenVA Analysis Completed Successfully", "Event")
+        r_out = pl.run_openva(settings)
+        pl.log_event("OpenVA Analysis Completed Successfully", "Event")
     except (OpenVAError, SmartVAError) as e:
-        pl.logEvent(str(e), "Error")
+        pl.log_event(str(e), "Error")
         sys.exit(1)
 
-    if rOut["zeroRecords"] == True:
-        pl.logEvent("No new VA records from ODK (now exiting)", "Event")
+    if r_out["zero_records"]:
+        pl.log_event("No new VA records from ODK (now exiting)", "Event")
         sys.exit(0)
 
-    if export_to_DHIS:
+    if export_to_dhis:
         try:
-            pl.runDHIS(settingsDHIS, settingsPipeline)
-            pl.logEvent("Posted Events to DHIS2 Successfully", "Event")
+            pl.run_dhis(settings)
+            pl.log_event("Posted Events to DHIS2 Successfully", "Event")
         except DHISError as e:
-            pl.logEvent(str(e), "Error")
+            pl.log_event(str(e), "Error")
             sys.exit(1)
 
     try:
-        pl.storeResultsDB()
-        pl.logEvent("Stored Records to Xfer Database Successfully", "Event")
-    except (PipelineError, DatabaseConnectionError, PipelineConfigurationError) as e:
-        pl.logEvent(str(e), "Error")
+        pl.store_results_db()
+        pl.log_event("Stored Records to Xfer Database Successfully", "Event")
+    except (PipelineError, DatabaseConnectionError,
+            PipelineConfigurationError) as e:
+        pl.log_event(str(e), "Error")
         sys.exit(1)
 
     try:
-        pl.closePipeline()
-        pl.logEvent("Successfully Completed Run of Pipeline", "Event")
+        pl.close_pipeline()
+        pl.log_event("Successfully Completed Run of Pipeline", "Event")
     except (DatabaseConnectionError, DatabaseConnectionError) as e:
-        pl.logEvent(str(e), "Error")
+        pl.log_event(str(e), "Error")
         sys.exit(1)
 
 
-def downloadBriefcase():
+def download_briefcase():
     """Download the ODK Briefcase (v1.18.0) jar file from Git Hub."""
 
-    bcURL = "https://github.com/getodk/briefcase/releases/download/v1.18.0/ODK-Briefcase-v1.18.0.jar"
+    bc_url = ("https://github.com/getodk/briefcase/releases/download/" +
+              "v1.18.0/ODK-Briefcase-v1.18.0.jar")
     try:
-        with open("ODK-Briefcase-v1.18.0.jar", "wb") as bcFile:
-            r = requests.get(bcURL)
-            bcFile.write(r.content)
+        with open("ODK-Briefcase-v1.18.0.jar", "wb") as bc_file:
+            r = requests.get(bc_url)
+            bc_file.write(r.content)
         os.chmod("ODK-Briefcase-v1.18.0.jar", 0o744)
     except (requests.RequestException, IOError) as e:
         raise ODKError("Error downloading Briefcase: {}".format(str(e)))
 
 
-def downloadSmartVA():
+def download_smartva():
     """Download the smartva (linux) binary application file from Git Hub."""
 
-    smartvaURL = (
-        "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/v2.0.0/smartva"
+    smartva_url = (
+        "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/" +
+        "v2.0.0/smartva"
     )
     try:
-        with open("smartva", "wb") as smartvaBinary:
-            r = requests.get(smartvaURL)
-            smartvaBinary.write(r.content)
+        with open("smartva", "wb") as smartva_binary:
+            r = requests.get(smartva_url)
+            smartva_binary.write(r.content)
         os.chmod("smartva", 0o777)
     except (requests.RequestException, IOError) as e:
         raise SmartVAError("Error downloading smartva: {}".format(str(e)))
-
 
 # if __name__ == "__main__":
 #     runPipeline(database_file_name= "run_Pipeline.db",

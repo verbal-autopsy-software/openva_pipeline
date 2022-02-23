@@ -57,7 +57,7 @@ class OpenVA:
             raise OpenVAError("Unable to create directory" +
                               dirOpenVA) from exc
 
-    def copyVA(self):
+    def copy_va(self):
         """Create data file for openVA by merging ODK export files & converting
            with pycrossva.
 
@@ -123,7 +123,7 @@ class OpenVA:
                 final_data.to_csv(openVAInputFile, index=False)
         return zeroRecords
 
-    def rScript(self):
+    def r_script(self):
         """Create an R script for running openVA and assigning CODs."""
 
         if not self.pipelineArgs.algorithm == "SmartVA":
@@ -360,7 +360,7 @@ class OpenVA:
         dfEVA.sort_values(by=["ID"], inplace=True)
         dfEVA.to_csv(self.dirOpenVA + "/entityAttributeValue.csv", index=False)
 
-    def getCOD(self):
+    def get_cod(self):
         """Create and execute R script to assign a COD with openVA; or call
            the SmartVA CLI to assign COD."""
 

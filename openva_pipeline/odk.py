@@ -34,7 +34,7 @@ class ODK:
 
     def __init__(self, odkSettings, workingDirectory):
 
-        self.odkID = odkSettings.odkID
+        self.odkID = odkSettings.odk_id
         self.odkURL = odkSettings.odkURL
         self.odkUser = odkSettings.odkUser
         self.odkPassword = odkSettings.odkPassword
@@ -58,7 +58,7 @@ class ODK:
         except:
             raise ODKError("Unable to create directory " + odkPath)
 
-    def mergeToPrevExport(self):
+    def merge_to_prev_export(self):
         """Merge previous ODK Briefcase export files."""
 
         exportFile_prev = os.path.join(self.exportDir, "odkBCExportPrev.csv")

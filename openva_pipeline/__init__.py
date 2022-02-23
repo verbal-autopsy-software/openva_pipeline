@@ -4,7 +4,7 @@ from .runPipeline import createTransferDB
 from .runPipeline import downloadBriefcase
 from .runPipeline import downloadSmartVA
 from .pipeline import Pipeline
-from .transferDB import TransferDB
+from .transfer_db import TransferDB
 from .odk import ODK
 from .openVA import OpenVA
 from .dhis import API

@@ -13,7 +13,7 @@ source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
 import context
 from openva_pipeline import dhis
-from openva_pipeline.transferDB import TransferDB
+from openva_pipeline.transfer_db import TransferDB
 from openva_pipeline.runPipeline import createTransferDB
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
@@ -43,28 +43,28 @@ class Check_DHIS(unittest.TestCase):
         dbFileName = 'Pipeline.db'
         dbKey = 'enilepiP'
         wrong_dbKey = 'wrongKey'
-        # dbDirectory = os.path.abspath(os.path.dirname(__file__))
+        # db_directory = os.path.abspath(os.path.dirname(__file__))
         dbDirectory = '.'
         if not os.path.isfile('Pipeline.db'):
             createTransferDB(dbFileName, dbDirectory, dbKey)
         pipelineRunDate = datetime.datetime.now()
 
-        xferDB = TransferDB(dbFileName = dbFileName,
-                            dbDirectory = dbDirectory,
-                            dbKey = dbKey,
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        settingsDHIS = xferDB.configDHIS(conn, 'InSilicoVA')
+        xferDB = TransferDB(db_file_name= dbFileName,
+                            db_directory= dbDirectory,
+                            db_key= dbKey,
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        settingsDHIS = xferDB.config_dhis(conn, 'InSilicoVA')
 
         cls.pipelineDHIS = dhis.DHIS(settingsDHIS, '.')
         apiDHIS = cls.pipelineDHIS.connect()
-        cls.postLog = cls.pipelineDHIS.postVA(apiDHIS)
-        cls.pipelineDHIS.verifyPost(cls.postLog, apiDHIS)
+        cls.postLog = cls.pipelineDHIS.post_va(apiDHIS)
+        cls.pipelineDHIS.verify_post(cls.postLog, apiDHIS)
 
     def test_vaProgramUID(self):
         """Verify VA program is installed."""
 
-        self.assertEqual(self.pipelineDHIS.vaProgramUID, 'sv91bCroFFx')
+        self.assertEqual(self.pipelineDHIS.va_program_uid, 'sv91bCroFFx')
 
     def test_postVA(self):
         """Post VA records to DHIS2."""
@@ -77,7 +77,7 @@ class Check_DHIS(unittest.TestCase):
 
         dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
         nPushed = sum(dfNewStorage['pipelineOutcome'] == 'Pushed to DHIS2')
-        self.assertEqual(nPushed, self.pipelineDHIS.nPostedRecords)
+        self.assertEqual(nPushed, self.pipelineDHIS.n_posted_records)
 
     @classmethod
     def tearDownClass(cls):
@@ -104,13 +104,13 @@ class Check_DHIS_getCODCode(unittest.TestCase):
 
         pipelineRunDate = datetime.datetime(
             2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(dbFileName = 'Pipeline.db',
-                            dbDirectory = '.',
-                            dbKey = 'enilepiP',
-                            plRunDate = pipelineRunDate)
-        conn = xferDB.connectDB()
-        cls.cod_who = xferDB.configDHIS(conn, 'InSilicoVA')
-        cls.cod_tariff = xferDB.configDHIS(conn, 'SmartVA')
+        xferDB = TransferDB(db_file_name='Pipeline.db',
+                            db_directory='.',
+                            db_key='enilepiP',
+                            pl_run_date= pipelineRunDate)
+        conn = xferDB.connect_db()
+        cls.cod_who = xferDB.config_dhis(conn, 'InSilicoVA')
+        cls.cod_tariff = xferDB.config_dhis(conn, 'SmartVA')
 
         with open("who_cod.R", "w", newline="") as f:
             f.write("data(causetextV5, package='InterVA5')\n")

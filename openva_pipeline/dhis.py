@@ -179,7 +179,7 @@ class VerbalAutopsyEvent(object):
         self.algorithm_metadata = algorithm_metadata
         self.odk_id = odk_id
 
-        if not age == "MISSING":
+        if age != "MISSING":
             self.datavalues = [
                 {"dataElement": "htm6PixLJNy", "value": self.va_id},
                 {"dataElement": "hi7qRC4SMMk", "value": self.sex},
@@ -275,7 +275,7 @@ class DHIS:
     server and/or the local Transfer database.
 
     :param dhisArgs: Contains parameter values for connected to DHIS2, as
-      returned by transferDB.configDHIS().
+      returned by transferDB.config_dhis().
     :type dhisArgs: (named) tuple
     :param workingDirectory: Workind direcotry for the openVA Pipeline
     :type workingDirectory: string
@@ -291,8 +291,8 @@ class DHIS:
         self.dhisCODCodes = dhisArgs[1]
         self.dirDHIS = os.path.join(workingDirectory, "DHIS")
         self.dirOpenVA = os.path.join(workingDirectory, "OpenVAFiles")
-        self.vaProgramUID = None
-        self.nPostedRecords = 0
+        self.va_program_uid = None
+        self.n_posted_records = 0
 
         dhisPath = os.path.join(workingDirectory, "DHIS")
 
@@ -331,15 +331,15 @@ class DHIS:
             raise DHISError("No Verbal Autopsy Program found.")
         if len(vaPrograms) > 1:
             raise DHISError("More than one Verbal Autopsy Program found.")
-        self.vaProgramUID = vaPrograms[0].get("id")
+        self.va_program_uid = vaPrograms[0].get("id")
 
-        orgUnits = apiDHIS.get("organisationUnits").get("organisationUnits")
-        validOrgUnit = self.dhisOrgUnit in [i["id"] for i in orgUnits]
-        if not validOrgUnit:
-            raise DHISError("Did not find Organisation Unit.")
-        return apiDHIS
+        # orgUnits = apiDHIS.get("organisationUnits").get("organisationUnits")
+        # validOrgUnit = self.dhisOrgUnit in [i["id"] for i in orgUnits]
+        # if not validOrgUnit:
+        #     raise DHISError("Did not find Organisation Unit.")
+        # return apiDHIS
 
-    def postVA(self, apiDHIS):
+    def post_va(self, apiDHIS):
         """Post VA records to DHIS.
 
         This method reads in a CSV file ("entityAttribuesValue.csv") with
@@ -441,7 +441,7 @@ class DHIS:
 
                     e = VerbalAutopsyEvent(
                         vaID,
-                        self.vaProgramUID,
+                        self.va_program_uid,
                         self.dhisOrgUnit,
                         eventDate,
                         sex,
@@ -464,15 +464,15 @@ class DHIS:
             log = apiDHIS.post("events", data=export)
         except requests.RequestException as e:
             raise DHISError("Unable to post events to DHIS2..." + str(e))
-        self.nPostedRecords = len(log["response"]["importSummaries"])
+        self.n_posted_records = len(log["response"]["importSummaries"])
         return log
 
-    def verifyPost(self, postLog, apiDHIS):
+    def verify_post(self, postLog, apiDHIS):
         """Verify that VA records were posted to DHIS2 server.
 
         :param postLog: Log information retrieved after posting events to
           a VA Program on a DHIS2 server; this is the return object from
-          :meth:`DHIS.postVA <postVA>`.
+          :meth:`DHIS.post_va <post_va>`.
         :type postLog: dictionary
         :param apiDHIS: A class instance for interacting with the DHIS2 API
           created by the method :meth:`DHIS.connect <connect>`
@@ -485,7 +485,7 @@ class DHIS:
             dfNewStorage = read_csv(self.dirOpenVA + "/newStorage.csv")
         except:
             raise DHISError(
-                "Problem with DHIS.verifyPost...Can't find file "
+                "Problem with DHIS.verify_post...Can't find file "
                 + self.dirOpenVA
                 + "/newStorage.csv"
             )
@@ -508,5 +508,5 @@ class DHIS:
             dfNewStorage.to_csv(self.dirOpenVA + "/newStorage.csv", index=False)
         except:
             raise DHISError(
-                "Problem with DHIS.postVA...couldn't verify posted records."
+                "Problem with DHIS.post_va...couldn't verify posted records."
             )
