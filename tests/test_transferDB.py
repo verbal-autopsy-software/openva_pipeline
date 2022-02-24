@@ -292,13 +292,13 @@ class Check_ODK_Conf(unittest.TestCase):
         cls.copy_conn = cls.copy_xferDB.connect_db()
 
     def test_odkConf_odkURL(self):
-        """Test ODK_Conf table has valid odkURL"""
+        """Test ODK_Conf table has valid odk_url"""
         self.assertEqual(self.settingsODK.odkURL,
                          'https://odk.swisstph.ch/ODKAggregateOpenVa')
     def test_odkConf_odkURL_Exception(self):
         """config_odk should fail with invalid url."""
         c = self.copy_conn.cursor()
-        sql = 'UPDATE ODK_Conf SET odkURL = ?'
+        sql = 'UPDATE ODK_Conf SET odk_url = ?'
         par = ('wrong.url',)
         c.execute(sql, par)
         self.assertRaises(ODKConfigurationError,
@@ -306,27 +306,27 @@ class Check_ODK_Conf(unittest.TestCase):
         self.copy_conn.rollback()
 
     def test_odkConf_odkUser(self):
-        """Test ODK_Conf table has valid odkUser"""
+        """Test ODK_Conf table has valid odk_user"""
         self.assertEqual(self.settingsODK.odkUser, 'odk_openva')
 
     def test_odkConf_odkPassword(self):
-        """Test ODK_Conf table has valid odkPassword"""
+        """Test ODK_Conf table has valid odk_password"""
         self.assertEqual(self.settingsODK.odkPassword, 'openVA2018')
 
     def test_odkConf_odkFormID(self):
-        """Test ODK_Conf table has valid odkFormID"""
+        """Test ODK_Conf table has valid odk_form_id"""
         self.assertEqual(self.settingsODK.odkFormID, 'va_who_v1_5_1')
 
     def test_odkConf_odkLastRun(self):
-        """Test ODK_Conf table has valid odkLastRun"""
+        """Test ODK_Conf table has valid odk_last_run"""
         self.assertEqual(self.settingsODK.odkLastRun, '1900-01-01_00:00:01')
 
     def test_odkConf_odkLastRunDate(self):
-        """Test ODK_Conf table has valid odkLastRunDate"""
+        """Test ODK_Conf table has valid odk_last_run_date"""
         self.assertEqual(self.settingsODK.odkLastRunDate, '1900/01/01')
 
     def test_odkConf_odkLastRunDatePrev(self):
-        """Test ODK_Conf table has valid odkLastRunDatePrev"""
+        """Test ODK_Conf table has valid odk_last_run_date_prev"""
         self.assertEqual(self.settingsODK.odkLastRunDatePrev, '1899/12/31')
 
     def test_odkConf_odkUseCentral(self):
@@ -334,7 +334,7 @@ class Check_ODK_Conf(unittest.TestCase):
         self.assertEqual(self.settingsODK.odkUseCentral, 'False')
 
     def test_odkConf_odkProjectNumber(self):
-        """Test ODK_Conf table has valid odkProjectNumber"""
+        """Test ODK_Conf table has valid odk_project_number"""
         self.assertEqual(self.settingsODK.odkProjectNumber, '40')
 
     @classmethod
@@ -1319,7 +1319,7 @@ class Check_DHIS_storeVA(unittest.TestCase):
 
 
 class Check_updateODKLastRun(unittest.TestCase):
-    """Test methods that updates ODK_Conf.odkLastRun"""
+    """Test methods that updates ODK_Conf.odk_last_run"""
 
 
     @classmethod
@@ -1348,7 +1348,7 @@ class Check_updateODKLastRun(unittest.TestCase):
 
         self.copy_xferDB.update_odk_last_run(self.copy_conn, self.newRunDate)
         c = self.copy_conn.cursor()
-        sql = 'SELECT odkLastRun FROM ODK_Conf'
+        sql = 'SELECT odk_last_run FROM ODK_Conf'
         c.execute(sql)
         sqlQuery = c.fetchall()
         for i in sqlQuery:

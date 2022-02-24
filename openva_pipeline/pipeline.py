@@ -411,7 +411,7 @@ class Pipeline:
         <openva_pipeline.transferDB.TransferDB.clean_dhis>`
         is called to remove the blobs posted to the DHIS2 server and stored in
         the folder "DHIS/blobs".  Finally, this method updates the Transfer
-        DB's value in the ODK_Conf table's variable odkLastRun so the next ODK
+        DB's value in the ODK_Conf table's variable odk_last_run so the next ODK
         Export file does not include VA records already processed through the
         pipeline.
         """

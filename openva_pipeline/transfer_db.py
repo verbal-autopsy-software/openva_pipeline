@@ -1,5 +1,5 @@
 """
-openva.transferDB
+openva_pipeline.transfer_db
 -----------------
 
 This module handles interactions with the Transfer database.
@@ -166,8 +166,8 @@ class TransferDB:
 
         c = conn.cursor()
         sql_odk = (
-            "SELECT odk_id, odkURL, odkUser, odkPassword, odkFormID, "
-            "odkLastRun, odkUseCentral, odkProjectNumber FROM ODK_Conf;"
+            "SELECT odk_id, odk_url, odk_user, odk_password, odk_form_id, "
+            "odk_last_run, odkUseCentral, odk_project_number FROM ODK_Conf;"
         )
         try:
             query_odk = c.execute(sql_odk).fetchall()
@@ -180,7 +180,7 @@ class TransferDB:
         start_html = odk_url[0:7]
         start_htmls = odk_url[0:8]
         if not (start_html == "http://" or start_htmls == "https://"):
-            raise ODKConfigurationError("Problem in database: ODK_Conf.odkURL")
+            raise ODKConfigurationError("Problem in database: ODK_Conf.odk_url")
         odk_user = query_odk[0][2]
         odk_password = query_odk[0][3]
         odk_form_id = query_odk[0][4]
@@ -233,7 +233,7 @@ class TransferDB:
 
     @staticmethod
     def update_odk_last_run(conn, pl_run_date):
-        """Update Transfer Database table ODK_Conf.odkLastRun
+        """Update Transfer Database table ODK_Conf.odk_last_run
 
         :param conn: A connection to the Transfer Database (e.g. the object
           returned from :meth:`TransferDB.connect_db() <connect_db>`.)
@@ -243,7 +243,7 @@ class TransferDB:
         """
 
         c = conn.cursor()
-        sql = "UPDATE ODK_Conf SET odkLastRun = ?"
+        sql = "UPDATE ODK_Conf SET odk_last_run = ?"
         par = (pl_run_date,)
         c.execute(sql, par)
         conn.commit()
@@ -452,8 +452,8 @@ class TransferDB:
                 df_no_duplicates.to_csv(odk_bc_export_path, index=False)
             except (PermissionError, OSError) as exc:
                 raise PipelineError(
-                    "Error trying to create new CSV file after "
-                    + "removing duplicate records in ODK Export"
+                    "Error trying to create new CSV file after " +
+                    "removing duplicate records in ODK Export"
                 ) from exc
 
     def config_openva(self, conn, algorithm):

@@ -74,35 +74,35 @@ class Check_Pipeline_config(unittest.TestCase):
 
     def test_config_odk_odkURL(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkURL:"""
+        settingsODK.odk_url:"""
 
-        self.assertEqual(self.settingsODK.odkURL,
+        self.assertEqual(self.settingsODK.odk_url,
                          'https://odk.swisstph.ch/ODKAggregateOpenVa')
 
     def test_config_odk_odkUser(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkUser:"""
+        settingsODK.odk_user:"""
 
-        self.assertEqual(self.settingsODK.odkUser, 'odk_openva')
+        self.assertEqual(self.settingsODK.odk_user, 'odk_openva')
 
     def test_config_odk_odkPassword(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkPassword:"""
+        settingsODK.odk_password:"""
 
-        self.assertEqual(self.settingsODK.odkPassword, 'openVA2018')
+        self.assertEqual(self.settingsODK.odk_password, 'openVA2018')
 
     def test_config_odk_odkFormID(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkFormID:"""
+        settingsODK.odk_form_id:"""
 
-        self.assertEqual(self.settingsODK.odkFormID,
+        self.assertEqual(self.settingsODK.odk_form_id,
                          'va_who_v1_5_1')
 
     def test_config_odk_odkLastRun(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkLastRun:"""
+        settingsODK.odk_last_run:"""
 
-        self.assertEqual(self.settingsODK.odkLastRun, '1900-01-01_00:00:01')
+        self.assertEqual(self.settingsODK.odk_last_run, '1900-01-01_00:00:01')
 
     def test_config_odk_odkUseCentral(self):
         """Test config method configuration of pipeline:
@@ -112,9 +112,9 @@ class Check_Pipeline_config(unittest.TestCase):
 
     def test_config_odk_odkProjectNumber(self):
         """Test config method configuration of pipeline:
-        settingsODK.odkProjectNumber:"""
+        settingsODK.odk_project_number:"""
 
-        self.assertEqual(self.settingsODK.odkProjectNumber, '40')
+        self.assertEqual(self.settingsODK.odk_project_number, '40')
 
     def test_config_dhis_dhisURL(self):
         """Test config method configuration of pipeline:
@@ -941,9 +941,9 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
         self.assertFalse(fileExist)
 
     def test_cleanPipeline_odkLastRun(self):
-        """Test update of ODK_Conf.odkLastRun:"""
+        """Test update of ODK_Conf.odk_last_run:"""
 
-        self.c.execute('SELECT odkLastRun FROM ODK_Conf;')
+        self.c.execute('SELECT odk_last_run FROM ODK_Conf;')
         sqlQuery = self.c.fetchone()
         results = [i for i in sqlQuery]
         self.assertEqual(results[0], self.pl.pipeline_run_date)
@@ -951,7 +951,7 @@ class Check_Pipeline_cleanPipeline(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        cls.c.execute("UPDATE ODK_Conf SET odkLastRun = '1900-01-01_00:00:01';")
+        cls.c.execute("UPDATE ODK_Conf SET odk_last_run = '1900-01-01_00:00:01';")
         cls.conn.commit()
         cls.conn.close()
         shutil.rmtree('DHIS/blobs/', ignore_errors = True)
