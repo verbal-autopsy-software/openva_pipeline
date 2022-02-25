@@ -6,7 +6,7 @@ from .runPipeline import downloadSmartVA
 from .pipeline import Pipeline
 from .transfer_db import TransferDB
 from .odk import ODK
-from .openVA import OpenVA
+from .openva import OpenVA
 from .dhis import API
 from .dhis import VerbalAutopsyEvent
 from .dhis import create_db

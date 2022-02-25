@@ -10,7 +10,7 @@ source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
 import context
 from openva_pipeline.transfer_db import TransferDB
-from openva_pipeline.openVA import OpenVA
+from openva_pipeline.openva import OpenVA
 from openva_pipeline.runPipeline import downloadSmartVA
 from openva_pipeline.runPipeline import createTransferDB
 from openva_pipeline.exceptions import OpenVAError

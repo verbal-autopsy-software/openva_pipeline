@@ -1181,7 +1181,8 @@ class TransferDB:
             )
 
         nt_dhis = collections.namedtuple(
-            "nt_dhis", ["dhisURL", "dhisUser", "dhisPassword", "dhisOrgUnit"]
+            "nt_dhis", ["dhis_url", "dhis_user",
+                        "dhis_password", "dhis_org_unit"]
         )
         settings_dhis = nt_dhis(dhis_url, dhis_user, dhis_password,
                                 dhis_org_unit)

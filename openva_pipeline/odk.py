@@ -50,7 +50,7 @@ class ODK:
                                 "ODKFiles")
         self.export_dir = odk_path
         self.storage_dir = odk_path
-        self.file_name = "odkBCExportNew.csv"
+        self.file_name = "odk_bc_export_new.csv"
 
         try:
             if not os.path.isdir(odk_path):
@@ -61,7 +61,8 @@ class ODK:
     def merge_to_prev_export(self):
         """Merge previous ODK Briefcase export files."""
 
-        export_file_prev = os.path.join(self.export_dir, "odkBCExportPrev.csv")
+        export_file_prev = os.path.join(self.export_dir,
+                                        "odk_bc_export_prev.csv")
         export_file_new = os.path.join(self.export_dir, self.file_name)
 
         is_export_file_prev = os.path.isfile(export_file_prev)

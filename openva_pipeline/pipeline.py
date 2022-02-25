@@ -13,7 +13,7 @@ import sys
 from .transfer_db import TransferDB
 from .transfer_db import DatabaseConnectionError
 from .odk import ODK
-from .openVA import OpenVA
+from .openva import OpenVA
 from .dhis import DHIS
 
 
@@ -58,7 +58,7 @@ class Pipeline:
         :type event_type: string
         """
 
-        error_file = os.path.join(self.db_directory, "dbErrorLog.csv")
+        error_file = os.path.join(self.db_directory, "db_error_log.csv")
         time_fmt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         if not os.path.isfile(error_file):
             try:
@@ -68,7 +68,7 @@ class Pipeline:
                         ["Date"] + ["Description"] + ["Additional Information"]
                     )
             except OSError as e:
-                print(str(e) + "...Can't create dbErrorLog.csv")
+                print(str(e) + "...Can't create db_error_log.csv")
                 sys.exit(1)
         try:
             xfer_db = TransferDB(
@@ -92,7 +92,7 @@ class Pipeline:
                     writer = csv.writer(f)
                     writer.writerow(error_msg)
             except (PermissionError, OSError) as exc:
-                print("Can't write to dbErrorLog.csv")
+                print("Can't write to db_error_log.csv")
                 print(error_msg.append(str(exc)))
 
     def config(self):
