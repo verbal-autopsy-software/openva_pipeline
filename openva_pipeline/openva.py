@@ -45,16 +45,18 @@ class OpenVA:
         else:
             self.odk_id = settings["odk"].odk_id
         self.run_date = pipeline_run_date
-
         dir_openva = os.path.join(self.pipeline_args.working_directory,
                                   "OpenVAFiles")
         self.dir_openva = dir_openva
         dir_odk = os.path.join(self.pipeline_args.working_directory,
                                "ODKFiles")
         self.dir_odk = dir_odk
-
         self.cli_smartva = os.path.join(self.pipeline_args.working_directory,
                                         "smartva")
+        self.dhis_org_unit = None
+        if "dhis" in settings.keys():
+            self.dhis_org_unit = str(settings["dhis"][0].dhis_org_unit)
+
         self.successful_run = None
 
         try:
@@ -75,7 +77,7 @@ class OpenVA:
         export_file_prev = os.path.join(self.dir_odk, "odk_bc_export_prev.csv")
         export_file_new = os.path.join(self.dir_odk, "odk_bc_export_new.csv")
         pycva_input = os.path.join(self.dir_openva, "pycrossva_input.csv")
-        openva_input_file = os.path.join(self.dir_openva, "openVA_input.csv")
+        openva_input_file = os.path.join(self.dir_openva, "openva_input.csv")
 
         is_export_file_prev = os.path.isfile(export_file_prev)
         is_export_file_new = os.path.isfile(export_file_new)
@@ -169,7 +171,7 @@ class OpenVA:
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
                 odk_id_for_r = self.odk_id.replace("-", ".")
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
-                f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openVA_input.csv') \n")
+                f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
                 f.write("results <- insilico(data = records_sorted, \n")
                 f.write("\t data.type = '" + self.va_args.insilicova_data_type + "', \n")
@@ -234,8 +236,21 @@ class OpenVA:
                 f.write("evaBlob <- cbind(rep(as.character(records2[,'ID']), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dir_openva + "/entity_attribute_value.csv', row.names=FALSE, na='') \n\n")
-                f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
-                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                if self.dhis_org_unit is not None:
+                    f.write("### check for DHIS org unit \n")
+                    f.write("org_unit_col <- grepl(" + self.dhis_org_unit.lower() + ", tolower(names(raw_data_sorted))) \n")
+                    f.write("if (sum(org_unit_col) == 1) { \n")
+                    f.write("  org_unit <- raw_data_sorted[, org_unit_col] \n")
+                    f.write("} else { \n")
+                    f.write("  org_unit <- '" + self.dhis_org_unit.lower() + "' \n")
+                    f.write("} \n")
+                    f.write("### write out results to csv \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, org_unit, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'dhis_org_unit', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                else:
+                    f.write("### write out results to csv \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dir_openva + "/record_storage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
         except (PermissionError, OSError) as exc:
@@ -264,7 +279,7 @@ class OpenVA:
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
                 odk_id_for_r = self.odk_id.replace("-", ".")
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
-                f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openVA_input.csv') \n")
+                f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
                 if self.va_args.interva_version == "4":
                     f.write("results <- InterVA5(Input = records_sorted, \n")
@@ -310,8 +325,21 @@ class OpenVA:
                 f.write("evaBlob <- cbind(rep(as.character(records2[,'ID']), each=ncol(records2)), rep(names(records2)), c(apply(records2, 1, c))) \n")
                 f.write("colnames(evaBlob) <- c('ID', 'Attribute', 'Value') \n")
                 f.write("write.csv(evaBlob, file='" + self.dir_openva + "/entity_attribute_value.csv', row.names=FALSE, na='') \n\n")
-                f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
-                f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                if self.dhis_org_unit is not None:
+                    f.write("### check for DHIS org unit \n")
+                    f.write("org_unit_col <- grepl(" + self.dhis_org_unit.lower() + ", tolower(names(raw_data_sorted))) \n")
+                    f.write("if (sum(org_unit_col) == 1) { \n")
+                    f.write("  org_unit <- raw_data_sorted[, org_unit_col] \n")
+                    f.write("} else { \n")
+                    f.write("  org_unit <- '" + self.dhis_org_unit.lower() + "' \n")
+                    f.write("} \n")
+                    f.write("### write out results to csv \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, org_unit, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'dhis_org_unit', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                else:
+                    f.write("### write out results to csv \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dir_openva + "/record_storage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
         except (PermissionError, OSError) as exc:
@@ -330,6 +358,14 @@ class OpenVA:
         in_file = os.path.join(self.dir_openva, "openva_input.csv")
         out_dir = os.path.join(self.dir_openva, self.run_date)
         df_data = read_csv(in_file)
+        if self.dhis_org_unit is not None:
+            col_has_org_unit = [self.dhis_org_unit in col for col in
+                                df_data.columns]
+            if sum(col_has_org_unit) == 1:
+                col_org_unit_index = col_has_org_unit.index(True)
+                df_data["dhis_org_unit"] = df_data.iloc[:, col_org_unit_index]
+            else:
+                df_data["dhis_org_unit"] = self.dhis_org_unit
         df_results = read_csv(out_dir +
                               "/1-individual-cause-of-death/" +
                               "individual-cause-of-death.csv")

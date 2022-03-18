@@ -1,8 +1,8 @@
 name = "openva_pipeline"
-from .runPipeline import runPipeline
-from .runPipeline import createTransferDB
-from .runPipeline import downloadBriefcase
-from .runPipeline import downloadSmartVA
+from .runPipeline import run_pipeline
+from .runPipeline import create_transfer_db
+from .runPipeline import download_briefcase
+from .runPipeline import download_smartva
 from .pipeline import Pipeline
 from .transfer_db import TransferDB
 from .odk import ODK

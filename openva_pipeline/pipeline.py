@@ -277,8 +277,7 @@ class Pipeline:
         """
 
         args_odk = settings['odk']
-        args_pipeline = settings['pipeline']
-        pipeline_odk = ODK(args_odk, args_pipeline.working_directory)
+        pipeline_odk = ODK(settings)
         pipeline_odk.merge_to_prev_export()
         if args_odk.odk_use_central == "True":
             odk_central = pipeline_odk.central()
@@ -323,14 +322,9 @@ class Pipeline:
         :rtype: dictionary
         """
 
-        args_openva = settings['openva']
-        args_pipeline = settings['pipeline']
-        args_odk = settings['odk']
         pipeline_openva = OpenVA(
-            va_args=args_openva,
-            pipeline_args=args_pipeline,
-            odk_id=args_odk.odk_id,
-            run_date=self.pipeline_run_date,
+            settings=settings,
+            pipeline_run_date=self.pipeline_run_date,
         )
         zero_records = pipeline_openva.copy_va()
         r_out = {"zero_records": zero_records}
@@ -401,7 +395,7 @@ class Pipeline:
         and "ODKFiles/odkBCExportPrev.csv") if they exist;
         :meth:`TransferDB.clean_openva()
         <openva_pipeline.transferDB.TransferDB.clean_openva>`
-        to remove the input data file ("OpenVAFiles/openVA_input.csv") and the
+        to remove the input data file ("OpenVAFiles/openva_input.csv") and the
         output files ("OpenVAFiles/recordStorage.csv",
         "OpenVAFiles/newStorage.csv", and
         "OpenVAFiles/entityAttributeValue.csv") -- note that all of these

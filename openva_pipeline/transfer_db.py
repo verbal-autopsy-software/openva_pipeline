@@ -7,7 +7,7 @@ This module handles interactions with the Transfer database.
 
 import os
 import shutil
-import collections
+from collections import namedtuple
 import datetime
 import sqlite3
 from pickle import dumps
@@ -93,7 +93,7 @@ class TransferDB:
           codSource - attribute detailing the source of the Cause of Death list
           algorithm - attribute indicating which VA algorithm to use
           workingDirectory - attribute indicating the working directory
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: PipelineConfigurationError
         """
 
@@ -130,7 +130,7 @@ class TransferDB:
                 "Problem in database: Pipeline_Conf.workingDirectory"
             )
 
-        nt_pipeline = collections.namedtuple(
+        nt_pipeline = namedtuple(
             "nt_pipeline",
             ["algorithm_metadata_code", "cod_source", "algorithm",
              "working_directory"],
@@ -160,14 +160,14 @@ class TransferDB:
         :type conn: sqlite3 Connection object
         :returns: Contains all parameters for
           :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: ODKConfigurationError
         """
 
         c = conn.cursor()
         sql_odk = (
-            "SELECT odk_id, odk_url, odk_user, odk_password, odk_form_id, "
-            "odk_last_run, odkUseCentral, odk_project_number FROM ODK_Conf;"
+            "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, "
+            "odkLastRun, odkUseCentral, odkProjectNumber FROM ODK_Conf;"
         )
         try:
             query_odk = c.execute(sql_odk).fetchall()
@@ -199,7 +199,7 @@ class TransferDB:
             - datetime.timedelta(days=1)
         ).strftime("%Y/%m/%d")
 
-        nt_odk = collections.namedtuple(
+        nt_odk = namedtuple(
             "nt_odk",
             [
                 "odk_id",
@@ -243,7 +243,7 @@ class TransferDB:
         """
 
         c = conn.cursor()
-        sql = "UPDATE ODK_Conf SET odk_last_run = ?"
+        sql = "UPDATE ODK_Conf SET odkLastRun = ?"
         par = (pl_run_date,)
         c.execute(sql, par)
         conn.commit()
@@ -394,7 +394,7 @@ class TransferDB:
         """
 
         c = conn.cursor()
-        sql_schema = ("SELECT sql FROM sqlite_master" +
+        sql_schema = ("SELECT sql FROM sqlite_master " +
                       f"WHERE type='table' and name='{table}'")
         schema = c.execute(sql_schema).fetchall()
         return schema
@@ -432,7 +432,7 @@ class TransferDB:
             n_duplicates = len(va_duplicates)
             sql_xfer_db = (
                 "INSERT INTO EventLog "
-                "(event_desc, event_type, eventTime) VALUES (?, ?, ?)"
+                "(eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
             )
             event_desc_part1 = [
                 "Removing duplicate records from ODK Export with"
@@ -478,7 +478,7 @@ class TransferDB:
         :type algorithm: str
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
@@ -508,7 +508,7 @@ class TransferDB:
         :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
@@ -586,7 +586,7 @@ class TransferDB:
                 "Problem in database: Advanced_InterVA_Conf.replicate_bug2."
             )
 
-        nt_interva = collections.namedtuple(
+        nt_interva = namedtuple(
             "nt_interva",
             [
                 "interva_version",
@@ -625,7 +625,7 @@ class TransferDB:
         :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
@@ -944,7 +944,7 @@ class TransferDB:
                 "(valid options: 'TRUE' or 'FALSE')."
             )
 
-        nt_insilicova = collections.namedtuple(
+        nt_insilicova = namedtuple(
             "nt_insilicova",
             [
                 "insilicova_data_type",
@@ -1027,7 +1027,7 @@ class TransferDB:
         :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
-        :rtype: tuple
+        :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
@@ -1081,7 +1081,7 @@ class TransferDB:
             raise OpenVAConfigurationError(
                 "Problem in database: SmartVA_Conf.language")
 
-        nt_smartva = collections.namedtuple(
+        nt_smartva = namedtuple(
             "nt_smartva",
             [
                 "smartva_country",
@@ -1123,9 +1123,11 @@ class TransferDB:
         :type conn: sqlite3 Connection object
         :param algorithm: VA algorithm used by R package openVA
         :type algorithm: str
-        :returns: Contains all parameters for
-          :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`.
-        :rtype: tuple
+        :returns: First item contains all parameters for
+          :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`,
+          and the second item contains the causes of death used by the
+          VA Program (in DHIS2)
+        :rtype: list [named tuple, dict]
         :raises: DHISConfigurationError
         """
         c = conn.cursor()
@@ -1180,7 +1182,7 @@ class TransferDB:
                 "Problem in database: DHIS_Conf.dhisOrgUnit (is empty)"
             )
 
-        nt_dhis = collections.namedtuple(
+        nt_dhis = namedtuple(
             "nt_dhis", ["dhis_url", "dhis_user",
                         "dhis_password", "dhis_org_unit"]
         )
@@ -1298,16 +1300,16 @@ class TransferDB:
             self.working_directory, "OpenVAFiles", "pycrossva_input.csv"
         )
         openva_input_path = os.path.join(
-            self.working_directory, "OpenVAFiles", "openVA_input.csv"
+            self.working_directory, "OpenVAFiles", "openva_input.csv"
         )
         record_storage_path = os.path.join(
-            self.working_directory, "OpenVAFiles", "recordStorage.csv"
+            self.working_directory, "OpenVAFiles", "record_storage.csv"
         )
         new_storage_path = os.path.join(
-            self.working_directory, "OpenVAFiles", "newStorage.csv"
+            self.working_directory, "OpenVAFiles", "new_storage.csv"
         )
         eva_path = os.path.join(
-            self.working_directory, "OpenVAFiles", "entityAttributeValue.csv"
+            self.working_directory, "OpenVAFiles", "entity_attribute_value.csv"
         )
         if os.path.isfile(pcva_input_path):
             os.remove(pcva_input_path)
