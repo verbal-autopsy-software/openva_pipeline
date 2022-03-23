@@ -180,7 +180,8 @@ class TransferDB:
         start_html = odk_url[0:7]
         start_htmls = odk_url[0:8]
         if not (start_html == "http://" or start_htmls == "https://"):
-            raise ODKConfigurationError("Problem in database: ODK_Conf.odk_url")
+            raise ODKConfigurationError(
+                "Problem in database: ODK_Conf.odk_url")
         odk_user = query_odk[0][2]
         odk_password = query_odk[0][3]
         odk_form_id = query_odk[0][4]
