@@ -6,9 +6,9 @@ This module handles interactions with the Transfer database.
 """
 
 import os
-import shutil
+from shutil import rmtree
 from collections import namedtuple
-import datetime
+from datetime import datetime, timedelta
 import sqlite3
 from pickle import dumps
 from pandas import read_csv
@@ -40,10 +40,14 @@ class TransferDB:
     :type db_key: str
     :param pl_run_date: Date when pipeline started latest
       run (YYYY-MM-DD_hh:mm:ss).
-    :type pl_run_date: date
+    :type pl_run_date: datetime
     """
 
-    def __init__(self, db_file_name, db_directory, db_key, pl_run_date):
+    def __init__(self,
+                 db_file_name: str,
+                 db_directory: str,
+                 db_key: str,
+                 pl_run_date: datetime):
 
         self.db_file_name = db_file_name
         self.db_directory = db_directory
@@ -78,7 +82,6 @@ class TransferDB:
         except sqlcipher.DatabaseError as e:
             raise DatabaseConnectionError("Database password error..." +
                                           str(e))
-
         return conn
 
     def config_pipeline(self, conn):
@@ -192,12 +195,12 @@ class TransferDB:
         # if not odkLastRunResult in ("success", "fail"):
         #     raise ODKConfigurationError \
         #         ("Problem in database: ODK_Conf.odkLastRunResult")
-        odk_last_run_date = datetime.datetime.strptime(
+        odk_last_run_date = datetime.strptime(
             odk_last_run, "%Y-%m-%d_%H:%M:%S"
         ).strftime("%Y/%m/%d")
         odk_last_run_date_prev = (
-            datetime.datetime.strptime(odk_last_run_date, "%Y/%m/%d")
-            - datetime.timedelta(days=1)
+            datetime.strptime(odk_last_run_date, "%Y/%m/%d")
+            - timedelta(days=1)
         ).strftime("%Y/%m/%d")
 
         nt_odk = namedtuple(
@@ -428,7 +431,7 @@ class TransferDB:
         va_ids = c.fetchall()
         va_ids_list = [j for i in va_ids for j in i]
         va_duplicates = set(df_odk_id).intersection(set(va_ids_list))
-        time_fmt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         if len(va_duplicates) > 0:
             n_duplicates = len(va_duplicates)
             sql_xfer_db = (
@@ -1212,7 +1215,7 @@ class TransferDB:
             self.working_directory, "OpenVAFiles", "newStorage.csv"
         )
         df_new_storage = read_csv(new_storage_path)
-        time_fmt = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         try:
             for row in df_new_storage.itertuples():
                 xfer_db_id = row[1]
@@ -1328,4 +1331,4 @@ class TransferDB:
 
         if self.working_directory is None:
             raise PipelineError("Need to run config_pipeline.")
-        shutil.rmtree(os.path.join(self.working_directory, "DHIS", "blobs"))
+        rmtree(os.path.join(self.working_directory, "DHIS", "blobs"))

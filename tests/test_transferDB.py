@@ -275,7 +275,7 @@ class CheckODKConf(unittest.TestCase):
     def test_odk_conf_odk_url(self):
         """Test ODK_Conf table has valid odkURL"""
         self.assertEqual(self.settings_odk.odk_url,
-                         'https://odk.swisstph.ch/ODKAggregateOpenVa')
+                         'https://odk-central.swisstph.ch')
 
     def test_odk_conf_odk_url_exception(self):
         """config_odk should fail with invalid url."""
@@ -289,15 +289,15 @@ class CheckODKConf(unittest.TestCase):
 
     def test_odk_conf_odk_user(self):
         """Test ODK_Conf table has valid odkUser"""
-        self.assertEqual(self.settings_odk.odk_user, 'odk_openva')
+        self.assertEqual(self.settings_odk.odk_user, 'who.va.view@swisstph.ch')
 
     def test_odk_conf_odk_password(self):
         """Test ODK_Conf table has valid odkPassword"""
-        self.assertEqual(self.settings_odk.odk_password, 'openVA2018')
+        self.assertEqual(self.settings_odk.odk_password, 'WHOVAVi3w153!')
 
     def test_odk_conf_odk_form_id(self):
         """Test ODK_Conf table has valid odkFormID"""
-        self.assertEqual(self.settings_odk.odk_form_id, 'va_who_v1_5_1')
+        self.assertEqual(self.settings_odk.odk_form_id, 'va_who_v1_5_3')
 
     def test_odk_conf_odk_last_run(self):
         """Test ODK_Conf table has valid odkLastRun"""
@@ -314,7 +314,7 @@ class CheckODKConf(unittest.TestCase):
 
     def test_odk_conf_odk_use_central(self):
         """Test ODK_Conf table has valid odkUseCentral"""
-        self.assertEqual(self.settings_odk.odk_use_central, 'False')
+        self.assertEqual(self.settings_odk.odk_use_central, 'True')
 
     def test_odk_conf_odk_project_number(self):
         """Test ODK_Conf table has valid odkProjectNumber"""

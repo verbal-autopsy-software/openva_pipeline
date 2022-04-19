@@ -74,8 +74,8 @@ class OpenVA:
         :rtype: logical
         """
 
-        export_file_prev = os.path.join(self.dir_odk, "odk_bc_export_prev.csv")
-        export_file_new = os.path.join(self.dir_odk, "odk_bc_export_new.csv")
+        export_file_prev = os.path.join(self.dir_odk, "odk_export_prev.csv")
+        export_file_new = os.path.join(self.dir_odk, "odk_export_new.csv")
         pycva_input = os.path.join(self.dir_openva, "pycrossva_input.csv")
         openva_input_file = os.path.join(self.dir_openva, "openva_input.csv")
 
