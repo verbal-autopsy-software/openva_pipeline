@@ -396,9 +396,9 @@ class Pipeline:
         :meth:`TransferDB.clean_openva()
         <openva_pipeline.transferDB.TransferDB.clean_openva>`
         to remove the input data file ("OpenVAFiles/openva_input.csv") and the
-        output files ("OpenVAFiles/recordStorage.csv",
-        "OpenVAFiles/newStorage.csv", and
-        "OpenVAFiles/entityAttributeValue.csv") -- note that all of these
+        output files ("OpenVAFiles/record_storage.csv",
+        "OpenVAFiles/new_storage.csv", and
+        "OpenVAFiles/entity_attribute_value.csv") -- note that all of these
         results are stored in either/both of the Transfer DB and the DHIS2
         server's VA program; and, third, the method
         :meth:`TransferDB.clean_dhis()
