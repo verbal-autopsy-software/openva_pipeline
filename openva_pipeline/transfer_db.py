@@ -420,10 +420,10 @@ class TransferDB:
         if self.working_directory is None:
             raise PipelineError("Need to run config_pipeline.")
         c = conn.cursor()
-        odk_bc_export_path = os.path.join(
+        odk_export_path = os.path.join(
             self.working_directory, "ODKFiles", "odkBCExportNew.csv"
         )
-        df_odk = read_csv(odk_bc_export_path)
+        df_odk = read_csv(odk_export_path)
         df_odk_id = df_odk["meta-instanceID"]
 
         sql = "SELECT id FROM VA_Storage"
@@ -453,7 +453,7 @@ class TransferDB:
             df_no_duplicates = df_odk[
                 ~df_odk["meta-instanceID"].isin(list(va_duplicates))]
             try:
-                df_no_duplicates.to_csv(odk_bc_export_path, index=False)
+                df_no_duplicates.to_csv(odk_export_path, index=False)
             except (PermissionError, OSError) as exc:
                 raise PipelineError(
                     "Error trying to create new CSV file after " +

@@ -242,8 +242,8 @@ class Check_runODK_with_exports(unittest.TestCase):
             os.remove('ODKFiles/odkBCExportNew.csv')
         if os.path.isfile('ODKFiles/odkBCExportPrev.csv'):
             os.remove('ODKFiles/odkBCExportPrev.csv')
-        shutil.copy('ODKFiles/previous_bc_export.csv', 'ODKFiles/odkBCExportPrev.csv')
-        shutil.copy('ODKFiles/another_bc_export.csv', 'ODKFiles/odkBCExportNew.csv')
+        shutil.copy('ODKFiles/previous_export.csv', 'ODKFiles/odkBCExportPrev.csv')
+        shutil.copy('ODKFiles/another_export.csv', 'ODKFiles/odkBCExportNew.csv')
         self.old_mtimePrev = os.path.getmtime('ODKFiles/odkBCExportPrev.csv')
         self.old_mtimeNew = os.path.getmtime('ODKFiles/odkBCExportNew.csv')
         if not os.path.isfile('ODK-Briefcase-v1.18.0.jar'):
