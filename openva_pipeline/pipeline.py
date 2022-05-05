@@ -332,7 +332,7 @@ class Pipeline:
             pipeline_openva.r_script()
             completed = pipeline_openva.get_cod()
             # r_out["completed"] = completed
-            r_out["returncode"] = completed.returncode
+            r_out["return_code"] = completed.returncode
         return r_out
 
     def run_dhis(self, settings):
@@ -356,7 +356,7 @@ class Pipeline:
 
         args_dhis = settings['dhis']
         args_pipeline = settings['pipeline']
-        pipeline_dhis = DHIS(args_dhis, args_pipeline.workingDirectory)
+        pipeline_dhis = DHIS(args_dhis, args_pipeline.working_directory)
         api_dhis = pipeline_dhis.connect()
         post_log = pipeline_dhis.post_va(api_dhis)
         pipeline_dhis.verify_post(post_log, api_dhis)

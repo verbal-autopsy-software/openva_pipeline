@@ -1,122 +1,116 @@
+from openva_pipeline import dhis
+from openva_pipeline.transfer_db import TransferDB
+from openva_pipeline.run_pipeline import create_transfer_db
+
 import datetime
 import subprocess
 import shutil
 import os
 import unittest
 import collections
-import requests
 from pandas import read_csv
-from pysqlcipher3 import dbapi2 as sqlcipher
-
 from sys import path
 source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
 import context
-from openva_pipeline import dhis
-from openva_pipeline.transfer_db import TransferDB
-from openva_pipeline.runPipeline import createTransferDB
 
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-class Check_DHIS(unittest.TestCase):
+#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
-
 
     @classmethod
     def setUpClass(cls):
 
-        shutil.rmtree('DHIS/blobs/', ignore_errors = True)
-        shutil.copy('OpenVAFiles/sampleEAV.csv',
-                    'OpenVAFiles/entityAttributeValue.csv')
-        shutil.copy('OpenVAFiles/sample_recordStorage.csv',
-                    'OpenVAFiles/recordStorage.csv')
-        # Define valid parameters for SwissTPH DHIS2 Server.
-        dirOpenVA = 'OpenVAFiles'
-        dhisURL = 'https://va30se.swisstph-mis.ch'
-        # dhisURL = 'https://va25.swisstph-mis.ch'
-        dhisUser = 'va-demo'
-        dhisPassword = 'VerbalAutopsy99!'
-        dhisOrgUnit = 'SCVeBskgiK6'
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        shutil.copy("OpenVAFiles/sample_eav.csv",
+                    "OpenVAFiles/entity_attribute_value.csv")
+        shutil.copy("OpenVAFiles/sample_record_storage.csv",
+                    "OpenVAFiles/record_storage.csv")
+        db_file_name = "Pipeline.db"
+        db_key = "enilepiP"
+        db_directory = "."
+        if not os.path.isfile("Pipeline.db"):
+            create_transfer_db(db_file_name, 
+                               db_directory, 
+                               db_key)
+        pipeline_run_date = datetime.datetime.now()
 
-        # parameters for connecting to DB (assuming DB is in tests folder)
-        dbFileName = 'Pipeline.db'
-        dbKey = 'enilepiP'
-        wrong_dbKey = 'wrongKey'
-        # db_directory = os.path.abspath(os.path.dirname(__file__))
-        dbDirectory = '.'
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB(dbFileName, dbDirectory, dbKey)
-        pipelineRunDate = datetime.datetime.now()
+        xfer_db = TransferDB(db_file_name=db_file_name,
+                             db_directory=db_directory,
+                             db_key=db_key,
+                             pl_run_date=pipeline_run_date)
+        conn = xfer_db.connect_db()
+        xfer_db.update_dhis_conf(conn,
+                                 ["dhisURL",
+                                  "dhisUser",
+                                  "dhisPassword"],
+                                 ["http://localhost:8080",
+                                  "admin",
+                                  "district"])
+        settings_dhis = xfer_db.config_dhis(conn, "InSilicoVA")
 
-        xferDB = TransferDB(db_file_name= dbFileName,
-                            db_directory= dbDirectory,
-                            db_key= dbKey,
-                            pl_run_date= pipelineRunDate)
-        conn = xferDB.connect_db()
-        settingsDHIS = xferDB.config_dhis(conn, 'InSilicoVA')
+        cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
 
-        cls.pipelineDHIS = dhis.DHIS(settingsDHIS, '.')
-        apiDHIS = cls.pipelineDHIS.connect()
-        cls.postLog = cls.pipelineDHIS.post_va(apiDHIS)
-        cls.pipelineDHIS.verify_post(cls.postLog, apiDHIS)
+        api_dhis = cls.pipeline_dhis.connect()
+        cls.post_log = cls.pipeline_dhis.post_va(api_dhis)
+        cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
 
-    def test_vaProgramUID(self):
+    def test_va_program_uid(self):
         """Verify VA program is installed."""
 
-        self.assertEqual(self.pipelineDHIS.va_program_uid, 'sv91bCroFFx')
+        self.assertEqual(self.pipeline_dhis.va_program_uid, "sv91bCroFFx")
 
-    def test_postVA(self):
+    def test_post_va(self):
         """Post VA records to DHIS2."""
 
-        checkLog = 'importSummaries' in self.postLog['response'].keys()
-        self.assertTrue(checkLog)
+        check_log = "importSummaries" in self.post_log["response"].keys()
+        self.assertTrue(check_log)
 
     def test_verifyPost(self):
         """Verify VA records got posted to DHIS2."""
 
-        dfNewStorage = read_csv('OpenVAFiles/newStorage.csv')
-        nPushed = sum(dfNewStorage['pipelineOutcome'] == 'Pushed to DHIS2')
-        self.assertEqual(nPushed, self.pipelineDHIS.n_posted_records)
+        df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
+        n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
+        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_records)
 
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('DHIS/blobs/', ignore_errors = True)
-        os.remove('OpenVAFiles/entityAttributeValue.csv')
-        os.remove('OpenVAFiles/newStorage.csv')
-        os.remove('Pipeline.db')
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        os.remove("OpenVAFiles/entity_attribute_value.csv")
+        os.remove("OpenVAFiles/new_storage.csv")
+        os.remove("Pipeline.db")
 
 
-class Check_DHIS_getCODCode(unittest.TestCase):
-    """Check getCODCode function."""
-
+class CheckDHISGetCODCode(unittest.TestCase):
+    """Check get_cod_code function."""
 
     @classmethod
     def setUpClass(cls):
 
-        if not os.path.isfile('Pipeline.db'):
-            createTransferDB('Pipeline.db', '.', 'enilepiP')
-        if os.path.isfile('who_cod.R'):
-            os.remove('who_cod.R')
-        # if os.path.isfile('tariff_cod.py'):
-        #     os.remove('tariff_cod.py')
+        if not os.path.isfile("Pipeline.db"):
+            create_transfer_db("Pipeline.db", ".", "enilepiP")
+        if os.path.isfile("who_cod.R"):
+            os.remove("who_cod.R")
 
-        pipelineRunDate = datetime.datetime(
-            2018, 9, 1, 9, 0, 0).strftime('%Y_%m_%d_%H:%M:%S')
-        xferDB = TransferDB(db_file_name='Pipeline.db',
-                            db_directory='.',
-                            db_key='enilepiP',
-                            pl_run_date= pipelineRunDate)
-        conn = xferDB.connect_db()
-        cls.cod_who = xferDB.config_dhis(conn, 'InSilicoVA')
-        cls.cod_tariff = xferDB.config_dhis(conn, 'SmartVA')
+        pipeline_run_date = datetime.datetime(
+            2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
+        xfer_db = TransferDB(db_file_name="Pipeline.db",
+                             db_directory=".",
+                             db_key="enilepiP",
+                             pl_run_date=pipeline_run_date)
+        conn = xfer_db.connect_db()
+        cls.cod_who = xfer_db.config_dhis(conn, "InSilicoVA")
+        cls.cod_tariff = xfer_db.config_dhis(conn, "SmartVA")
 
         with open("who_cod.R", "w", newline="") as f:
             f.write("data(causetextV5, package='InterVA5')\n")
             f.write("write.csv(causetextV5, file='who_cod.csv', row.names=FALSE)\n")
-        rArgs = ["R", "CMD", "BATCH", "--vanilla", "who_cod.R"]
-        subprocess.run(args=rArgs,
+        r_args = ["R", "CMD", "BATCH", "--vanilla", "who_cod.R"]
+        subprocess.run(args=r_args,
                        stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE,
@@ -129,16 +123,16 @@ class Check_DHIS_getCODCode(unittest.TestCase):
         # url_tariff = "https://github.com/ihmeuw/SmartVA-Analyze/raw/master/smartva/data/icds.py"
         # r = requests.get(url_tariff)
         # tariff = "#" + r.text
-        # with open("tariff_cod.py", "w", newline="") as f:
-        #     #print(r.text, file=f)
-        #     f.write("ADULT = 'adult'\n")
-        #     f.write("CHILD = 'child'\n")
-        #     f.write("NEONATE = 'neonate'\n")
-        #     print(tariff, file=f)
+        # with open("tariff_cod.py", "w", newline="") as db_file:
+        #     #print(r.text, file=db_file)
+        #     db_file.write("ADULT = "adult"\n")
+        #     db_file.write("CHILD = "child"\n")
+        #     db_file.write("NEONATE = "neonate"\n")
+        #     print(tariff, file=db_file)
         # from tariff_cod import ICDS
-        # tariff_adult = list(ICDS['adult'].keys())
-        # tariff_child = list(ICDS['child'].keys())
-        # tariff_neonate = list(ICDS['neonate'].keys())
+        # tariff_adult = list(ICDS["adult"].keys())
+        # tariff_child = list(ICDS["child"].keys())
+        # tariff_neonate = list(ICDS["neonate"].keys())
         # cls.tariff_causes = tariff_adult + tariff_child + tariff_neonate
 
     def test_who_causes(self):
@@ -146,86 +140,82 @@ class Check_DHIS_getCODCode(unittest.TestCase):
 
         for i in self.who_causes:
             with self.subTest(i=i):
-                self.assertIsNotNone(dhis.getCODCode(self.cod_who[1], i))
+                self.assertIsNotNone(dhis.get_cod_code(self.cod_who[1], i))
 
     # def test_tariff_causes(self):
     #     """Test matching for Tariff causes of death."""
 
     #     for i in self.tariff_causes:
     #         with self.subTest(i=i):
-    #             self.assertIsNotNone(dhis.getCODCode(self.cod_tariff[1], i))
+    #             self.assertIsNotNone(
+    #             dhis.get_cod_code(self.cod_tariff[1], i))
 
     @classmethod
     def tearDownClass(cls):
 
-        os.remove('who_cod.csv')
-        os.remove('who_cod.R')
-        os.remove('who_cod.Rout')
-        # os.remove('tariff_cod.py')
+        os.remove("who_cod.csv")
+        os.remove("who_cod.R")
+        os.remove("who_cod.Rout")
 
 
-class Check_DHIS_Exceptions(unittest.TestCase):
+class CheckDHISExceptions(unittest.TestCase):
     """Check that DHIS raises exceptions when it should."""
 
+    # removing test (if org unit not found, then death is posted to root level)
+    # def test_org_unit_exception(self):
+    #     """Verify exception is raised with faulty input."""
+    #
+    #     dhis_url = "https://va30tr.swisstph-mis.ch"
+    #     dhis_user = "va-demo"
+    #     dhis_password = "VerbalAutopsy99!"
+    #     dhis_org_unit = "wrong"
+    #     ntDHIS = collections.namedtuple("ntDHIS",
+    #                                     ["dhis_url",
+    #                                      "dhis_user",
+    #                                      "dhis_password",
+    #                                      "dhis_org_unit",
+    #                                      "dhis_cod_codes"]
+    #     )
+    #     bad_settings = ntDHIS(dhis_url,
+    #                           dhis_user,
+    #                           dhis_password,
+    #                           dhis_org_unit,
+    #                           "InSilicoVA")
+    #     mock_cod = {"cause1": "code1", "cause2": "code2"}
+    #     bad_input = [bad_settings, mock_cod]
+    #     pipeline_dhis = dhis.DHIS(bad_input, ".")
+    #     self.assertRaises(dhis.DHISError, pipeline_dhis.connect)
 
-    def test_orgUnit_Exception(self):
+    def test_dhis_user_exception(self):
         """Verify exception is raised with faulty input."""
 
-        dirOpenVA = 'OpenVAFiles'
-        dhisURL = 'https://va30se.swisstph-mis.ch'
-        # dhisURL = 'https://va25.swisstph-mis.ch'
-        dhisUser = 'va-demo'
-        dhisPassword = 'VerbalAutopsy99!'
-        dhisOrgUnit = 'wrong'
-        ntDHIS = collections.namedtuple('ntDHIS',
-                                        ['dhisURL',
-                                         'dhisUser',
-                                         'dhisPassword',
-                                         'dhisOrgUnit',
-                                         'dhisCODCodes']
+        dhis_url = "https://va30tr.swisstph-mis.ch"
+        dhis_user = "wrong"
+        dhis_password = "VerbalAutopsy99!"
+        dhis_org_unit = "SCVeBskgiK6"
+        ntDHIS = collections.namedtuple("ntDHIS",
+                                        ["dhis_url",
+                                         "dhis_user",
+                                         "dhis_password",
+                                         "dhis_org_unit",
+                                         "dhis_cod_codes"]
         )
-        badSettings = ntDHIS(dhisURL,
-                             dhisUser,
-                             dhisPassword,
-                             dhisOrgUnit,
-                             'InSilicoVA')
-        mockCOD = {'cause1': 'code1', 'cause2': 'code2'}
-        badInput = [badSettings, mockCOD]
-        pipelineDHIS = dhis.DHIS(badInput, '.')
-        self.assertRaises(dhis.DHISError, pipelineDHIS.connect)
+        bad_settings = ntDHIS(dhis_url,
+                              dhis_user,
+                              dhis_password,
+                              dhis_org_unit,
+                              "InSilicoVA")
+        mock_cod = {"cause1": "code1", "cause2": "code2"}
+        bad_input = [bad_settings, mock_cod]
 
-    def test_dhisUser_Exception(self):
-        """Verify exepction is raised with faulty input."""
-
-        dirOpenVA = 'OpenVAFiles'
-        dhisURL = 'https://va30se.swisstph-mis.ch'
-        # dhisURL = 'https://va25.swisstph-mis.ch'
-        dhisUser = 'wrong'
-        dhisPassword = 'VerbalAutopsy99!'
-        dhisOrgUnit = 'SCVeBskgiK6'
-        ntDHIS = collections.namedtuple('ntDHIS',
-                                        ['dhisURL',
-                                         'dhisUser',
-                                         'dhisPassword',
-                                         'dhisOrgUnit',
-                                         'dhisCODCodes']
-        )
-        badSettings = ntDHIS(dhisURL,
-                             dhisUser,
-                             dhisPassword,
-                             dhisOrgUnit,
-                             'InSilicoVA')
-        mockCOD = {'cause1': 'code1', 'cause2': 'code2'}
-        badInput = [badSettings, mockCOD]
-
-        pipelineDHIS = dhis.DHIS(badInput, '.')
-        self.assertRaises(dhis.DHISError, pipelineDHIS.connect)
+        pipeline_dhis = dhis.DHIS(bad_input, ".")
+        self.assertRaises(dhis.DHISError, pipeline_dhis.connect)
 
     @classmethod
     def tearDownClass(cls):
 
-        shutil.rmtree('DHIS/blobs/', ignore_errors = True)
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
 
 
-if __name__ == '__main__':
-    unittest.main(verbosity = 2)
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

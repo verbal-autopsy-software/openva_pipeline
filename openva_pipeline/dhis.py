@@ -26,30 +26,30 @@ class API(object):
     information from and post verbal autopsy records (and results) to a
     DHIS2 server that has the Verbal Autopsy program installed.
 
-    :param dhisURL: Web address for DHIS2 server (e.g., "play.dhis2.org/demo").
-    :type dhisURL: string
-    :param dhisUser: Username for DHIS2 account.
-    :type dhisUser: string
-    :param dhisPassword: Password for DHIS2 account.
-    :type dhisPassword: string
+    :param dhis_url: Web address for DHIS2 server (e.g. "play.dhis2.org/demo").
+    :type dhis_url: string
+    :param dhis_user: Username for DHIS2 account.
+    :type dhis_user: string
+    :param dhis_password: Password for DHIS2 account.
+    :type dhis_password: string
     :raises: DHISError
     """
 
-    def __init__(self, dhisURL, dhisUser, dhisPass):
+    def __init__(self, dhis_url, dhis_user, dhis_password):
 
-        if "/api" in dhisURL:
+        if "/api" in dhis_url:
             raise DHISError(
                 "Please do not specify /api/ in the server argument: \
               e.g. --server=play.dhis2.org/demo"
             )
-        if dhisURL.startswith("localhost") or dhisURL.startswith("127.0.0.1"):
-            dhisURL = "http://{}".format(dhisURL)
-        elif dhisURL.startswith("http://"):
-            dhisURL = dhisURL
-        elif not dhisURL.startswith("https://"):
-            dhisURL = "https://{}".format(dhisURL)
-        self.auth = (dhisUser, dhisPass)
-        self.url = "{}/api".format(dhisURL)  ## possible new parameter
+        if dhis_url.startswith("localhost") or dhis_url.startswith("127.0.0.1"):
+            dhis_url = "http://{}".format(dhis_url)
+        elif dhis_url.startswith("http://"):
+            dhis_url = dhis_url
+        elif not dhis_url.startswith("https://"):
+            dhis_url = "https://{}".format(dhis_url)
+        self.auth = (dhis_user, dhis_password)
+        self.url = "{}/api".format(dhis_url)
 
     def get(self, endpoint, params=None):
         """GET method for DHIS2 API.
@@ -88,17 +88,19 @@ class API(object):
             else:
                 return r.json()
         except requests.RequestException:
-            raise DHISError("Problem with API.post..." + str(requests.RequestException))
+            raise DHISError("Problem with API.post..." +
+                            str(requests.RequestException))
 
-    def post_blob(self, f):
+    def post_blob(self, db_file):
         """Post file to DHIS2 and return created UID for that file
 
         :rtype: str
         """
 
         url = "{}/fileResources".format(self.url)
-        with open(f, "rb") as fName:
-            files = {"file": (f, fName, "application/x-sqlite3", {"Expires": "0"})}
+        with open(db_file, "rb") as file_name:
+            files = {"file": (db_file, file_name, "application/x-sqlite3",
+                              {"Expires": "0"})}
             try:
                 r = requests.post(url, files=files, auth=self.auth)
                 if r.status_code not in (200, 202):
@@ -113,7 +115,8 @@ class API(object):
                     return file_id
             except requests.RequestException:
                 raise DHISError(
-                    "Problem with API.post_blob..." + str(requests.RequestException)
+                    "Problem with API.post_blob..." +
+                    str(requests.RequestException)
                 )
 
 
@@ -125,9 +128,9 @@ class VerbalAutopsyEvent(object):
     :type va_id: string
     :param program: UID of the DHIS2's Verbal Autopsy program
     :type program: string
-    :param dhis_orgunit: UID for the DHIS2 Organization Unit where the
+    :param dhis_org_unit: UID for the DHIS2 Organization Unit where the
       event (death) should be registered.
-    :type dhis_orgunit: string
+    :type dhis_org_unit: string
     :param event_date: Date of death with YYYY-MM-DD format
     :type event_date: datetime.date
     :param sex: Sex of the deceased (used as a DHIS2 data element).
@@ -158,7 +161,7 @@ class VerbalAutopsyEvent(object):
         self,
         va_id,
         program,
-        dhis_orgunit,
+        dhis_org_unit,
         event_date,
         sex,
         dob,
@@ -170,7 +173,7 @@ class VerbalAutopsyEvent(object):
     ):
         self.va_id = va_id
         self.program = program
-        self.dhis_orgunit = dhis_orgunit
+        self.dhis_org_unit = dhis_org_unit
         self.event_date = event_date
         self.sex = sex
         self.dob = datetime.datetime.strftime(dob, "%Y-%m-%d")
@@ -179,43 +182,37 @@ class VerbalAutopsyEvent(object):
         self.algorithm_metadata = algorithm_metadata
         self.odk_id = odk_id
 
+        self.data_values = [
+            {"dataElement": "htm6PixLJNy", "value": self.va_id},
+            {"dataElement": "hi7qRC4SMMk", "value": self.sex},
+            {"dataElement": "mwSaVq64k7j", "value": self.dob},
+            {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
+            {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
+            {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
+            {"dataElement": "XLHIBoLtjGt", "value": file_id},
+        ]
         if age != "MISSING":
-            self.datavalues = [
-                {"dataElement": "htm6PixLJNy", "value": self.va_id},
-                {"dataElement": "hi7qRC4SMMk", "value": self.sex},
-                {"dataElement": "mwSaVq64k7j", "value": self.dob},
-                {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
-                {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
-                {"dataElement": "oPAg4MA0880", "value": self.age},
-                {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
-                {"dataElement": "XLHIBoLtjGt", "value": file_id},
-            ]
-        else:
-            self.datavalues = [
-                {"dataElement": "htm6PixLJNy", "value": self.va_id},
-                {"dataElement": "hi7qRC4SMMk", "value": self.sex},
-                {"dataElement": "mwSaVq64k7j", "value": self.dob},
-                {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
-                {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
-                {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
-                {"dataElement": "XLHIBoLtjGt", "value": file_id},
-            ]
+            self.data_values.append({"dataElement": "oPAg4MA0880",
+                                     "value": self.age})
 
-    def format_to_dhis2(self, dhisUser):
+    def format_to_dhis2(self, dhis_user, dhis_org_unit):
         """
         Format object to DHIS2 compatible event for DHIS2 API
 
-        :param dhisUser: DHIS2 username for account posting the event
+        :param dhis_user: DHIS2 username for account posting the event
+        :param dhis_org_unit: code for DHIS2 organization unit where the death
+          will be posted
         :returns: DHIS2 event
         :rtype: dict
         """
         event = {
             "program": self.program,
-            "orgUnit": self.dhis_orgunit,
-            "eventDate": datetime.datetime.strftime(self.event_date, "%Y-%m-%d"),
+            "orgUnit": dhis_org_unit,
+            "eventDate": datetime.datetime.strftime(
+                self.event_date, "%Y-%m-%d"),
             "status": "COMPLETED",
-            "storedBy": dhisUser,
-            "dataValues": self.datavalues,
+            "storedBy": dhis_user,
+            "dataValues": self.data_values,
         }
         return event
 
@@ -223,84 +220,90 @@ class VerbalAutopsyEvent(object):
         return json.dumps(self, default=lambda o: o.__dict__)
 
 
-def create_db(fName, evaList):
+def create_db(file_name, eva_list):
     """
     Create a SQLite database with VA data + COD
 
-    :param evaList: Event-Value-Attribute data structure with verbal autopsy
+    :param file_name: Name (including path) of sqlite3 db file (blob) that
+      will be posted to DHIS2
+    :type file_name: str
+    :param eva_list: Event-Value-Attribute data structure with verbal autopsy
       data, cause of death result, and VA metadata.
-    :type evaList: list
+    :type eva_list: list
     :rtype: None
     """
-    conn = sqlite3.connect(fName)
+    conn = sqlite3.connect(file_name)
     with conn:
         cur = conn.cursor()
-        cur.execute("CREATE TABLE vaRecord(ID INT, Attrtibute TEXT, Value TEXT)")
-        cur.executemany("INSERT INTO vaRecord VALUES (?,?,?)", evaList)
+        cur.execute(
+            "CREATE TABLE vaRecord(ID INT, Attribute TEXT, Value TEXT)")
+        cur.executemany("INSERT INTO vaRecord VALUES (?,?,?)", eva_list)
     conn.close()
 
 
-def getCODCode(myDict, searchFor):
+def get_cod_code(my_dict, search_for):
     """Return COD label expected by (DHIS2) VA Program.
 
-    :param searchFor: Cause of Death label returned by openVA.
-    :type searchFor: string
+    :param my_dict: Dictionary to search
+    :type my_dict: dict
+    :param search_for: Cause of Death label returned by openVA.
+    :type search_for: string
     :rtype: str
     """
-    for i in range(len(myDict.keys())):
-        match = re.search(re.escape(searchFor), list(myDict.keys())[i])
+    for i in range(len(my_dict.keys())):
+        match = re.search(re.escape(search_for), list(my_dict.keys())[i])
         if match:
-            return list(myDict.values())[i]
+            return list(my_dict.values())[i]
 
 
-def findKeyValue(key, d):
+def find_key_value(key, my_dict):
     """
     Return a key's value in a nested dictionary.
     """
-    if key in d:
-        yield d[key]
-    for k in d:
-        if isinstance(d[k], list):
-            for i in d[k]:
-                for j in findKeyValue(key, i):
+    if key in my_dict:
+        yield my_dict[key]
+    for k in my_dict:
+        if isinstance(my_dict[k], list):
+            for i in my_dict[k]:
+                for j in find_key_value(key, i):
                     yield j
 
 
 class DHIS:
-    """Class for transfering VA records (with assigned CODs) to the DHIS2 server.
+    """Class for transferring VA records (with assigned CODs) to the DHIS2.
 
-    This class includes methods for importing VA results (i.e. assigned causes of
-    death from openVA or SmartVA) as CSV files, connecting to a DHIS2 server
+    This class includes methods for importing VA results (i.e. assigned causes
+    of death from openVA or SmartVA) as CSV files, connecting to a DHIS2 server
     with the Verbal Autopsy Program, and posting the results to the DHIS2
     server and/or the local Transfer database.
 
-    :param dhisArgs: Contains parameter values for connected to DHIS2, as
+    :param dhis_args: Contains parameter values for connected to DHIS2, as
       returned by transferDB.config_dhis().
-    :type dhisArgs: (named) tuple
-    :param workingDirectory: Workind direcotry for the openVA Pipeline
-    :type workingDirectory: string
+    :type dhis_args: (named) tuple
+    :param working_directory: Working directory for the openVA Pipeline
+    :type working_directory: string
     :raises: DHISError
     """
 
-    def __init__(self, dhisArgs, workingDirectory):
+    def __init__(self, dhis_args, working_directory):
 
-        self.dhisURL = dhisArgs[0].dhisURL
-        self.dhisUser = dhisArgs[0].dhisUser
-        self.dhisPassword = dhisArgs[0].dhisPassword
-        self.dhisOrgUnit = dhisArgs[0].dhisOrgUnit
-        self.dhisCODCodes = dhisArgs[1]
-        self.dirDHIS = os.path.join(workingDirectory, "DHIS")
-        self.dirOpenVA = os.path.join(workingDirectory, "OpenVAFiles")
+        self.dhis_url = dhis_args[0].dhis_url
+        self.dhis_user = dhis_args[0].dhis_user
+        self.dhis_password = dhis_args[0].dhis_password
+        self.dhis_org_unit = dhis_args[0].dhis_org_unit
+        self.dhis_cod_codes = dhis_args[1]
+        self.dir_dhis = os.path.join(working_directory, "DHIS")
+        self.dir_openva = os.path.join(working_directory, "OpenVAFiles")
         self.va_program_uid = None
         self.n_posted_records = 0
 
-        dhisPath = os.path.join(workingDirectory, "DHIS")
+        dhis_path = os.path.join(working_directory, "DHIS")
 
         try:
-            if not os.path.isdir(dhisPath):
-                os.makedirs(dhisPath)
-        except:
-            raise DHISError("Unable to create directory" + dhisPath)
+            if not os.path.isdir(dhis_path):
+                os.makedirs(dhis_path)
+        except (PermissionError, OSError) as exc:
+            raise DHISError("Unable to create directory" + str(exc)) from exc
 
     def connect(self):
         """Setup connection to DHIS2 server.
@@ -320,91 +323,104 @@ class DHIS:
         """
 
         try:
-            apiDHIS = API(self.dhisURL, self.dhisUser, self.dhisPassword)
-        except (requests.RequestException) as e:
-            raise DHISError(str(e))
+            api_dhis = API(self.dhis_url, self.dhis_user, self.dhis_password)
+        except requests.RequestException as exc:
+            raise DHISError(str(exc)) from exc
 
-        vaPrograms = apiDHIS.get(
+        va_programs = api_dhis.get(
             "programs", params={"filter": "name:like:Verbal Autopsy"}
         ).get("programs")
-        if len(vaPrograms) == 0:
+        if len(va_programs) == 0:
             raise DHISError("No Verbal Autopsy Program found.")
-        if len(vaPrograms) > 1:
+        if len(va_programs) > 1:
             raise DHISError("More than one Verbal Autopsy Program found.")
-        self.va_program_uid = vaPrograms[0].get("id")
+        self.va_program_uid = va_programs[0].get("id")
 
-        # orgUnits = apiDHIS.get("organisationUnits").get("organisationUnits")
-        # validOrgUnit = self.dhisOrgUnit in [i["id"] for i in orgUnits]
+        # orgUnits = api_dhis.get("organisationUnits").get("organisationUnits")
+        # validOrgUnit = self.dhis_org_unit in [i["id"] for i in orgUnits]
         # if not validOrgUnit:
         #     raise DHISError("Did not find Organisation Unit.")
-        # return apiDHIS
+        return api_dhis
 
-    def post_va(self, apiDHIS):
+    def post_va(self, api_dhis):
         """Post VA records to DHIS.
 
-        This method reads in a CSV file ("entityAttribuesValue.csv") with
+        This method reads in a CSV file ("entity_attributes_value.csv") with
         cause of death results (from openVA) then formats events and posts
         them to a VA Program (installed on DHIS2 server).
 
-        :param apiDHIS: A class instance for interacting with the DHIS2 API
+        :param api_dhis: A class instance for interacting with the DHIS2 API
           created by the method :meth:`DHIS.connect <connect>`
-        :type apiDHIS: Instance of the :class:`API <API>` class
-        :returns: Log information receieved after posting events to the VA
+        :type api_dhis: Instance of the :class:`API <API>` class
+        :returns: Log information received after posting events to the VA
           Program on a DHIS2 server (see :meth:`API.post <API.post>`).
         :rtype: dict
         :raises: DHISError
         """
 
-        evaPath = os.path.join(self.dirOpenVA, "entityAttributeValue.csv")
-        if not os.path.isfile(evaPath):
-            raise DHISError("Missing: " + evaPath)
-        recordStoragePath = os.path.join(self.dirOpenVA, "recordStorage.csv")
-        if not os.path.isfile(evaPath):
-            raise DHISError("Missing: " + recordStoragePath)
-        newStoragePath = os.path.join(self.dirOpenVA, "newStorage.csv")
+        eva_path = os.path.join(self.dir_openva, "entity_attribute_value.csv")
+        if not os.path.isfile(eva_path):
+            raise DHISError("Missing: " + eva_path)
+        record_storage_path = os.path.join(self.dir_openva,
+                                           "record_storage.csv")
+        if not os.path.isfile(record_storage_path):
+            raise DHISError("Missing: " + record_storage_path)
+        new_storage_path = os.path.join(self.dir_openva, "new_storage.csv")
 
-        blobPath = os.path.join(self.dirDHIS, "blobs")
+        blob_path = os.path.join(self.dir_dhis, "blobs")
         try:
-            if not os.path.isdir(blobPath):
-                os.makedirs(blobPath)
-        except OSError as e:
-            raise DHISError("Unable to create directory for DHIS blobs.")
+            if not os.path.isdir(blob_path):
+                os.makedirs(blob_path)
+        except OSError as exc:
+            raise DHISError(
+                "Unable to create directory for DHIS blobs.") from exc
 
         events = []
         export = {}
 
-        dfDHIS = read_csv(evaPath)
-        grouped = dfDHIS.groupby(["ID"])
-        dfRecordStorage = read_csv(recordStoragePath)
+        df_dhis = read_csv(eva_path)
+        grouped = df_dhis.groupby(["ID"])
+        df_record_storage = read_csv(record_storage_path)
+        server_org_units = api_dhis.get(
+            "organisationUnits").get("organisationUnits")
+        server_org_unit_names = [i['displayName'] for i in server_org_units]
+        server_org_unit_ids = [i['id'] for i in server_org_units]
+        server_top_org_unit = api_dhis.get(
+            "organisationUnits",
+            params={"filter": "level:eq:1"})["organisationUnits"][0]
+        server_top_org_unit_id = server_top_org_unit["id"]
 
-        with open(newStoragePath, "w", newline="") as csvOut:
-            writer = csv.writer(csvOut)
+        with open(new_storage_path, "w", newline="") as csv_out:
+            writer = csv.writer(csv_out)
 
-            header = list(dfRecordStorage)
+            header = list(df_record_storage)
             header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
             writer.writerow(header)
 
-            ## this depends on openVA vs SmartVA
-            for i in dfRecordStorage.itertuples(index=False):
+            # this depends on openVA vs SmartVA
+            for i in df_record_storage.itertuples(index=False):
                 row = list(i)
 
-                if row[5] != "MISSING" and row[5] != None:
+                if row[5] != "MISSING" and row[5] is not None:
 
-                    vaID = str(row[0])
-                    blobFile = "{}.db".format(os.path.join(self.dirDHIS, "blobs", vaID))
-                    blobRecord = grouped.get_group(str(row[0]))
-                    blobEVA = blobRecord.values.tolist()
+                    va_id = str(row[0])
+                    blob_file = "{}.db".format(os.path.join(self.dir_dhis,
+                                                            "blobs",
+                                                            va_id))
+                    blob_record = grouped.get_group(str(row[0]))
+                    blob_eva = blob_record.values.tolist()
 
                     try:
-                        create_db(blobFile, blobEVA)
-                    except:
-                        raise DHISError("Unable to create blob.")
+                        create_db(blob_file, blob_eva)
+                    except sqlite3.OperationalError as exc:
+                        raise DHISError("Unable to create blob.") from exc
                     try:
-                        fileID = apiDHIS.post_blob(blobFile)
-                    except requests.RequestException as e:
-                        raise DHISError("Unable to post blob to DHIS..." + str(e))
+                        file_id = api_dhis.post_blob(blob_file)
+                    except requests.RequestException as exc:
+                        raise DHISError("Unable to post blob to DHIS..." +
+                                        str(exc)) from exc
 
-                    algorithm = row[6].split("|")[0]
+                    algorithm = row[7].split("|")[0]
                     if algorithm == "SmartVA":
                         if row[1] in ["1", "1.0", 1, 1.0]:
                             sex = "male"
@@ -419,13 +435,18 @@ class DHIS:
                     if isnull(row[2]):
                         dob = datetime.date(9999, 9, 9)
                     else:
-                        dobTemp = datetime.datetime.strptime(row[2], "%Y-%m-%d")
-                        dob = datetime.date(dobTemp.year, dobTemp.month, dobTemp.day)
+                        dob_temp = datetime.datetime.strptime(row[2],
+                                                              "%Y-%m-%d")
+                        dob = datetime.date(dob_temp.year,
+                                            dob_temp.month,
+                                            dob_temp.day)
                     if isnull(row[3]):
-                        eventDate = datetime.date(9999, 9, 9)
+                        event_date = datetime.date(9999, 9, 9)
                     else:
                         dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
-                        eventDate = datetime.date(dod.year, dod.month, dod.day)
+                        event_date = datetime.date(dod.year,
+                                                   dod.month,
+                                                   dod.day)
                     if type(row[4]) == int:
                         age = row[4]
                     elif type(row[4]) == float and not isnan(row[4]):
@@ -433,80 +454,96 @@ class DHIS:
                     else:
                         age = "MISSING"
                     if row[5] == "Undetermined":
-                        codCode = "99"
+                        cod_code = "99"
                     else:
-                        codCode = getCODCode(self.dhisCODCodes, row[5])
-                    algorithmMetadataCode = row[6]
-                    odkID = row[7]
+                        cod_code = get_cod_code(self.dhis_cod_codes, row[5])
+                    death_org_unit = row[6]
+                    if death_org_unit in server_org_unit_names:
+                        org_unit_index = server_org_unit_names.index(
+                            death_org_unit)
+                        dhis_org_unit = server_org_unit_ids[org_unit_index]
+                    elif death_org_unit in server_org_unit_ids:
+                        dhis_org_unit = death_org_unit
+                    else:
+                        # TODO: add parameter for what to do when can't find
+                        # DHIS org unit with options post to root or don't post
+                        dhis_org_unit = server_top_org_unit_id
+
+                    algorithm_metadata_code = row[7]
+                    odk_id = row[8]
 
                     e = VerbalAutopsyEvent(
-                        vaID,
+                        va_id,
                         self.va_program_uid,
-                        self.dhisOrgUnit,
-                        eventDate,
+                        dhis_org_unit,
+                        event_date,
                         sex,
                         dob,
                         age,
-                        codCode,
-                        algorithmMetadataCode,
-                        odkID,
-                        fileID,
+                        cod_code,
+                        algorithm_metadata_code,
+                        odk_id,
+                        file_id,
                     )
-                    events.append(e.format_to_dhis2(self.dhisUser))
+                    events.append(e.format_to_dhis2(self.dhis_user,
+                                                    dhis_org_unit))
 
-                    row.extend([vaID, "Pushing to DHIS2"])
+                    row.extend([va_id, "Pushing to DHIS2"])
                     writer.writerow(row)
                 else:
                     row.extend(["", "No CoD Assigned"])
                     writer.writerow(row)
         export["events"] = events
         try:
-            log = apiDHIS.post("events", data=export)
-        except requests.RequestException as e:
-            raise DHISError("Unable to post events to DHIS2..." + str(e))
+            log = api_dhis.post("events", data=export)
+        except requests.RequestException as exc:
+            raise DHISError("Unable to post events to DHIS2..." + str(exc))
         self.n_posted_records = len(log["response"]["importSummaries"])
         return log
 
-    def verify_post(self, postLog, apiDHIS):
+    def verify_post(self, post_log, api_dhis):
         """Verify that VA records were posted to DHIS2 server.
 
-        :param postLog: Log information retrieved after posting events to
+        :param post_log: Log information retrieved after posting events to
           a VA Program on a DHIS2 server; this is the return object from
           :meth:`DHIS.post_va <post_va>`.
-        :type postLog: dictionary
-        :param apiDHIS: A class instance for interacting with the DHIS2 API
+        :type post_log: dictionary
+        :param api_dhis: A class instance for interacting with the DHIS2 API
           created by the method :meth:`DHIS.connect <connect>`
-        :type apiDHIS: Instance of the :class:`API <API>` class
+        :type api_dhis: Instance of the :class:`API <API>` class
         :raises: DHISError
         """
 
-        vaReferences = list(findKeyValue("reference", d=postLog["response"]))
+        va_references = list(find_key_value("reference",
+                                            my_dict=post_log["response"]))
         try:
-            dfNewStorage = read_csv(self.dirOpenVA + "/newStorage.csv")
-        except:
+            df_new_storage = read_csv(self.dir_openva + "/new_storage.csv")
+        except FileNotFoundError:
             raise DHISError(
                 "Problem with DHIS.verify_post...Can't find file "
-                + self.dirOpenVA
-                + "/newStorage.csv"
+                + self.dir_openva
+                + "/new_storage.csv"
             )
         try:
-            for vaReference in vaReferences:
-                postedDataValues = apiDHIS.get("events/{}".format(vaReference)).get(
-                    "dataValues"
-                )
-                postedVAIDIndex = next(
+            for va_reference in va_references:
+                posted_data_values = api_dhis.get(
+                    "events/{}".format(va_reference)).get("dataValues")
+                posted_va_id_index = next(
                     (
                         index
-                        for (index, d) in enumerate(postedDataValues)
+                        for (index, d) in enumerate(posted_data_values)
                         if d["dataElement"] == "htm6PixLJNy"
                     ),
                     None,
                 )
-                postedVAID = postedDataValues[postedVAIDIndex]["value"]
-                rowVAID = dfNewStorage["dhisVerbalAutopsyID"] == postedVAID
-                dfNewStorage.loc[rowVAID, "pipelineOutcome"] = "Pushed to DHIS2"
-            dfNewStorage.to_csv(self.dirOpenVA + "/newStorage.csv", index=False)
-        except:
+                posted_va_id = posted_data_values[posted_va_id_index]["value"]
+                row_va_id = df_new_storage[
+                                "dhisVerbalAutopsyID"] == posted_va_id
+                df_new_storage.loc[row_va_id,
+                                   "pipelineOutcome"] = "Pushed to DHIS2"
+            df_new_storage.to_csv(self.dir_openva + "/new_storage.csv",
+                                  index=False)
+        except (requests.RequestException, ) as exc:
             raise DHISError(
-                "Problem with DHIS.post_va...couldn't verify posted records."
-            )
+                "Problem verifying posted records with DHIS.post_va..." +
+                str(exc)) from exc

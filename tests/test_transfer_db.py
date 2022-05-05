@@ -1,5 +1,5 @@
 from openva_pipeline.transfer_db import TransferDB
-from openva_pipeline.runPipeline import create_transfer_db
+from openva_pipeline.run_pipeline import create_transfer_db
 from openva_pipeline.exceptions import DatabaseConnectionError
 from openva_pipeline.exceptions import PipelineConfigurationError
 from openva_pipeline.exceptions import ODKConfigurationError
@@ -233,7 +233,7 @@ class CheckPipelineConf(unittest.TestCase):
         self.assertTrue(valid_wd)
 
     def test_pipeline_conf_working_directory_exception(self):
-        """config_pipeline should fail with invalid workingDirectory."""
+        """config_pipeline should fail with invalid working_directory."""
         c = self.copy_conn.cursor()
         sql = 'UPDATE Pipeline_Conf SET workingDirectory = ?'
         par = ('/wrong/path',)
@@ -1233,7 +1233,7 @@ class CheckDHISConf(unittest.TestCase):
     def test_dhis_conf_dhis_url(self):
         """Test DHIS_Conf table has valid dhisURL"""
         self.assertEqual(self.settings_dhis[0].dhis_url,
-                         'https://va30se.swisstph-mis.ch')
+                         'https://va30tr.swisstph-mis.ch')
 
     def test_dhis_conf_dhis_url_exception(self):
         """config_dhis should fail with invalid url."""
@@ -1301,8 +1301,8 @@ class CheckDHISStoreVA(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        shutil.copy('OpenVAFiles/sample_newStorage.csv',
-                    'OpenVAFiles/newStorage.csv')
+        shutil.copy('OpenVAFiles/sample_new_storage.csv',
+                    'OpenVAFiles/new_storage.csv')
 
         if not os.path.isfile('Pipeline.db'):
             create_transfer_db('Pipeline.db', '.', 'enilepiP')
@@ -1319,7 +1319,7 @@ class CheckDHISStoreVA(unittest.TestCase):
         cls.conn = cls.xfer_db.connect_db()
         cls.xfer_db.config_pipeline(cls.conn)
 
-    def test_dhis_storeva(self):
+    def test_dhis_store_va(self):
         """Check that VA records get stored in Transfer DB."""
 
         self.xfer_db.store_va(self.conn)

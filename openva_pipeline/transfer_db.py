@@ -89,13 +89,13 @@ class TransferDB:
 
         This method queries the Pipeline_Conf table in Transfer database and
         returns a tuple with attributes (1) algorithmMetadataCode; (2)
-        codSource; (3) algorithm; and (4) workingDirectory.
+        codSource; (3) algorithm; and (4) working_directory.
 
         :returns: Arguments needed to configure the OpenVA Pipeline
           algorithmMetadataCode - attribute describing VA data
           codSource - attribute detailing the source of the Cause of Death list
           algorithm - attribute indicating which VA algorithm to use
-          workingDirectory - attribute indicating the working directory
+          working_directory - attribute indicating the working directory
         :rtype: (named) tuple
         :raises: PipelineConfigurationError
         """
@@ -421,7 +421,7 @@ class TransferDB:
             raise PipelineError("Need to run config_pipeline.")
         c = conn.cursor()
         odk_export_path = os.path.join(
-            self.working_directory, "ODKFiles", "odkBCExportNew.csv"
+            self.working_directory, "ODKFiles", "odk_export_new.csv"
         )
         df_odk = read_csv(odk_export_path)
         df_odk_id = df_odk["meta-instanceID"]
@@ -1169,21 +1169,21 @@ class TransferDB:
         start_htmls = dhis_url[0:8]
         if not (start_html == "http://" or start_htmls == "https://"):
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhisURL")
+                "Problem in database: DHIS_Conf.dhis_url")
         dhis_user = query_dhis[0][1]
         if dhis_user == "" or dhis_user is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhisUser (is empty)"
+                "Problem in database: DHIS_Conf.dhis_user (is empty)"
             )
         dhis_password = query_dhis[0][2]
         if dhis_password == "" or dhis_password is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhisPassword (is empty)"
+                "Problem in database: DHIS_Conf.dhis_password (is empty)"
             )
         dhis_org_unit = query_dhis[0][3]
         if dhis_org_unit == "" or dhis_org_unit is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhisOrgUnit (is empty)"
+                "Problem in database: DHIS_Conf.dhis_org_unit (is empty)"
             )
 
         nt_dhis = namedtuple(
@@ -1212,7 +1212,7 @@ class TransferDB:
             raise PipelineError("Need to run config_pipeline.")
         c = conn.cursor()
         new_storage_path = os.path.join(
-            self.working_directory, "OpenVAFiles", "newStorage.csv"
+            self.working_directory, "OpenVAFiles", "new_storage.csv"
         )
         df_new_storage = read_csv(new_storage_path)
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
@@ -1285,10 +1285,10 @@ class TransferDB:
         if self.working_directory is None:
             raise PipelineError("Need to run config_pipeline.")
         odk_export_new_path = os.path.join(
-            self.working_directory, "ODKFiles", "odkBCExportNew.csv"
+            self.working_directory, "ODKFiles", "odk_export_new.csv"
         )
         odk_export_prev_path = os.path.join(
-            self.working_directory, "ODKFiles", "odkBCExportPrev.csv"
+            self.working_directory, "ODKFiles", "odk_export_prev.csv"
         )
         if os.path.isfile(odk_export_new_path):
             os.remove(odk_export_new_path)

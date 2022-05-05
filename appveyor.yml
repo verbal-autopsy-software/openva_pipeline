@@ -10,6 +10,8 @@ environment:
     PYTHON: "3.8"
   - TOXENV: py39
     PYTHON: "3.9"
+  - TOXENV: py310
+    PYTHON: "3.10"
 
 stack: python $PYTHON
 
@@ -18,7 +20,6 @@ install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >> /etc/apt/sources.list"
 - sudo apt-get update
-#- sudo apt-get install -y --allow-change-held-packages r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev openjdk-11-jdk openjdk-11-jdk-headless openjdk-11-jre openjdk-11-jre-headless curl libcurl4-openssl-dev
 - sudo apt-get install -y r-base sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev
 - sudo R CMD javareconf
 - cd /home/appveyor/projects

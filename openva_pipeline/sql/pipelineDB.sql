@@ -341,7 +341,7 @@ CREATE TABLE DHIS_Conf
 
 INSERT INTO DHIS_Conf
   (dhisURL, dhisUser, dhisPassword, dhisOrgUnit)
-  VALUES ("https://va30se.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6");
+  VALUES ("https://va30tr.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6");
 
 CREATE TABLE COD_Codes_DHIS
 (

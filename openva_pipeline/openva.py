@@ -390,6 +390,7 @@ class OpenVA:
         df_results = concat([df_results, code_df], axis=1)
         cols_keep = ["sex", "birth_date", "death_date",
                      "age", "cause34", "metadataCode", "sid"]
+        # TODO: need to add dhis org unit
         df_record_storage = merge(left=df_results[cols_keep],
                                   left_on="sid",
                                   right=df_data,

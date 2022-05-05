@@ -1,8 +1,8 @@
 from openva_pipeline.transfer_db import TransferDB
 from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.openva import OpenVA
-from openva_pipeline.runPipeline import download_smartva
-from openva_pipeline.runPipeline import create_transfer_db
+from openva_pipeline.run_pipeline import download_smartva
+from openva_pipeline.run_pipeline import create_transfer_db
 from openva_pipeline.exceptions import OpenVAError
 from openva_pipeline.exceptions import SmartVAError
 import unittest
@@ -10,7 +10,7 @@ import os
 import shutil
 import collections
 from datetime import datetime
-from sys import path
+from sys import path, platform
 from pandas import read_csv
 source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
@@ -488,6 +488,7 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
 
 
+@unittest.skipIf(platform == "darwin", "Can't run smartva on MacOS")
 class CheckSmartVA(unittest.TestCase):
 
     @classmethod
@@ -734,6 +735,7 @@ class CheckExceptionsInterVA(unittest.TestCase):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
 
 
+@unittest.skipIf(platform == "darwin", "Can't run smartva on MacOS")
 class CheckExceptionsSmartVA(unittest.TestCase):
 
     @classmethod

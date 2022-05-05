@@ -1,8 +1,8 @@
 name = "openva_pipeline"
-from .runPipeline import run_pipeline
-from .runPipeline import create_transfer_db
-from .runPipeline import download_briefcase
-from .runPipeline import download_smartva
+from .run_pipeline import run_pipeline
+from .run_pipeline import create_transfer_db
+from .run_pipeline import download_briefcase
+from .run_pipeline import download_smartva
 from .pipeline import Pipeline
 from .transfer_db import TransferDB
 from .odk import ODK
@@ -10,8 +10,8 @@ from .openva import OpenVA
 from .dhis import API
 from .dhis import VerbalAutopsyEvent
 from .dhis import create_db
-from .dhis import getCODCode
-from .dhis import findKeyValue
+from .dhis import get_cod_code
+from .dhis import find_key_value
 from .dhis import DHIS
 from .exceptions import PipelineError
 from .exceptions import DatabaseConnectionError
