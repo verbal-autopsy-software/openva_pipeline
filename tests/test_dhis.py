@@ -109,7 +109,8 @@ class CheckDHISGetCODCode(unittest.TestCase):
         with open("who_cod.R", "w", newline="") as f:
             f.write("data(causetextV5, package='InterVA5')\n")
             f.write("write.csv(causetextV5, file='who_cod.csv', row.names=FALSE)\n")
-        r_args = ["R", "CMD", "BATCH", "--vanilla", "who_cod.R"]
+        r_args = ["R", "CMD", "BATCH",
+                  "--no-save", "--no-restore", "who_cod.R"]
         subprocess.run(args=r_args,
                        stdin=subprocess.PIPE,
                        stdout=subprocess.PIPE,

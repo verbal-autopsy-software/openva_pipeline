@@ -432,7 +432,8 @@ class OpenVA:
                                        "r_script_" + self.run_date + ".R")
             r_script_out = os.path.join(self.dir_openva, self.run_date,
                                         "r_script_" + self.run_date + ".Rout")
-            r_args = ["R", "CMD", "BATCH", "--vanilla",
+            #r_args = ["R", "CMD", "BATCH", "--vanilla",
+            r_args = ["R", "CMD", "BATCH", "--no-save", "--no-restore",
                       r_script_in, r_script_out]
             try:
                 # capture_output=True not available in Python 3.6
