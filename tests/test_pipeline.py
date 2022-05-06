@@ -335,6 +335,7 @@ class CheckStoreResultsDB(unittest.TestCase):
         self.conn.commit()
         self.odk = self.pl.run_odk(self.settings)
 
+    @unittest.skip("Only to run locally with local single event DHIS2 server")
     def test_run_odk_check_duplicates(self):
         """Check check_duplicates() method:"""
 

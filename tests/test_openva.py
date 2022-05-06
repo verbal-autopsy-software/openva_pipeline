@@ -352,34 +352,16 @@ class CheckInterVAOrgUnit(unittest.TestCase):
             os.remove("Check_InterVA_Pipeline.db")
         create_transfer_db("Check_InterVA_Pipeline.db", ".", "enilepiP")
 
-        pipeline_run_date = datetime(
-            2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
-        TransferDB(db_file_name="Check_InterVA_Pipeline.db",
-                   db_directory=".",
-                   db_key="enilepiP",
-                   pl_run_date=pipeline_run_date)
-        pl = Pipeline(db_file_name="Check_InterVA_Pipeline.db",
-                      db_directory=".",
-                      db_key="enilepiP")
-        pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
-        settings = pl.config()
-
-        cls.static_run_date = datetime(
-            2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
-        shutil.rmtree(
-            os.path.join("OpenVAFiles", cls.static_run_date),
-            ignore_errors=True
-        )
-        cls.r_script = os.path.join("OpenVAFiles", cls.static_run_date,
-                                    "r_script_" + cls.static_run_date + ".R")
-        cls.r_out_file = os.path.join("OpenVAFiles", cls.static_run_date,
-                                      "r_script_" + cls.static_run_date +
-                                      ".Rout")
+        cls.pl = Pipeline(db_file_name="Check_InterVA_Pipeline.db",
+                          db_directory=".",
+                          db_key="enilepiP")
+        cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
+        settings = cls.pl.config()
         r_openva = OpenVA(settings=settings,
-                          pipeline_run_date=cls.static_run_date)
+                          pipeline_run_date=cls.pl.pipeline_run_date)
         r_openva.copy_va()
         r_openva.r_script()
-        cls.completed = r_openva.get_cod()
+        r_openva.get_cod()
 
     def test_record_storage_includes_org_units(self):
         """Check that output csv file includes DHIS organization units"""
@@ -397,7 +379,7 @@ class CheckInterVAOrgUnit(unittest.TestCase):
 
         os.remove("Check_InterVA_Pipeline.db")
         shutil.rmtree(
-            os.path.join("OpenVAFiles", cls.static_run_date),
+            os.path.join("OpenVAFiles", cls.pl.pipeline_run_date),
             ignore_errors=True
         )
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
@@ -425,37 +407,19 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
                     "ODKFiles/odk_export_new.csv")
         if os.path.isfile("Check_InterVA_Pipeline.db"):
             os.remove("Check_InterVA_Pipeline.db")
-        create_transfer_db("Check_InterVA_Pipeline.db", ".", "enilepiP")
+        create_transfer_db("Check_InSilicoVA_Pipeline.db", ".", "enilepiP")
 
-        pipeline_run_date = datetime(
-            2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
-        TransferDB(db_file_name="Check_InterVA_Pipeline.db",
-                   db_directory=".",
-                   db_key="enilepiP",
-                   pl_run_date=pipeline_run_date)
-        pl = Pipeline(db_file_name="Check_InterVA_Pipeline.db",
-                      db_directory=".",
-                      db_key="enilepiP")
-        pl._update_dhis(["dhisOrgUnit"], ["Id10057"])
-        pl._update_pipeline(["algorithm"], ["InSilicoVA"])
-        settings = pl.config()
-
-        cls.static_run_date = datetime(
-            2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
-        shutil.rmtree(
-            os.path.join("OpenVAFiles", cls.static_run_date),
-            ignore_errors=True
-        )
-        cls.r_script = os.path.join("OpenVAFiles", cls.static_run_date,
-                                    "r_script_" + cls.static_run_date + ".R")
-        cls.r_out_file = os.path.join("OpenVAFiles", cls.static_run_date,
-                                      "r_script_" + cls.static_run_date +
-                                      ".Rout")
+        cls.pl = Pipeline(db_file_name="Check_InSilicoVA_Pipeline.db",
+                          db_directory=".",
+                          db_key="enilepiP")
+        cls.pl._update_dhis(["dhisOrgUnit"], ["Id10057"])
+        cls.pl._update_pipeline(["algorithm"], ["InSilicoVA"])
+        settings = cls.pl.config()
         r_openva = OpenVA(settings=settings,
-                          pipeline_run_date=cls.static_run_date)
+                          pipeline_run_date=cls.pl.pipeline_run_date)
         r_openva.copy_va()
         r_openva.r_script()
-        cls.completed = r_openva.get_cod()
+        completed = r_openva.get_cod()
 
     def test_record_storage_includes_org_units(self):
         """Check that output csv file includes DHIS organization units"""
@@ -473,7 +437,7 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
 
         os.remove("Check_InterVA_Pipeline.db")
         shutil.rmtree(
-            os.path.join("OpenVAFiles", cls.static_run_date),
+            os.path.join("OpenVAFiles", cls.pl.pipeline_run_date),
             ignore_errors=True
         )
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
