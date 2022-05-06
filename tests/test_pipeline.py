@@ -699,7 +699,7 @@ class CheckRunOpenVASmartVA(unittest.TestCase):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
  
 
-#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckPipelineRunDHIS(unittest.TestCase):
     """Check run_dhis method"""
 

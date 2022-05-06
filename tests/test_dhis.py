@@ -17,7 +17,7 @@ import context
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
 
