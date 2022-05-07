@@ -435,7 +435,7 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
 
-        os.remove("Check_InterVA_Pipeline.db")
+        os.remove("Check_InSilicoVA_Pipeline.db")
         shutil.rmtree(
             os.path.join("OpenVAFiles", cls.pl.pipeline_run_date),
             ignore_errors=True
