@@ -105,13 +105,6 @@ class OpenVA:
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                if ":" in str(pycva_input.columns) and "-" not in str(pycva_input.columns):
-                    new_colnames = [c.replace(":", "-") for c in list(pycva_input)]
-                    dict_new_colnames = dict(
-                        zip(list(pycva_input), new_colnames))
-                    pycva_input.rename(dict_new_colnames,
-                                       axis="columns",
-                                       inplace=True)
                 final_data = transform(mapping=(pycva_instrument_version,
                                                 "InterVA5"),
                                        raw_data=pycva_input,
@@ -137,13 +130,6 @@ class OpenVA:
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                if ":" in str(pycva_input.columns) and "-" not in str(pycva_input.columns):
-                    new_colnames = [c.replace(":", "-") for c in list(pycva_input)]
-                    dict_new_colnames = dict(
-                        zip(list(pycva_input), new_colnames))
-                    pycva_input.rename(dict_new_colnames,
-                                       axis="columns",
-                                       inplace=True)
                 final_data = transform(mapping=(pycva_instrument_version,
                                                 "InterVA5"),
                                        raw_data=pycva_input,
@@ -188,11 +174,12 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                f.write("col_names <- names(raw_data) \n")
-                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
-                f.write("names(raw_data) <- tolower(unlist(new_names)) \n")
-                odk_id_for_r = self.odk_id.replace("-", ".").lower()
+                odk_id_for_r = self.odk_id.replace("-", ".")
+                odk_id_for_r = odk_id_for_r.replace(":", ".")
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
+                f.write("col_names <- names(raw_data_sorted) \n")
+                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
+                f.write("names(raw_data_sorted) <- tolower(unlist(new_names)) \n")
                 f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
                 f.write("results <- insilico(data = records_sorted, \n")
@@ -327,11 +314,12 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                f.write("col_names <- names(raw_data) \n")
-                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
-                f.write("names(raw_data) <- tolower(unlist(new_names)) \n")
-                odk_id_for_r = self.odk_id.replace("-", ".").lower()
+                odk_id_for_r = self.odk_id.replace("-", ".")
+                odk_id_for_r = odk_id_for_r.replace(":", ".")
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
+                f.write("col_names <- names(raw_data_sorted) \n")
+                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
+                f.write("names(raw_data_sorted) <- tolower(unlist(new_names)) \n")
                 f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
                 if self.va_args.interva_version == "4":
