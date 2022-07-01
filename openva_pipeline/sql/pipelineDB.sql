@@ -336,7 +336,8 @@ CREATE TABLE DHIS_Conf
   dhisURL           char(50),
   dhisUser          char(50),
   dhisPassword      char(50),
-  dhisOrgUnit       char(20)
+  dhisOrgUnit       char(500),
+  teiAttributeID    char(50)
 );
 
 INSERT INTO DHIS_Conf

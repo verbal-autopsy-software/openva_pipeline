@@ -8,6 +8,7 @@ This module runs openVA and smartVA to assign causes of death to VA records.
 import subprocess
 import shutil
 import os
+import re
 from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
@@ -41,7 +42,8 @@ class OpenVA:
         self.va_args = settings["openva"]
         self.pipeline_args = settings["pipeline"]
         if settings["odk"].odk_id is None:
-            self.odk_id = "meta-instanceID"
+            #self.odk_id = "meta-instanceID"
+            self.odk_id = "instanceID"
         else:
             self.odk_id = settings["odk"].odk_id
         self.run_date = pipeline_run_date
@@ -56,6 +58,7 @@ class OpenVA:
         self.dhis_org_unit = None
         if "dhis" in settings.keys():
             self.dhis_org_unit = str(settings["dhis"][0].dhis_org_unit)
+            self.dhis_org_units = re.split(r"\s|,", self.dhis_org_unit)
 
         self.successful_run = None
 
@@ -88,9 +91,9 @@ class OpenVA:
             self.pipeline_args.algorithm_metadata_code.split("|")
         who_instrument_version = algorithm_metadata[5]
         if who_instrument_version == "v1_4_1":
-            pcva_input = "2016WHOv141"
+            pycva_instrument_version = "2016WHOv141"
         else:
-            pcva_input = "2016WHOv151"
+            pycva_instrument_version = "2016WHOv151"
 
         if is_export_file_new and not is_export_file_prev:
             with open(export_file_new, "r", newline="") as f_new:
@@ -102,7 +105,15 @@ class OpenVA:
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                final_data = transform(mapping=(pcva_input, "InterVA5"),
+                if ":" in str(pycva_input.columns) and "-" not in str(pycva_input.columns):
+                    new_colnames = [c.replace(":", "-") for c in list(pycva_input)]
+                    dict_new_colnames = dict(
+                        zip(list(pycva_input), new_colnames))
+                    pycva_input.rename(dict_new_colnames,
+                                       axis="columns",
+                                       inplace=True)
+                final_data = transform(mapping=(pycva_instrument_version,
+                                                "InterVA5"),
                                        raw_data=pycva_input,
                                        raw_data_id=self.odk_id,
                                        verbose=0)
@@ -126,7 +137,15 @@ class OpenVA:
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                final_data = transform(mapping=(pcva_input, "InterVA5"),
+                if ":" in str(pycva_input.columns) and "-" not in str(pycva_input.columns):
+                    new_colnames = [c.replace(":", "-") for c in list(pycva_input)]
+                    dict_new_colnames = dict(
+                        zip(list(pycva_input), new_colnames))
+                    pycva_input.rename(dict_new_colnames,
+                                       axis="columns",
+                                       inplace=True)
+                final_data = transform(mapping=(pycva_instrument_version,
+                                                "InterVA5"),
                                        raw_data=pycva_input,
                                        raw_data_id=self.odk_id,
                                        verbose=0)
@@ -169,7 +188,10 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                odk_id_for_r = self.odk_id.replace("-", ".")
+                f.write("col_names <- names(raw_data) \n")
+                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
+                f.write("names(raw_data) <- tolower(unlist(new_names)) \n")
+                odk_id_for_r = self.odk_id.replace("-", ".").lower()
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
                 f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
@@ -213,22 +235,34 @@ class OpenVA:
                     f.write("sex <- ifelse(tolower(records_sorted$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
                 f.write("names(cod) <- toupper(names(cod)) \n")
-                f.write("dob <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10021), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y')) \n")
+                f.write("dob <- tryCatch(\n")
+                f.write("  expr = {as.Date(as.character(raw_data_sorted$id10021),")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("  error = {function(e) return(rep('', length(raw_data_sorted$id10021)))}) \n")
                 f.write("if (length(dob) == 0) { \n")
-                f.write("  index_id10021 <- which(grepl('id10021$', tolower(names(raw_data_sorted))))\n")
-                f.write("  dob <- as.Date(as.character(raw_data_sorted[, index_id10021]), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}\n")
-                f.write("dod <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10023), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y')) \n")
+                f.write("  index_id10021 <- which(grepl('id10021$', names(raw_data_sorted)))\n")
+                f.write("  dob <- tryCatch(\n")
+                f.write("    expr = {as.Date(as.character(raw_data_sorted[, index_id10021]), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("    error = {function(e) return(rep('', length(raw_data_sorted[, index_id10021])))})} \n")
+                f.write("dod <- tryCatch(\n")
+                f.write("  expr = {as.Date(as.character(raw_data_sorted$id10023), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("  error = {function(c) return(rep('', length(raw_data_sorted$id10023)))}) \n")
                 f.write("if (length(dod) == 0) { \n")
-                f.write("  index_id10023 <- which(grepl('id10023$', tolower(names(raw_data_sorted))))\n")
-                f.write("  dod <- as.Date(as.character(raw_data_sorted[, index_id10023]), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}\n")
-                f.write("if (any(which(grepl('ageindays2$', tolower(names(raw_data_sorted)))))) {\n")
-                f.write("  index_ageindays2 <- which(grepl('ageindays2$', tolower(names(raw_data_sorted))))\n")
-                f.write("  index_isneonatal <- which(grepl('isneonatal$', tolower(names(raw_data_sorted))))\n")
+                f.write("  index_id10023 <- which(grepl('id10023$', names(raw_data_sorted)))\n")
+                f.write("  dod <- tryCatch(\n")
+                f.write("    expr = {as.Date(as.character(raw_data_sorted[, index_id10023]), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("    error = {function(e) return(rep('', length(raw_data_sorted[, index_id10023])))})} \n")
+                f.write("if (any(which(grepl('ageindays2$', names(raw_data_sorted))))) {\n")
+                f.write("  index_ageindays2 <- which(grepl('ageindays2$', names(raw_data_sorted)))\n")
+                f.write("  index_isneonatal <- which(grepl('isneonatal$', names(raw_data_sorted)))\n")
                 f.write("  age <- raw_data_sorted[, index_ageindays2]\n")
                 f.write("  age[is.na(age) & raw_data_sorted[, index_isneonatal] == 1] <- 0 \n")
-                f.write("} else if (any(which(grepl('ageindays$', tolower(names(raw_data_sorted)))))) {\n")
-                f.write("  index_ageindays <- which(grepl('ageindays$', tolower(names(raw_data_sorted))))\n")
-                f.write("  index_isneonatal <- which(grepl('isneonatal$', tolower(names(raw_data_sorted))))\n")
+                f.write("} else if (any(which(grepl('ageindays$', names(raw_data_sorted))))) {\n")
+                f.write("  index_ageindays <- which(grepl('ageindays$', names(raw_data_sorted)))\n")
+                f.write("  index_isneonatal <- which(grepl('isneonatal$', names(raw_data_sorted)))\n")
                 f.write("  age <- raw_data_sorted[, index_ageindays]\n")
                 f.write("  age[is.na(age) & raw_data_sorted[, index_isneonatal] == 1] <- 0 \n")
                 f.write("} else {age <- rep('', nrow(raw_data_sorted))}\n")
@@ -245,18 +279,27 @@ class OpenVA:
                 f.write("write.csv(evaBlob, file='" + self.dir_openva + "/entity_attribute_value.csv', row.names=FALSE, na='') \n\n")
                 if self.dhis_org_unit is not None:
                     f.write("### check for DHIS org unit \n")
-                    f.write("org_unit_col <- grepl('" + self.dhis_org_unit.lower() + "', tolower(names(raw_data_sorted))) \n")
-                    f.write("if (sum(org_unit_col) == 1) { \n")
-                    f.write("  org_unit <- raw_data_sorted[, org_unit_col] \n")
-                    f.write("} else { \n")
-                    f.write("  org_unit <- '" + self.dhis_org_unit.lower() + "' \n")
-                    f.write("} \n")
+                    ou_list = []
+                    for ou in self.dhis_org_units:
+                        ou_colname = "org_unit_col" + str(len(ou_list) + 1)
+                        ou_list.append(ou_colname)
+                        f.write(ou_colname + " <- grepl('" + ou.lower() + "', names(raw_data_sorted)) \n")
+                        f.write("if (sum(" + ou_colname + ") == 1) { \n")
+                        f.write("  " + ou_colname + " <- raw_data_sorted[, " + ou_colname + "] \n")
+                        f.write("} else { \n")
+                        f.write("  " + ou_colname + " <- '" + ou.lower() + "' \n")
+                        f.write("} \n")
                     f.write("### write out results to csv \n")
-                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, org_unit, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
-                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'dhis_org_unit', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, \n  ")
+                    f.write(", ".join(ou_list))
+                    f.write(", \n  metadataCode, raw_data_sorted$instanceid, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', \n  ")
+                    #f.write(", ".join(f"'{ou}'".format(ou) for ou in ou_list))
+                    f.write(str(ou_list)[1:-1])
+                    f.write(", \n  'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 else:
                     f.write("### write out results to csv \n")
-                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$instanceid, records_sorted[,-1]) \n")
                     f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dir_openva + "/record_storage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")
@@ -284,7 +327,10 @@ class OpenVA:
                 f.write("library(openVA) \n")
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
-                odk_id_for_r = self.odk_id.replace("-", ".")
+                f.write("col_names <- names(raw_data) \n")
+                f.write("new_names <- lapply(strsplit(col_names, '\\\\.'), tail, n = 1) \n")
+                f.write("names(raw_data) <- tolower(unlist(new_names)) \n")
+                odk_id_for_r = self.odk_id.replace("-", ".").lower()
                 f.write("raw_data_sorted <- raw_data[order(raw_data$" + odk_id_for_r + "),] \n")
                 f.write("data_from_pycrossva <- read.csv('" + self.dir_openva + "/openva_input.csv') \n")
                 f.write("records_sorted <- data_from_pycrossva[order(data_from_pycrossva$ID),] \n")
@@ -309,22 +355,34 @@ class OpenVA:
                     f.write("sex <- ifelse(tolower(records_sorted$i019a)=='y', 'Male', 'Female') \n")
                 f.write("cod <- getTopCOD(results) \n")
                 f.write("names(cod) <- toupper(names(cod)) \n")
-                f.write("dob <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10021), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y')) \n")
+                f.write("dob <- tryCatch(\n")
+                f.write("  expr = {as.Date(as.character(raw_data_sorted$id10021),")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("  error = {function(e) return(rep('', length(raw_data_sorted$id10021)))}) \n")
                 f.write("if (length(dob) == 0) { \n")
-                f.write("  index_id10021 <- which(grepl('id10021$', tolower(names(raw_data_sorted))))\n")
-                f.write("  dob <- as.Date(as.character(raw_data_sorted[, index_id10021]), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}\n")
-                f.write("dod <- as.Date(as.character(raw_data_sorted$consented.deceased_CRVS.info_on_deceased.Id10023), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y')) \n")
+                f.write("  index_id10021 <- which(grepl('id10021$', names(raw_data_sorted)))\n")
+                f.write("  dob <- tryCatch(\n")
+                f.write("    expr = {as.Date(as.character(raw_data_sorted[, index_id10021]), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("    error = {function(e) return(rep('', length(raw_data_sorted[, index_id10021])))})} \n")
+                f.write("dod <- tryCatch(\n")
+                f.write("  expr = {as.Date(as.character(raw_data_sorted$id10023), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("  error = {function(c) return(rep('', length(raw_data_sorted$id10023)))}) \n")
                 f.write("if (length(dod) == 0) { \n")
-                f.write("  index_id10023 <- which(grepl('id10023$', tolower(names(raw_data_sorted))))\n")
-                f.write("  dod <- as.Date(as.character(raw_data_sorted[, index_id10023]), tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}\n")
-                f.write("if (any(which(grepl('ageindays2$', tolower(names(raw_data_sorted)))))) {\n")
-                f.write("  index_ageindays2 <- which(grepl('ageindays2$', tolower(names(raw_data_sorted))))\n")
-                f.write("  index_isneonatal <- which(grepl('isneonatal$', tolower(names(raw_data_sorted))))\n")
+                f.write("  index_id10023 <- which(grepl('id10023$', names(raw_data_sorted)))\n")
+                f.write("  dod <- tryCatch(\n")
+                f.write("    expr = {as.Date(as.character(raw_data_sorted[, index_id10023]), ")
+                f.write("tryFormats=c('%m/%d/%y', '%m-%d-%y', '%Y-%m-%d', '%Y/%m/%d', '%b %d, %Y'))}, \n")
+                f.write("    error = {function(e) return(rep('', length(raw_data_sorted[, index_id10023])))})} \n")
+                f.write("if (any(which(grepl('ageindays2$', names(raw_data_sorted))))) {\n")
+                f.write("  index_ageindays2 <- which(grepl('ageindays2$', names(raw_data_sorted)))\n")
+                f.write("  index_isneonatal <- which(grepl('isneonatal$', names(raw_data_sorted)))\n")
                 f.write("  age <- raw_data_sorted[, index_ageindays2]\n")
                 f.write("  age[is.na(age) & raw_data_sorted[, index_isneonatal] == 1] <- 0 \n")
-                f.write("} else if (any(which(grepl('ageindays$', tolower(names(raw_data_sorted)))))) {\n")
-                f.write("  index_ageindays <- which(grepl('ageindays$', tolower(names(raw_data_sorted))))\n")
-                f.write("  index_isneonatal <- which(grepl('isneonatal$', tolower(names(raw_data_sorted))))\n")
+                f.write("} else if (any(which(grepl('ageindays$', names(raw_data_sorted))))) {\n")
+                f.write("  index_ageindays <- which(grepl('ageindays$', names(raw_data_sorted)))\n")
+                f.write("  index_isneonatal <- which(grepl('isneonatal$', names(raw_data_sorted)))\n")
                 f.write("  age <- raw_data_sorted[, index_ageindays]\n")
                 f.write("  age[is.na(age) & raw_data_sorted[, index_isneonatal] == 1] <- 0 \n")
                 f.write("} else {age <- rep('', nrow(raw_data_sorted))}\n")
@@ -341,18 +399,27 @@ class OpenVA:
                 f.write("write.csv(evaBlob, file='" + self.dir_openva + "/entity_attribute_value.csv', row.names=FALSE, na='') \n\n")
                 if self.dhis_org_unit is not None:
                     f.write("### check for DHIS org unit \n")
-                    f.write("org_unit_col <- grepl('" + self.dhis_org_unit.lower() + "', tolower(names(raw_data_sorted))) \n")
-                    f.write("if (sum(org_unit_col) == 1) { \n")
-                    f.write("  org_unit <- raw_data_sorted[, org_unit_col] \n")
-                    f.write("} else { \n")
-                    f.write("  org_unit <- '" + self.dhis_org_unit.lower() + "' \n")
-                    f.write("} \n")
+                    ou_list = []
+                    for ou in self.dhis_org_units:
+                        ou_colname = "org_unit_col" + str(len(ou_list) + 1)
+                        ou_list.append(ou_colname)
+                        f.write(ou_colname + " <- grepl('" + ou.lower() + "', names(raw_data_sorted)) \n")
+                        f.write("if (sum(" + ou_colname + ") == 1) { \n")
+                        f.write("  " + ou_colname + " <- raw_data_sorted[, " + ou_colname + "] \n")
+                        f.write("} else { \n")
+                        f.write("  " + ou_colname + " <- '" + ou.lower() + "' \n")
+                        f.write("} \n")
                     f.write("### write out results to csv \n")
-                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, org_unit, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
-                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'dhis_org_unit', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, \n  ")
+                    f.write(", ".join(ou_list))
+                    f.write(", \n  metadataCode, raw_data_sorted$instanceid, records_sorted[,-1]) \n")
+                    f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', \n  ")
+                    #f.write(", ".join(f"'{ou}'".format(ou) for ou in ou_list))
+                    f.write(str(ou_list)[1:-1])
+                    f.write(", \n  'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 else:
                     f.write("### write out results to csv \n")
-                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$meta.instanceID, records_sorted[,-1]) \n")
+                    f.write("records3 <- cbind(as.character(records_sorted[,'ID']), sex, dob, dod, age, cod2, metadataCode, raw_data_sorted$instanceid, records_sorted[,-1]) \n")
                     f.write("names(records3) <- c('id', 'sex', 'dob', 'dod', 'age', 'cod', 'metadataCode', 'odkMetaInstanceID', names(records_sorted[,-1])) \n")
                 f.write("write.csv(records3, file='" + self.dir_openva + "/record_storage.csv', row.names=FALSE, na='') \n")
                 f.write("date() \n")

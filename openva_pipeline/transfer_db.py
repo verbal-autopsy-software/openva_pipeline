@@ -6,6 +6,7 @@ This module handles interactions with the Transfer database.
 """
 
 import os
+from typing import Union
 from shutil import rmtree
 from collections import namedtuple
 from datetime import datetime, timedelta
@@ -253,54 +254,67 @@ class TransferDB:
         conn.commit()
 
     @staticmethod
-    def update_odk_conf(conn, field, value):
+    def update_odk_conf(conn: sqlcipher.connect,
+                        field: Union[str, list],
+                        value: Union[str, list]) -> None:
         """Update value(s) into Transfer Database ODK_Conf.field(s)
 
         :param conn: A connection to the Transfer Database (e.g. the object
           returned from :meth:`TransferDB.connect_db() <connect_db>`.)
         :type conn: sqlite3 Connection object
         :param field: field name(s) in table ODK_Conf
-        :type field: str or list of str
         :param value: list of new values used to update in ODK_Conf.fields
         """
 
         c = conn.cursor()
+        if isinstance(field, str):
+            field = [field]
+        if isinstance(value, str):
+            value = [value]
         sql = "UPDATE ODK_Conf SET {}=?"
         for par in zip(field, value):
             c.execute(sql.format(par[0]), (par[1],))
         conn.commit()
 
     @staticmethod
-    def update_dhis_conf(conn, field, value):
+    def update_dhis_conf(conn: sqlcipher.connect,
+                         field: Union[str, list],
+                         value: Union[str, list]) -> None:
         """Update value(s) into Transfer Database DHIS_Conf.field(s)
 
         :param conn: A connection to the Transfer Database (e.g. the object
           returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param field: field name(s) in table DHIS_Conf
-        :type field: str or list of str
-        :param value: list of new values to update in DHIS_Conf.fields
+        :param value: new values to update in DHIS_Conf.fields
         """
 
         c = conn.cursor()
+        if isinstance(field, str):
+            field = [field]
+        if isinstance(value, str):
+            value = [value]
         sql = "UPDATE DHIS_Conf SET {}=?"
         for par in zip(field, value):
             c.execute(sql.format(par[0]), (par[1],))
         conn.commit()
 
     @staticmethod
-    def update_pipeline_conf(conn, field, value):
+    def update_pipeline_conf(conn: sqlcipher.connect,
+                             field: Union[str, list],
+                             value: Union[str, list]) -> None:
         """Update value(s) into Transfer Database Pipeline_Conf.field(s)
 
         :param conn: A connection to the Transfer Database (e.g. the object
           returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param field: field name(s) in table Pipeline_Conf
-        :type field: str or list of str
         :param value: list of new values to update in Pipeline_Conf.fields
         """
 
         c = conn.cursor()
+        if isinstance(field, str):
+            field = [field]
+        if isinstance(value, str):
+            value = [value]
         sql = "UPDATE Pipeline_Conf SET {}=?"
         for par in zip(field, value):
             c.execute(sql.format(par[0]), (par[1],))

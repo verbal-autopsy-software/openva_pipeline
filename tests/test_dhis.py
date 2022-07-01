@@ -17,7 +17,7 @@ import context
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
 
@@ -56,12 +56,18 @@ class CheckDHIS(unittest.TestCase):
 
         api_dhis = cls.pipeline_dhis.connect()
         cls.post_log = cls.pipeline_dhis.post_va(api_dhis)
-        cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
+        if cls.pipeline_dhis.post_to_tracker:
+            cls.pipeline_dhis.verify_tei_post(cls.post_log, api_dhis)
+        else:
+            cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
 
     def test_va_program_uid(self):
         """Verify VA program is installed."""
 
-        self.assertEqual(self.pipeline_dhis.va_program_uid, "sv91bCroFFx")
+        if self.pipeline_dhis.post_to_tracker:
+            self.assertEqual(self.pipeline_dhis.va_program_uid, "nrEVPTOQoze")
+        else:
+            self.assertEqual(self.pipeline_dhis.va_program_uid, "sv91bCroFFx")
 
     def test_post_va(self):
         """Post VA records to DHIS2."""

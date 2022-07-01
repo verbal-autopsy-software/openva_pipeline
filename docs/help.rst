@@ -48,8 +48,8 @@ API for DHIS2
 .. autoclass:: openva_pipeline.dhis.VerbalAutopsyEvent
    :inherited-members:
 .. autofunction:: openva_pipeline.dhis.create_db
-.. autofunction:: openva_pipeline.dhis.getCODCode
-.. autofunction:: openva_pipeline.dhis.findKeyValue
+.. autofunction:: openva_pipeline.dhis.get_cod_code
+.. autofunction:: openva_pipeline.dhis.find_key_value
 
 Exceptions
 -----------
