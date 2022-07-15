@@ -17,7 +17,7 @@ import context
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
 
@@ -75,8 +75,72 @@ class CheckDHIS(unittest.TestCase):
         check_log = "importSummaries" in self.post_log["response"].keys()
         self.assertTrue(check_log)
 
-    def test_verifyPost(self):
+    def test_verify_post(self):
         """Verify VA records got posted to DHIS2."""
+
+        df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
+        n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
+        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_records)
+
+    @classmethod
+    def tearDownClass(cls):
+
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        os.remove("OpenVAFiles/entity_attribute_value.csv")
+        os.remove("OpenVAFiles/new_storage.csv")
+        os.remove("Pipeline.db")
+
+
+class CheckDHISTracker(unittest.TestCase):
+    """Check that everything works as it should."""
+
+    @classmethod
+    def setUpClass(cls):
+
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        shutil.copy("OpenVAFiles/sample_eav.csv",
+                    "OpenVAFiles/entity_attribute_value.csv")
+        shutil.copy("OpenVAFiles/sample_record_storage.csv",
+                    "OpenVAFiles/record_storage.csv")
+        db_file_name = "Pipeline.db"
+        db_key = "enilepiP"
+        db_directory = "."
+        if not os.path.isfile("Pipeline.db"):
+            create_transfer_db(db_file_name,
+                               db_directory,
+                               db_key)
+        pipeline_run_date = datetime.datetime.now()
+
+        xfer_db = TransferDB(db_file_name=db_file_name,
+                             db_directory=db_directory,
+                             db_key=db_key,
+                             pl_run_date=pipeline_run_date)
+        conn = xfer_db.connect_db()
+        settings_dhis = xfer_db.config_dhis(conn, "InSilicoVA")
+        cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
+        api_dhis = cls.pipeline_dhis.connect()
+        cls.post_log = cls.pipeline_dhis.post_va(api_dhis)
+        if cls.pipeline_dhis.post_to_tracker:
+            cls.pipeline_dhis.verify_tei_post(cls.post_log, api_dhis)
+        else:
+            cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
+
+    def test_va_program_uid(self):
+        """Verify VA program is installed."""
+
+        if self.pipeline_dhis.post_to_tracker:
+            self.assertEqual(self.pipeline_dhis.va_program_uid, "nrEVPTOQoze")
+        else:
+            self.assertEqual(self.pipeline_dhis.va_program_uid, "sv91bCroFFx")
+
+    def test_post_va(self):
+        """Post VA records to DHIS2."""
+
+        check_log = "importSummaries" in self.post_log["response"].keys()
+        self.assertTrue(check_log)
+
+    def test_verify_tei_post(self):
+        """Verify tracked entity instances events got posted to DHIS2."""
 
         df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
         n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")

@@ -71,7 +71,7 @@ class API(object):
         except requests.RequestException:
             raise DHISError(str(requests.RequestException))
 
-    def post(self, endpoint, data):
+    def post(self, endpoint, data, params=None):
         """POST method for DHIS2 API.
 
         :rtype: dict
@@ -79,7 +79,7 @@ class API(object):
 
         url = "{}/{}.json".format(self.url, endpoint)
         try:
-            r = requests.post(url=url, json=data, auth=self.auth)
+            r = requests.post(url=url, json=data, params=params, auth=self.auth)
             if r.status_code not in range(200, 206):
                 raise DHISError(
                     "Problem with API.post..."
@@ -526,9 +526,7 @@ class DHIS:
                         event_date = datetime.date(dod.year,
                                                    dod.month,
                                                    dod.day)
-                    if type(row[4]) == int:
-                        age = row[4]
-                    elif type(row[4]) == float and not isnan(row[4]):
+                    if row[4] >= 0 and not isnan(row[4]):
                         age = int(row[4])
                     else:
                         age = "MISSING"
@@ -540,7 +538,7 @@ class DHIS:
                     row_dict = i._asdict()
                     ou_keys = [key for key, val in row_dict.items()
                                if ('org_unit_col' in key) and
-                               isinstance(val, str)]
+                               (isinstance(val, str) or isnull(val))]
                     ou_keys.sort()
                     death_org_unit = row_dict[ou_keys[-1]]
                     #death_org_unit = row[6]
@@ -598,7 +596,21 @@ class DHIS:
                 log = api_dhis.post("events", data=export)
         except requests.RequestException as exc:
             raise DHISError("Unable to post events to DHIS2..." + str(exc))
-        self.n_posted_records = len(log["response"]["importSummaries"])
+        if self.post_to_tracker:
+            log_summaries = log["response"]["importSummaries"]
+            posted_events = [
+                (i["reference"],
+                 i["enrollments"]["importSummaries"][0]["events"]["status"])
+                for i in log_summaries]
+            n_successes = sum([1 for i in posted_events if i[1] == "SUCCESS"])
+            self.n_posted_records = n_successes
+            # package = {"trackedEntityInstances": [{
+            #     "trackedEntityInstance": i[0]}
+            #     for i in posted_events if i[1] == "ERROR"]}
+            # api_dhis.post("trackedEntityInstances", data=package,
+            #               params={"strategy": "DELETE"})
+        else:
+            self.n_posted_records = len(log["response"]["importSummaries"])
         return log
 
     def verify_post(self, post_log, api_dhis):
@@ -627,7 +639,7 @@ class DHIS:
         try:
             for va_reference in va_references:
                 posted_data_values = api_dhis.get(
-                    "events".format(va_reference)).get("dataValues")
+                    "events/{}".format(va_reference)).get("dataValues")
                 posted_va_id_index = next(
                     (
                         index
@@ -675,15 +687,17 @@ class DHIS:
         try:
             for va_reference in va_references:
                 params = {"trackedEntityInstance": va_reference}
-                posted_event = api_dhis.get("events",
-                                            params=params)['events'][0]
-                posted_data_values = posted_event['dataValues']
-                posted_va_id = [d["value"] for d in posted_data_values
-                                if d["dataElement"] == "htm6PixLJNy"]
-                row_va_id = df_new_storage[
-                                "dhisVerbalAutopsyID"] == posted_va_id[0]
-                df_new_storage.loc[row_va_id,
-                                   "pipelineOutcome"] = "Pushed to DHIS2"
+                posted_events = api_dhis.get("events",
+                                             params=params)["events"]
+                if posted_events:
+                    posted_event = posted_events[0]
+                    posted_data_values = posted_event['dataValues']
+                    posted_va_id = [d["value"] for d in posted_data_values
+                                    if d["dataElement"] == "htm6PixLJNy"]
+                    row_va_id = df_new_storage[
+                                    "dhisVerbalAutopsyID"] == posted_va_id[0]
+                    df_new_storage.loc[row_va_id,
+                                       "pipelineOutcome"] = "Pushed to DHIS2"
             df_new_storage.to_csv(self.dir_openva + "/new_storage.csv",
                                   index=False)
         except (requests.RequestException, ) as exc:
