@@ -744,7 +744,7 @@ class CheckPipelineRunDHIS(unittest.TestCase):
 
         df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
         n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
-        self.assertEqual(n_pushed, self.pipeline_dhis["n_posted_records"])
+        self.assertEqual(n_pushed, self.pipeline_dhis["n_posted_events"])
 
     @classmethod
     def tearDownClass(cls):

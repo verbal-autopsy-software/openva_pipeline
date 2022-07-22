@@ -337,12 +337,13 @@ CREATE TABLE DHIS_Conf
   dhisUser          char(50),
   dhisPassword      char(50),
   dhisOrgUnit       char(500),
+  dhisPostRoot      char(5) NOT NULL CHECK (dhisPostRoot IN ("True", "False")),
   teiAttributeID    char(50)
 );
 
 INSERT INTO DHIS_Conf
-  (dhisURL, dhisUser, dhisPassword, dhisOrgUnit)
-  VALUES ("https://va30tr.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6");
+  (dhisURL, dhisUser, dhisPassword, dhisOrgUnit, dhisPostRoot)
+  VALUES ("https://va30tr.swisstph-mis.ch", "va-demo", "VerbalAutopsy99!", "SCVeBskgiK6", "False");
 
 CREATE TABLE COD_Codes_DHIS
 (

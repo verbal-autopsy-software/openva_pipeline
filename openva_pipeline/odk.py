@@ -30,8 +30,8 @@ class ODK:
 
     def __init__(self, settings):
 
-        odk_settings = settings['odk']
-        pipeline_settings = settings['pipeline']
+        odk_settings = settings["odk"]
+        pipeline_settings = settings["pipeline"]
         self.odk_id = odk_settings.odk_id
         self.odk_url = odk_settings.odk_url
         self.odk_user = odk_settings.odk_user

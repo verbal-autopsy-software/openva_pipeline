@@ -1281,6 +1281,10 @@ class CheckDHISConf(unittest.TestCase):
         """Test DHIS_Conf table has valid dhisOrgUnit"""
         self.assertEqual(self.settings_dhis[0].dhis_org_unit, 'SCVeBskgiK6')
 
+    def test_dhis_conf_dhis_post_root(self):
+        """Test DHIS_Conf table has valid dhisPostRoot"""
+        self.assertEqual(self.settings_dhis[0].dhis_post_root, 'False')
+
     def test_dhis_conf_dhis_org_unit_exception(self):
         """config_dhis should fail with invalid dhisOrgUnit."""
         c = self.copy_conn.cursor()
@@ -1414,8 +1418,10 @@ class CheckUpdateTableConf(unittest.TestCase):
 
     def test_update_dhis_conf(self):
         """should change values in DHIS_Conf table"""
-        list_fields = ['dhisURL', 'dhisUser', 'dhisPassword', 'dhisOrgUnit']
-        list_values = ['new_url', 'new_user', 'new_password', 'new_org_unit']
+        list_fields = ['dhisURL', 'dhisUser', 'dhisPassword',
+                       'dhisOrgUnit', 'dhisPostRoot']
+        list_values = ['new_url', 'new_user', 'new_password',
+                       'new_org_unit', 'True']
         TransferDB.update_dhis_conf(self.conn, list_fields, list_values)
         results = TransferDB.get_dhis_conf(self.conn)
         for i in list_values:

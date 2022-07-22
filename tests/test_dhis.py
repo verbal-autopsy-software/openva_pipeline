@@ -80,7 +80,7 @@ class CheckDHIS(unittest.TestCase):
 
         df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
         n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
-        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_records)
+        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_events)
 
     @classmethod
     def tearDownClass(cls):
@@ -144,7 +144,7 @@ class CheckDHISTracker(unittest.TestCase):
 
         df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
         n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
-        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_records)
+        self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_events)
 
     @classmethod
     def tearDownClass(cls):
@@ -269,12 +269,14 @@ class CheckDHISExceptions(unittest.TestCase):
                                          "dhis_user",
                                          "dhis_password",
                                          "dhis_org_unit",
+                                         "dhis_post_root",
                                          "dhis_cod_codes"]
         )
         bad_settings = ntDHIS(dhis_url,
                               dhis_user,
                               dhis_password,
                               dhis_org_unit,
+                              "False",
                               "InSilicoVA")
         mock_cod = {"cause1": "code1", "cause2": "code2"}
         bad_input = [bad_settings, mock_cod]

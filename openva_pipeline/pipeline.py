@@ -364,7 +364,7 @@ class Pipeline:
         dhis_out = {
             "va_program_uid": pipeline_dhis.va_program_uid,
             "post_log": post_log,
-            "n_posted_records": pipeline_dhis.n_posted_records,
+            "n_posted_events": pipeline_dhis.n_posted_events,
         }
         return dhis_out
 

@@ -15,6 +15,7 @@ import csv
 import datetime
 import json
 import re
+from collections import OrderedDict
 
 from .exceptions import DHISError
 
@@ -367,11 +368,12 @@ class DHIS:
         self.dhis_user = dhis_args[0].dhis_user
         self.dhis_password = dhis_args[0].dhis_password
         self.dhis_org_unit = dhis_args[0].dhis_org_unit
+        self.dhis_post_root = dhis_args[0].dhis_post_root
         self.dhis_cod_codes = dhis_args[1]
         self.dir_dhis = os.path.join(working_directory, "DHIS")
         self.dir_openva = os.path.join(working_directory, "OpenVAFiles")
         self.va_program_uid = None
-        self.n_posted_records = 0
+        self.n_posted_events = 0
         self.post_to_tracker = False
 
         dhis_path = os.path.join(working_directory, "DHIS")
@@ -451,14 +453,24 @@ class DHIS:
         df_dhis = read_csv(eva_path)
         grouped = df_dhis.groupby(["ID"])
         df_record_storage = read_csv(record_storage_path)
-        server_org_units = api_dhis.get(
+        all_org_units = api_dhis.get(
             "organisationUnits").get("organisationUnits")
-        server_org_unit_names = [i['displayName'] for i in server_org_units]
-        server_org_unit_ids = [i['id'] for i in server_org_units]
-        server_top_org_unit = api_dhis.get(
-            "organisationUnits",
-            params={"filter": "level:eq:1"})["organisationUnits"][0]
-        server_top_org_unit_id = server_top_org_unit["id"]
+        va_org_units = api_dhis.get(
+            f"programs/{self.va_program_uid}",
+            params={"fields": "organisationUnits"}).get("organisationUnits")
+        va_org_unit_ids = [i["id"] for i in va_org_units]
+        valid_org_units = [i for i in all_org_units if
+                           i["id"] in va_org_unit_ids]
+        valid_org_unit_names = [i["displayName"] for i in valid_org_units]
+        valid_org_unit_ids = [i["id"] for i in valid_org_units]
+        top_org_unit_id = None
+        if self.dhis_post_root == "True":
+            top_org_unit = api_dhis.get(
+                "organisationUnits",
+                params={"filter": "level:eq:1"})["organisationUnits"][0]
+            if top_org_unit["id"] in valid_org_unit_ids:
+                top_org_unit_id = top_org_unit["id"]
+
         tea = api_dhis.get(
             "trackedEntityAttributes")["trackedEntityAttributes"]
         tea_names = [i['displayName'] for i in tea]
@@ -478,15 +490,14 @@ class DHIS:
 
             # this depends on openVA vs SmartVA
             for i in df_record_storage.itertuples(index=False):
-                row = list(i)
-
-                if row[5] != "MISSING" and row[5] is not None:
-
-                    va_id = str(row[0])
+                row_dict = i._asdict()
+                #if row_dict["cod"] != "MISSING" and row_dict["cod"] is not None:
+                if row_dict["cod"] and row_dict != "MISSING":
+                    va_id = str(row_dict["id"])
                     blob_file = "{}.db".format(os.path.join(self.dir_dhis,
                                                             "blobs",
                                                             va_id))
-                    blob_record = grouped.get_group(str(row[0]))
+                    blob_record = grouped.get_group(va_id)
                     blob_eva = blob_record.values.tolist()
 
                     try:
@@ -499,64 +510,64 @@ class DHIS:
                         raise DHISError("Unable to post blob to DHIS..." +
                                         str(exc)) from exc
 
-                    algorithm = row[7].split("|")[0]
+                    algorithm = row_dict["metadataCode"].split("|")[0]
                     if algorithm == "SmartVA":
-                        if row[1] in ["1", "1.0", 1, 1.0]:
+                        if row_dict["sex"] in ["1", "1.0", 1, 1.0]:
                             sex = "male"
-                        elif row[1] in ["2", "2.0", 2, 2.0]:
+                        elif row_dict["sex"] in ["2", "2.0", 2, 2.0]:
                             sex = "female"
-                        elif row[1] in ["8", "8.0", 8, 8.0]:
+                        elif row_dict["sex"] in ["8", "8.0", 8, 8.0]:
                             sex = "don't know"
                         else:
                             sex = "refused to answer"
                     else:
-                        sex = row[1].lower()
-                    if isnull(row[2]):
+                        sex = row_dict["sex"].lower()
+                    if isnull(row_dict["dob"]):
                         dob = datetime.date(9999, 9, 9)
                     else:
-                        dob_temp = datetime.datetime.strptime(row[2],
+                        dob_temp = datetime.datetime.strptime(row_dict["dob"],
                                                               "%Y-%m-%d")
                         dob = datetime.date(dob_temp.year,
                                             dob_temp.month,
                                             dob_temp.day)
-                    if isnull(row[3]):
+                    if isnull(row_dict["dod"]):
                         event_date = datetime.date(9999, 9, 9)
                     else:
-                        dod = datetime.datetime.strptime(row[3], "%Y-%m-%d")
+                        dod = datetime.datetime.strptime(row_dict["dod"],
+                                                         "%Y-%m-%d")
                         event_date = datetime.date(dod.year,
                                                    dod.month,
                                                    dod.day)
-                    if row[4] >= 0 and not isnan(row[4]):
-                        age = int(row[4])
+                    if row_dict["age"] >= 0 and not isnan(row_dict["age"]):
+                        age = int(row_dict["age"])
                     else:
                         age = "MISSING"
-                    if row[5] == "Undetermined":
+                    if row_dict["cod"] == "Undetermined":
                         cod_code = "99"
                     else:
-                        cod_code = get_cod_code(self.dhis_cod_codes, row[5])
+                        cod_code = get_cod_code(self.dhis_cod_codes,
+                                                row_dict["cod"])
 
-                    row_dict = i._asdict()
-                    ou_keys = [key for key, val in row_dict.items()
-                               if ('org_unit_col' in key) and
-                               (isinstance(val, str) or isnull(val))]
-                    ou_keys.sort()
-                    death_org_unit = row_dict[ou_keys[-1]]
-                    #death_org_unit = row[6]
-                    if death_org_unit in server_org_unit_names:
-                        org_unit_index = server_org_unit_names.index(
+                    org_unit_keys = [key for key, val in row_dict.items()
+                                     if ("org_unit_col" in key) and
+                                     (isinstance(val, str) or not isnull(val))]
+                    org_unit_keys.sort()
+                    death_org_unit_names = list(map(row_dict.get,
+                                                    org_unit_keys))
+                    death_org_unit = self._find_org_unit(death_org_unit_names,
+                                                         valid_org_unit_names)
+                    if death_org_unit != "No match found":
+                        org_unit_index = valid_org_unit_names.index(
                             death_org_unit)
-                        dhis_org_unit = server_org_unit_ids[org_unit_index]
-                    elif death_org_unit in server_org_unit_ids:
-                        dhis_org_unit = death_org_unit
+                        dhis_org_unit = valid_org_unit_ids[org_unit_index]
+                    # elif death_org_unit in valid_org_unit_ids:
+                    #     dhis_org_unit = death_org_unit
                     else:
                         # TODO: add parameter for what to do when can't find
                         # DHIS org unit with options post to root or don't post
                         # (note user may not have permission to post here!!!)
-                        dhis_org_unit = server_top_org_unit_id
-
-                    #algorithm_metadata_code = row[7]
+                        dhis_org_unit = top_org_unit_id
                     algorithm_metadata_code = row_dict['metadataCode']
-                    #odk_id = row[8]
                     odk_id = row_dict['odkMetaInstanceID']
 
                     e = VerbalAutopsyEvent(
@@ -573,20 +584,30 @@ class DHIS:
                         file_id,
                     )
 
-                    if self.post_to_tracker:
-                        # tei_dict = api_dhis.get("trackedEntityInstances",
-                        #                         params={"ou": dhis_org_unit})
-                        tracked_entity_instances.append(
-                            e.format_tea_to_dhis2(self.dhis_user,
-                                                  dhis_org_unit))
+                    if dhis_org_unit is None:
+                        row_list = list(row_dict.values())
+                        row_list.extend(
+                            [va_id,
+                             f"Invalid DHIS2 org unit ({dhis_org_unit})"])
+                        writer.writerow(row_list)
                     else:
-                        events.append(e.format_se_to_dhis2(self.dhis_user,
-                                                           dhis_org_unit))
-                    row.extend([va_id, "Pushing to DHIS2"])
-                    writer.writerow(row)
+                        if self.post_to_tracker:
+                            # tei_dict = api_dhis.get("trackedEntityInstances",
+                            #                         params={"ou": dhis_org_unit})
+                            tracked_entity_instances.append(
+                                e.format_tea_to_dhis2(self.dhis_user,
+                                                      dhis_org_unit))
+                        else:
+                            events.append(
+                                e.format_se_to_dhis2(self.dhis_user,
+                                                     dhis_org_unit))
+                        row_list = list(row_dict.values())
+                        row_list.extend([va_id, "Pushing to DHIS2"])
+                        writer.writerow(row_list)
                 else:
-                    row.extend(["", "No CoD Assigned"])
-                    writer.writerow(row)
+                    row_list = list(row_dict.values())
+                    row_list.extend(["", "No CoD Assigned"])
+                    writer.writerow(row_list)
         try:
             if self.post_to_tracker:
                 export["trackedEntityInstances"] = tracked_entity_instances
@@ -597,20 +618,19 @@ class DHIS:
         except requests.RequestException as exc:
             raise DHISError("Unable to post events to DHIS2..." + str(exc))
         if self.post_to_tracker:
-            log_summaries = log["response"]["importSummaries"]
-            posted_events = [
-                (i["reference"],
-                 i["enrollments"]["importSummaries"][0]["events"]["status"])
-                for i in log_summaries]
-            n_successes = sum([1 for i in posted_events if i[1] == "SUCCESS"])
-            self.n_posted_records = n_successes
+            tei_event_status = self._parse_tei_post_log(log)
+            event_success = [k for k, v in tei_event_status.items()
+                             if v.get("event") == "SUCCESS"]
+            self.n_posted_events = len(event_success)
+            # delete TEIs if event = ERROR? (may not have permission)
             # package = {"trackedEntityInstances": [{
-            #     "trackedEntityInstance": i[0]}
-            #     for i in posted_events if i[1] == "ERROR"]}
+            #     "trackedEntityInstance": k}
+            #     for k,v in tei_event_status.items()
+            #     if v.get("status") == "ERROR"]}
             # api_dhis.post("trackedEntityInstances", data=package,
             #               params={"strategy": "DELETE"})
         else:
-            self.n_posted_records = len(log["response"]["importSummaries"])
+            self.n_posted_events = len(log["response"]["importSummaries"])
         return log
 
     def verify_post(self, post_log, api_dhis):
@@ -704,3 +724,82 @@ class DHIS:
             raise DHISError(
                 "Problem verifying posted records with DHIS.post_va..." +
                 str(exc)) from exc
+
+    def _find_org_unit(self, find_ou: list, all_ou: list) -> str:
+        """Find matching DHIS org unit.
+
+        :param find_ou: Names of organisation units for death.
+        :param all_ou: Names of organisation units in DHIS2 hierarchy.
+        :rtype: str
+        """
+
+        n = len(find_ou)
+        ou_matches = OrderedDict()
+        for ou in range(n):
+            ou_pattern = re.compile("(^|\s)" + find_ou[ou].lower() + "(\s|$)")
+            ou_match = [i for i in all_ou if re.search(ou_pattern, i.lower())]
+            if ou_match:
+                ou_matches[f"level_{ou}"] = ou_match
+
+        if not ou_matches:
+            return "No match found"
+
+        current_ou = ou_matches.popitem(last=True)[1]
+        if len(current_ou) == 1:
+            return current_ou[0]
+
+        while ou_matches:
+            next_ou = ou_matches.popitem(last=True)[1]
+            if set(current_ou) & set(next_ou):
+                current_ou = list(set(current_ou) & set(next_ou))
+                if len(current_ou) == 1:
+                    return current_ou[0]
+            # elif return no match?
+        return "No match found"
+
+    def _parse_tei_post_log(self, log: dict) -> dict:
+        """Return events status for each tracked entity instance (TEI) as
+        indicated by the object (log) returned from a POST to DHIS2.
+
+        :param log: object returned from POST to DHIS2
+        :returns: Event status and description for each TEI
+        :rtype: dict
+        """
+        log_summaries = log["response"]["importSummaries"]
+        tei_event_status = {}
+        for summary in log_summaries:
+            tei_ref = summary.get("reference")
+            tei_event = summary["enrollments"]["importSummaries"][0]["events"]
+            event_status = tei_event.get("importSummaries")[0].get("status")
+            event_description = tei_event.get(
+                "importSummaries")[0].get("description")
+            tei_event_status[tei_ref] = {"event": event_status,
+                                         "description": event_description}
+        return tei_event_status
+
+    def _assign_va_program_to_org_units(self,
+                                        org_unit: str,
+                                        api_dhis: API) -> bool:
+        """Assign Verbal Autopsy (VA) program to organisation units
+        :param org_unit: UID for organisation unit that needs to be assigned
+        the VA program
+        :param api_dhis: A class instance for interacting with the DHIS2 API
+          created by the method :meth:`DHIS.connect <connect>`
+        :type api_dhis: Instance of the :class:`API <API>` class
+        :returns: Boolean for successful assignment
+        :rtype: bool
+        :raises: DHISError
+        """
+        existing = api_dhis.get(f"programs/{self.va_program_uid}",
+                                params={"field": "owner"})
+        if org_unit not in [ou["id"] for ou in existing["organisationUnits"]]:
+            existing["organisationUnits"].append({"id": org_unit})
+            package = {"programs": [existing]}
+            post_log = api_dhis.post("metadata", data=package)
+            if post_log.get("status") == "SUCCESS":
+                return True
+            else:
+                return False
+        else:
+            return True
+

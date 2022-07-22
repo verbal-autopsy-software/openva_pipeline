@@ -1151,7 +1151,8 @@ class TransferDB:
         c = conn.cursor()
         try:
             sql_dhis = (
-                "SELECT dhisURL, dhisUser, dhisPassword, dhisOrgUnit " 
+                "SELECT dhisURL, dhisUser, dhisPassword, "
+                "dhisOrgUnit, dhisPostRoot " 
                 "FROM DHIS_Conf;"
             )
             query_dhis = c.execute(sql_dhis).fetchall()
@@ -1183,29 +1184,30 @@ class TransferDB:
         start_htmls = dhis_url[0:8]
         if not (start_html == "http://" or start_htmls == "https://"):
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhis_url")
+                "Problem in database: DHIS_Conf.dhisURL")
         dhis_user = query_dhis[0][1]
         if dhis_user == "" or dhis_user is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhis_user (is empty)"
+                "Problem in database: DHIS_Conf.dhisUser (is empty)"
             )
         dhis_password = query_dhis[0][2]
         if dhis_password == "" or dhis_password is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhis_password (is empty)"
+                "Problem in database: DHIS_Conf.dhisPassword (is empty)"
             )
         dhis_org_unit = query_dhis[0][3]
         if dhis_org_unit == "" or dhis_org_unit is None:
             raise DHISConfigurationError(
-                "Problem in database: DHIS_Conf.dhis_org_unit (is empty)"
+                "Problem in database: DHIS_Conf.dhisOrgUnit (is empty)"
             )
+        dhis_post_root = query_dhis[0][4]
 
         nt_dhis = namedtuple(
             "nt_dhis", ["dhis_url", "dhis_user",
-                        "dhis_password", "dhis_org_unit"]
+                        "dhis_password", "dhis_org_unit", "dhis_post_root"]
         )
         settings_dhis = nt_dhis(dhis_url, dhis_user, dhis_password,
-                                dhis_org_unit)
+                                dhis_org_unit, dhis_post_root)
 
         return [settings_dhis, dhis_cod_codes]
 
