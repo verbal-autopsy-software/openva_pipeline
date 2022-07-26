@@ -6,8 +6,6 @@ environment:
     PYTHON: "3.8"
   - TOXENV: py39
     PYTHON: "3.9"
-  - TOXENV: py310
-    PYTHON: "3.10"
 
 stack: python $PYTHON
 
