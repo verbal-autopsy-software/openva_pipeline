@@ -69,8 +69,8 @@ class API(object):
                                                                 r.text))
             else:
                 return r.json()
-        except requests.RequestException:
-            raise DHISError(str(requests.RequestException))
+        except requests.RequestException as exc:
+            raise DHISError(str(exc))
 
     def post(self, endpoint, data, params=None):
         """POST method for DHIS2 API.
@@ -89,9 +89,9 @@ class API(object):
                 )
             else:
                 return r.json()
-        except requests.RequestException:
+        except requests.RequestException as exc:
             raise DHISError("Problem with API.post..." +
-                            str(requests.RequestException))
+                            str(exc))
 
     def post_blob(self, db_file):
         """Post file to DHIS2 and return created UID for that file
@@ -115,10 +115,10 @@ class API(object):
                     response = r.json()
                     file_id = response["response"]["fileResource"]["id"]
                     return file_id
-            except requests.RequestException:
+            except requests.RequestException as exc:
                 raise DHISError(
                     "Problem with API.post_blob..." +
-                    str(requests.RequestException)
+                    str(exc)
                 )
 
     def put(self, endpoint, data):
@@ -138,9 +138,9 @@ class API(object):
                 )
             else:
                 return r.json()
-        except requests.RequestException:
+        except requests.RequestException as exc:
             raise DHISError("Problem with API.put..." +
-                            str(requests.RequestException))
+                            str(exc))
 
 
 class VerbalAutopsyEvent(object):
@@ -622,7 +622,7 @@ class DHIS:
             event_success = [k for k, v in tei_event_status.items()
                              if v.get("event") == "SUCCESS"]
             self.n_posted_events = len(event_success)
-            # delete TEIs if event = ERROR? (may not have permission)
+            # delete TEIs if event -> ERROR? (may not have permission)
             # package = {"trackedEntityInstances": [{
             #     "trackedEntityInstance": k}
             #     for k,v in tei_event_status.items()
@@ -736,7 +736,13 @@ class DHIS:
         n = len(find_ou)
         ou_matches = OrderedDict()
         for ou in range(n):
-            ou_pattern = re.compile("(^|\s)" + find_ou[ou].lower() + "(\s|$)")
+            try:
+                ou_pattern = re.compile(
+                    "(^|\s)" + find_ou[ou].lower() + "(\s|$)")
+            except re.error:
+                ou_clean = find_ou[ou].replace("\\", "")
+                ou_pattern = re.compile(
+                    "(^|\s)" + ou_clean.lower() + "(\s|$)")
             ou_match = [i for i in all_ou if re.search(ou_pattern, i.lower())]
             if ou_match:
                 ou_matches[f"level_{ou}"] = ou_match
