@@ -489,9 +489,7 @@ class DHIS:
             writer.writerow(header)
 
             # this depends on openVA vs SmartVA
-            for i in df_record_storage.itertuples(index=False):
-                row_dict = i._asdict()
-                #if row_dict["cod"] != "MISSING" and row_dict["cod"] is not None:
+            for row_dict in df_record_storage.to_dict(orient="records"):
                 if row_dict["cod"] and row_dict != "MISSING":
                     va_id = str(row_dict["id"])
                     blob_file = "{}.db".format(os.path.join(self.dir_dhis,

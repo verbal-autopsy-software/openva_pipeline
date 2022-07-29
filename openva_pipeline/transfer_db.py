@@ -1233,16 +1233,15 @@ class TransferDB:
         df_new_storage = read_csv(new_storage_path)
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         try:
-            for row in df_new_storage.itertuples():
-                xfer_db_id = row[1]
-                n_elements = len(row) - 1
-                xfer_db_outcome = row[n_elements]
-                va_data = row[1], row[8:(n_elements - 1)]
-                va_data_flat = tuple(
-                    [y for x in va_data for y in
-                     (x if isinstance(x, tuple) else (x,))]
-                )
-                xfer_db_record = dumps(va_data_flat)
+            for row_dict in df_new_storage.to_dict(orient="records"):
+                xfer_db_id = row_dict["id"]
+                xfer_db_outcome = row_dict["pipelineOutcome"]
+                non_data_cols = ["sex", "dob", "dod", "age",
+                                 "cod", "metadataCode", "odkMetaInstanceID",
+                                 "pipelineOutcome"]
+                va_data = tuple(v for k, v in row_dict.items()
+                                 if k not in non_data_cols)
+                xfer_db_record = dumps(va_data)
                 sql_xfer_db = (
                     "INSERT INTO VA_Storage "
                     "(id, outcome, record, dateEntered) "
