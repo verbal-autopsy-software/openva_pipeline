@@ -80,7 +80,7 @@ class Pipeline:
             conn = xfer_db.connect_db()
             c = conn.cursor()
             sql = "INSERT INTO EventLog \
-                   (event_desc, event_type, eventTime) VALUES (?, ?, ?)"
+                   (eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
             par = (event_desc, event_type, time_fmt)
             c.execute(sql, par)
             conn.commit()
