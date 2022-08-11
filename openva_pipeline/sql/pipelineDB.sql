@@ -18,6 +18,14 @@ CREATE TABLE VA_Storage
   dateEntered date
 );
 
+CREATE TABLE VA_Problems
+(
+  id          char(100) NOT NULL,
+  outcome     char(100),
+  record      blob,
+  dateEntered date
+);
+
 CREATE TABLE EventLog
 (
   eventDesc char(255),

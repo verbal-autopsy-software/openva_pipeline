@@ -96,14 +96,14 @@ def run_pipeline(
 
     try:
         pl.run_odk(settings)
-        pl.log_event("ODK Export Completed Successfully", "Event")
+        pl.log_event("ODK Export completed successfully", "Event")
     except ODKError as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)
 
     try:
         r_out = pl.run_openva(settings)
-        pl.log_event("OpenVA Analysis Completed Successfully", "Event")
+        pl.log_event("OpenVA analysis completed successfully", "Event")
     except (OpenVAError, SmartVAError) as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)
@@ -114,15 +114,16 @@ def run_pipeline(
 
     if export_to_dhis:
         try:
-            pl.run_dhis(settings)
-            pl.log_event("Posted Events to DHIS2 Successfully", "Event")
+            dhis_out = pl.run_dhis(settings)
+            n = dhis_out["n_posted_events"]
+            pl.log_event(f"Posted {n} events to DHIS2 successfully", "Event")
         except DHISError as e:
             pl.log_event(str(e), "Error")
             sys.exit(1)
 
     try:
         pl.store_results_db()
-        pl.log_event("Stored Records to Xfer Database Successfully", "Event")
+        pl.log_event("Stored records to Xfer database successfully", "Event")
     except (PipelineError, DatabaseConnectionError,
             PipelineConfigurationError) as e:
         pl.log_event(str(e), "Error")
@@ -130,7 +131,7 @@ def run_pipeline(
 
     try:
         pl.close_pipeline()
-        pl.log_event("Successfully Completed Run of Pipeline", "Event")
+        pl.log_event("Successfully completed run of pipeline", "Event")
     except (DatabaseConnectionError, DatabaseConnectionError) as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)

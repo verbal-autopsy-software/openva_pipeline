@@ -1225,7 +1225,7 @@ class TransferDB:
         """
 
         if self.working_directory is None:
-            raise PipelineError("Need to run config_pipeline.")
+            raise PipelineError("Need to run Pipeline.config().")
         c = conn.cursor()
         new_storage_path = os.path.join(
             self.working_directory, "OpenVAFiles", "new_storage.csv"
@@ -1239,8 +1239,7 @@ class TransferDB:
                 non_data_cols = ["sex", "dob", "dod", "age",
                                  "cod", "metadataCode", "odkMetaInstanceID",
                                  "pipelineOutcome"]
-                va_data = tuple(v for k, v in row_dict.items()
-                                 if k not in non_data_cols)
+                va_data = tuple(v for k, v in row_dict.items() if k not in non_data_cols)
                 xfer_db_record = dumps(va_data)
                 sql_xfer_db = (
                     "INSERT INTO VA_Storage "
@@ -1253,7 +1252,7 @@ class TransferDB:
                        time_fmt]
                 c.execute(sql_xfer_db, par)
             conn.commit()
-        except sqlcipher.OperationalError as e:
+        except (sqlcipher.OperationalError, sqlcipher.IntegrityError) as e:
             raise DatabaseConnectionError(
                 "Problem storing VA record to Transfer DB..." + str(e))
 

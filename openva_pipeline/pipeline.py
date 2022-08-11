@@ -131,6 +131,48 @@ class Pipeline:
         conn.close()
         return settings
 
+    def update_db(self):
+        """Update transfer database created by previous version of the pipeline."""
+
+        table_names = self._get_tables()
+        xfer_db = TransferDB(
+            db_file_name=self.db_file_name,
+            db_directory=self.db_directory,
+            db_key=self.db_key,
+            pl_run_date=self.pipeline_run_date,
+        )
+        conn = xfer_db.connect_db()
+        c = conn.cursor()
+        if "VA_Problems" not in table_names:
+            sql_make_table = (
+                "CREATE TABLE VA_Problems "
+                "(id char(100) NOT NULL, "
+                "outcome char(100), "
+                "record blob, "
+                "dateEntered date);"
+            )
+            c.execute(sql_make_table)
+
+        dhis_table = self._get_fields("DHIS_Conf")
+        dhis_fields = [entry[0] for entry in dhis_table]
+        if "dhisPostRoot" not in dhis_fields:
+            sql_make_field = "ALTER TABLE DHIS_Conf ADD dhisPostRoot char(5);"
+            c.execute(sql_make_field)
+            sql_fill_field = "UPDATE DHIS_Conf SET dhisPostRoot = 'False';"
+            c.execute(sql_fill_field)
+
+        odk_table = self._get_fields("ODK_Conf")
+        odk_fields = [entry[0] for entry in odk_table]
+        if "odkUseCentral" not in odk_fields:
+            sql_make_field = "ALTER TABLE ODK_Conf ADD odkUseCentral char(5);"
+            c.execute(sql_make_field)
+            sql_fill_field = "UPDATE ODK_Conf SET odkUseCentral = 'False';"
+            c.execute(sql_make_field)
+        if "odkProjectNumber" not in odk_fields:
+            sql_make_field = "ALTER TABLE ODK_Conf ADD odkProjectNumber char(6);"
+            c.execute(sql_make_field)
+        conn.close()
+
     def _update_odk(self, field, value):
         """Update ODK_Conf.field(s) with value(s) in Transfer DB."""
 
