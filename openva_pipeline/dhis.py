@@ -490,7 +490,7 @@ class DHIS:
 
             # this depends on openVA vs SmartVA
             for row_dict in df_record_storage.to_dict(orient="records"):
-                if row_dict["cod"] and row_dict != "MISSING":
+                if row_dict["cod"] and row_dict["cod"] != "MISSING":
                     va_id = str(row_dict["id"])
                     blob_file = "{}.db".format(os.path.join(self.dir_dhis,
                                                             "blobs",
