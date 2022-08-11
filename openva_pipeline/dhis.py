@@ -552,19 +552,22 @@ class DHIS:
                     org_unit_keys.sort()
                     death_org_unit_names = list(map(row_dict.get,
                                                     org_unit_keys))
-                    death_org_unit = self._find_org_unit(death_org_unit_names,
-                                                         valid_org_unit_names)
-                    if death_org_unit != "No match found":
-                        org_unit_index = valid_org_unit_names.index(
-                            death_org_unit)
-                        dhis_org_unit = valid_org_unit_ids[org_unit_index]
-                    # elif death_org_unit in valid_org_unit_ids:
-                    #     dhis_org_unit = death_org_unit
+                    if len(death_org_unit_names) == 1 and death_org_unit_names[0] in valid_org_unit_ids:
+                        dhis_org_unit = death_org_unit_names[0]
                     else:
-                        # TODO: add parameter for what to do when can't find
-                        # DHIS org unit with options post to root or don't post
-                        # (note user may not have permission to post here!!!)
-                        dhis_org_unit = top_org_unit_id
+                        death_org_unit = self._find_org_unit(death_org_unit_names,
+                                                             valid_org_unit_names)
+                        if death_org_unit != "No match found":
+                            org_unit_index = valid_org_unit_names.index(
+                                death_org_unit)
+                            dhis_org_unit = valid_org_unit_ids[org_unit_index]
+                        # elif death_org_unit in valid_org_unit_ids:
+                        #     dhis_org_unit = death_org_unit
+                        else:
+                            # TODO: add parameter for what to do when can't find
+                            # DHIS org unit with options post to root or don't post
+                            # (note user may not have permission to post here!!!)
+                            dhis_org_unit = top_org_unit_id
                     algorithm_metadata_code = row_dict['metadataCode']
                     odk_id = row_dict['odkMetaInstanceID']
 
