@@ -309,6 +309,8 @@ def create_db(file_name, eva_list):
     :type eva_list: list
     :rtype: None
     """
+    if os.path.isfile(file_name):
+        os.remove(file_name)
     conn = sqlite3.connect(file_name)
     with conn:
         cur = conn.cursor()
@@ -552,11 +554,13 @@ class DHIS:
                     org_unit_keys.sort()
                     death_org_unit_names = list(map(row_dict.get,
                                                     org_unit_keys))
-                    if len(death_org_unit_names) == 1 and death_org_unit_names[0] in valid_org_unit_ids:
+                    if len(death_org_unit_names) == 1 and \
+                            death_org_unit_names[0] in valid_org_unit_ids:
                         dhis_org_unit = death_org_unit_names[0]
                     else:
-                        death_org_unit = self._find_org_unit(death_org_unit_names,
-                                                             valid_org_unit_names)
+                        death_org_unit = self._find_org_unit(
+                            death_org_unit_names,
+                            valid_org_unit_names)
                         if death_org_unit != "No match found":
                             org_unit_index = valid_org_unit_names.index(
                                 death_org_unit)

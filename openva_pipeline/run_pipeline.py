@@ -17,6 +17,8 @@
 
 import sys
 import os
+import shutil
+import subprocess
 import requests
 from pysqlcipher3 import dbapi2 as sqlcipher
 
@@ -88,6 +90,19 @@ def run_pipeline(
         db_key=database_key,
         use_dhis=export_to_dhis,
     )
+    check_r = shutil.which("R")
+    if not check_r:
+        print("R is not installed (needed for running openVA)")
+        pl.log_event("R is not installed (unable to assign causes of death)",
+                     "Error")
+        sys.exit(1)
+    openva_is_installed = check_openva_install(database_directory)
+    if not openva_is_installed:
+        print("R package openVA is not installed.")
+        pl.log_event("R package openVA is not installed.",
+                     "Error")
+        sys.exit(1)
+
     try:
         settings = pl.config()
     except PipelineConfigurationError as e:
@@ -165,6 +180,35 @@ def download_smartva():
         os.chmod("smartva", 0o777)
     except (requests.RequestException, IOError) as e:
         raise SmartVAError("Error downloading smartva: {}".format(str(e)))
+
+
+def check_openva_install(working_directory: str) -> bool:
+    """Check that openVA R package is installed."""
+
+    r_script = os.path.join(working_directory,
+                            "test_openva_install.R")
+
+    with open(r_script, "w", newline="") as f:
+        f.write("library(openVA)")
+    r_args = ["R", "CMD", "BATCH", "--no-save", "--no-restore",
+              r_script]
+    try:
+        # capture_output=True not available in Python 3.6
+        completed = subprocess.run(args=r_args,
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   check=True)
+        if completed.returncode == 0:
+            os.remove(r_script)
+            os.remove(r_script + "out")
+            return True
+        else:
+            return False
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode == 1:
+            return False
+
 
 # if __name__ == "__main__":
 #     runPipeline(database_file_name= "run_Pipeline.db",

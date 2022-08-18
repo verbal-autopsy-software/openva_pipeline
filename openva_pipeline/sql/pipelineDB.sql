@@ -18,12 +18,13 @@ CREATE TABLE VA_Storage
   dateEntered date
 );
 
-CREATE TABLE VA_Problems
+CREATE TABLE VA_Org_Unit_Not_Found
 (
   id          char(100) NOT NULL,
   outcome     char(100),
   record      blob,
-  dateEntered date
+  dateEntered date,
+  fixed       char(5)
 );
 
 CREATE TABLE EventLog

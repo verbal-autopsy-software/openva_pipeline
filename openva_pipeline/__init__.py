@@ -3,6 +3,7 @@ from .run_pipeline import run_pipeline
 from .run_pipeline import create_transfer_db
 from .run_pipeline import download_briefcase
 from .run_pipeline import download_smartva
+from .run_pipeline import check_openva_install
 from .pipeline import Pipeline
 from .transfer_db import TransferDB
 from .odk import ODK
