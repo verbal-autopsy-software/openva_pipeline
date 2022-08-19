@@ -293,6 +293,9 @@ class VerbalAutopsyEvent(object):
 
         return tracked_entity_instance
 
+    def set_dhis_org_unit(self, org_unit: str) -> None:
+        self.dhis_org_unit = org_unit
+
     def __str__(self):
         return json.dumps(self, default=lambda o: o.__dict__)
 

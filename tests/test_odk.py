@@ -76,7 +76,7 @@ class CompleteFreshRun(unittest.TestCase):
     def test_odk_central_return(self):
         """Check successful run with valid parameters."""
 
-        self.assertTrue("SUCCESS" in self.odk_central_return)
+        self.assertTrue("Downloaded" in self.odk_central_return)
 
     def test_for_file_odk_export_new(self):
         """Check for exported CSV file."""

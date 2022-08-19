@@ -429,25 +429,33 @@ class TransferDB:
           returned from :meth:`TransferDB.connect_db() <connect_db>`.)
         :type conn: sqlite3 Connection object
         :raises: DatabaseConnectionError, PipelineError
+        :return: Number of duplicates found and number of VA records sending to
+        openVA.
+        :rtype: dict
         """
 
         if self.working_directory is None:
             raise PipelineError("Need to run config_pipeline.")
-        c = conn.cursor()
+        results = {"n_records": None,
+                   "n_unique": None,
+                   "n_duplicates": None}
         odk_export_path = os.path.join(
             self.working_directory, "ODKFiles", "odk_export_new.csv"
         )
         df_odk = read_csv(odk_export_path)
         df_odk_id = df_odk["meta-instanceID"]
+        results["n_records"] = df_odk.shape[0]
+        results["n_unique"] = df_odk.shape[0]
 
+        c = conn.cursor()
         sql = "SELECT id FROM VA_Storage"
         c.execute(sql)
         va_ids = c.fetchall()
         va_ids_list = [j for i in va_ids for j in i]
         va_duplicates = set(df_odk_id).intersection(set(va_ids_list))
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
-        if len(va_duplicates) > 0:
-            n_duplicates = len(va_duplicates)
+        results["n_duplicates"] = len(va_duplicates)
+        if results["n_duplicates"] > 0:
             sql_xfer_db = (
                 "INSERT INTO EventLog "
                 "(eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
@@ -455,17 +463,18 @@ class TransferDB:
             event_desc_part1 = [
                 "Removing duplicate records from ODK Export with"
                 + "ODK Meta-Instance ID: "
-            ] * n_duplicates
+            ] * results["n_duplicates"]
             event_desc_part2 = list(va_duplicates)
             event_desc = [x + y for x, y in
                           zip(event_desc_part1, event_desc_part2)]
-            event_type = ["Warning"] * n_duplicates
-            event_time = [time_fmt] * n_duplicates
+            event_type = ["Warning"] * results["n_duplicates"]
+            event_time = [time_fmt] * results["n_duplicates"]
             par = list(zip(event_desc, event_type, event_time))
             c.executemany(sql_xfer_db, par)
             conn.commit()
             df_no_duplicates = df_odk[
                 ~df_odk["meta-instanceID"].isin(list(va_duplicates))]
+            results["n_unique"] = df_no_duplicates.shape[0]
             try:
                 df_no_duplicates.to_csv(odk_export_path, index=False)
             except (PermissionError, OSError) as exc:
@@ -473,6 +482,8 @@ class TransferDB:
                     "Error trying to create new CSV file after " +
                     "removing duplicate records in ODK Export"
                 ) from exc
+        return results
+
 
     def config_openva(self, conn, algorithm):
         """Query OpenVA configuration settings from database.

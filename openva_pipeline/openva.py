@@ -43,7 +43,6 @@ class OpenVA:
         self.pipeline_args = settings["pipeline"]
         if settings["odk"].odk_id is None:
             self.odk_id = "meta-instanceID"
-            #self.odk_id = "instanceID"
         else:
             self.odk_id = settings["odk"].odk_id
         self.run_date = pipeline_run_date
@@ -69,14 +68,19 @@ class OpenVA:
             raise OpenVAError("Unable to create directory" +
                               dir_openva) from exc
 
-    def copy_va(self):
+    def prep_va_data(self):
         """Create data file for openVA by merging ODK export files & converting
            with pycrossva.
 
-        :returns: Indicator of an empty (i.e. no records) ODK export file
-        :rtype: logical
+        :returns: Summary of the number of VA records at each step -- previous
+        ODK export (0 if there isn't one), new ODK export, and number of VA
+        records sent to openVA.
+        :rtype: dict
         """
 
+        summary = {"n_export_prev": None,
+                   "n_export_new": None,
+                   "n_to_openva": None}
         export_file_prev = os.path.join(self.dir_odk, "odk_export_prev.csv")
         export_file_new = os.path.join(self.dir_odk, "odk_export_new.csv")
         pycva_input = os.path.join(self.dir_openva, "pycrossva_input.csv")
@@ -84,8 +88,6 @@ class OpenVA:
 
         is_export_file_prev = os.path.isfile(export_file_prev)
         is_export_file_new = os.path.isfile(export_file_new)
-
-        zero_records = False
 
         algorithm_metadata = \
             self.pipeline_args.algorithm_metadata_code.split("|")
@@ -98,9 +100,11 @@ class OpenVA:
         if is_export_file_new and not is_export_file_prev:
             with open(export_file_new, "r", newline="") as f_new:
                 f_new_lines = f_new.readlines()
+            summary["n_export_prev"] = 0
+            summary["n_export_new"] = len(f_new_lines) - 1
+            summary["n_to_openva"] = len(f_new_lines) - 1
             if len(f_new_lines) == 1:
-                zero_records = True
-                return zero_records
+                return summary
             shutil.copy(export_file_new, pycva_input)
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
@@ -111,22 +115,26 @@ class OpenVA:
                                        raw_data_id=self.odk_id,
                                        verbose=0)
                 final_data.to_csv(openva_input_file, index=False)
-
-        if is_export_file_new and is_export_file_prev:
+                return summary
+        # if is_export_file_new and is_export_file_prev:
+        else:
             with open(export_file_new, "r", newline="") as f_new:
                 f_new_lines = f_new.readlines()
             with open(export_file_prev, "r", newline="") as f_prev:
                 f_prev_lines = f_prev.readlines()
-
+            summary["n_export_prev"] = len(f_prev_lines) - 1
+            summary["n_export_new"] = len(f_new_lines) - 1
             if len(f_new_lines) == 1 and len(f_prev_lines) == 1:
-                zero_records = True
-                return zero_records
-
+                summary["n_to_openva"] = 0
+                return summary
             shutil.copy(export_file_new, pycva_input)
-            with open(pycva_input, "a", newline="") as fCombined:
+            n_to_openva = len(f_new_lines) - 1
+            with open(pycva_input, "a", newline="") as f_combined:
                 for line in f_prev_lines:
                     if line not in f_new_lines:
-                        fCombined.write(line)
+                        f_combined.write(line)
+                        n_to_openva += 1
+            summary["n_to_openva"] = n_to_openva
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
@@ -136,7 +144,7 @@ class OpenVA:
                                        raw_data_id=self.odk_id,
                                        verbose=0)
                 final_data.to_csv(openva_input_file, index=False)
-        return zero_records
+        return summary
 
     def r_script(self):
         """Create an R script for running openVA and assigning CODs."""
@@ -550,3 +558,20 @@ class OpenVA:
                 self.successful_run = False
                 raise SmartVAError("Problem with SmartVA " +
                                    "country code") from exc
+
+    def get_summary(self) -> dict:
+        """
+        Get summary of openVA step.
+
+        :returns: Get the number of records passed to openVA and the number
+        of records without an assigned cause of death (CoD).
+        :rtype: dict
+        """
+
+        data_path = os.path.join(self.dir_openva, "record_storage.csv")
+        record_storage = read_csv(data_path)
+        n_records = record_storage.shape[0]
+        n_missing = sum(record_storage["cod"] == "MISSING")
+        summary = {"n_processed": n_records,
+                   "n_cod_missing": n_missing}
+        return summary

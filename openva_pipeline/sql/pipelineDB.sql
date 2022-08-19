@@ -13,7 +13,7 @@ INSERT INTO Pipeline_Conf
 CREATE TABLE VA_Storage
 (
   id          char(100) NOT NULL,
-  outcome     char( 19) NOT NULL CHECK (outcome IN ("Pushed to DHIS2", "No CoD Assigned")),
+  outcome     char(100) NOT NULL,
   record      blob,
   dateEntered date
 );
@@ -22,7 +22,9 @@ CREATE TABLE VA_Org_Unit_Not_Found
 (
   id          char(100) NOT NULL,
   outcome     char(100),
-  record      blob,
+  eventBlob   blob,
+  evaBlob     blob,
+  dhisOrgUnit char(500),
   dateEntered date,
   fixed       char(5)
 );

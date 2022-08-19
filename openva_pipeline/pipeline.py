@@ -9,6 +9,7 @@ import os
 import csv
 import datetime
 import sys
+from pandas import read_csv
 
 from .transfer_db import TransferDB
 from .transfer_db import DatabaseConnectionError
@@ -38,7 +39,11 @@ class Pipeline:
     :type db_key: string
     """
 
-    def __init__(self, db_file_name, db_directory, db_key, use_dhis=True):
+    def __init__(self,
+                 db_file_name: str,
+                 db_directory: str,
+                 db_key: str,
+                 use_dhis: bool = True):
 
         self.db_file_name = db_file_name
         self.db_directory = db_directory
@@ -47,6 +52,8 @@ class Pipeline:
         now_date = datetime.datetime.now()
         self.pipeline_run_date = now_date.strftime("%Y-%m-%d_%H:%M:%S")
         self.use_dhis = use_dhis
+        self.settings = None
+        self.config()
 
     def log_event(self, event_desc, event_type):
         """Commit event or error message into EventLog table of transfer
@@ -95,7 +102,7 @@ class Pipeline:
                 print("Can't write to db_error_log.csv")
                 print(error_msg.append(str(exc)))
 
-    def config(self):
+    def config(self) -> None:
         """Fetch configuration settings from Transfer DB.
 
         This method queries the Transfer database (DB) and returns objects that
@@ -103,9 +110,6 @@ class Pipeline:
         :meth:`Pipeline.run_odk() <run_odk>`,
         :meth:`Pipeline.run_openva() <run_openva>`, and
         :meth:`Pipeline.run_dhis() <run_dhis>`.
-        :returns: Configuration settings for pipeline steps (e.g. connecting
-          to ODK Aggregate, running openVA, or posting records to DHIS)
-        :rtype: dictionary
         """
 
         xfer_db = TransferDB(
@@ -124,12 +128,12 @@ class Pipeline:
             "odk": settings_odk,
             "openva": settings_openva,
         }
+        self.settings = settings
         if self.use_dhis:
             settings_dhis = xfer_db.config_dhis(conn,
                                                 settings_pipeline.algorithm)
             settings["dhis"] = settings_dhis
         conn.close()
-        return settings
 
     def update_db(self):
         """Update transfer database created by previous version of the pipeline."""
@@ -145,10 +149,12 @@ class Pipeline:
         c = conn.cursor()
         if "VA_Org_Unit_Not_Found" not in table_names:
             sql_make_table = (
-                "CREATE TABLE VA_Problems "
+                "CREATE TABLE VA_Org_Unit_Not_Found "
                 "(id char(100) NOT NULL, "
                 "outcome char(100), "
-                "record blob, "
+                "eventBlob blob, "
+                "evaBlob blob, "
+                "dhisOrgUnit char(500), "
                 "dateEntered date,"
                 "fixed char(5));"
             )
@@ -297,7 +303,7 @@ class Pipeline:
         conn.close()
         return schema
 
-    def run_odk(self, settings):
+    def run_odk(self):
         """Run check duplicates, copy file, and briefcase.
 
         This method downloads data from either (1) an ODK Central server,
@@ -306,8 +312,8 @@ class Pipeline:
         by calling the method
         :meth:`ODK.briefcase() <openva_pipeline.odk.ODK.briefcase>`.  The
         configuration settings are taken from the argument
-        argsODK (see :meth:`Pipeline.config() <config>`)
-        , and downloads verbal autopsy (VA)
+        argsODK (see :meth:`Pipeline.config() <config>`),
+        and downloads verbal autopsy (VA)
         records as a (csv) export from an ODK Central/Aggregate server.
         If there is a previous ODK export file, this method merges the files by
         keeping only the unique VA records.
@@ -315,12 +321,15 @@ class Pipeline:
         :param settings: Configuration settings for pipeline steps (which is
         returned from :meth:`Pipeline.config() <config>`).
         :type settings: dictionary of named tuples
-        :return: Return value from method subprocess.run()
-        :rtype: subprocess.CompletedProcess
+        :return: Summary of results from ODK step
+        :rtype: tuple
         """
 
-        args_odk = settings['odk']
-        pipeline_odk = ODK(settings)
+        if not self.settings:
+            return "Pipeline not configured yet, run config() method."
+
+        args_odk = self.settings["odk"]
+        pipeline_odk = ODK(self.settings)
         pipeline_odk.merge_to_prev_export()
         if args_odk.odk_use_central == "True":
             odk_central = pipeline_odk.central()
@@ -334,20 +343,20 @@ class Pipeline:
         )
         conn = xfer_db.connect_db()
         xfer_db.config_pipeline(conn)
-        xfer_db.check_duplicates(conn)
+        odk_summary = xfer_db.check_duplicates(conn)
         conn.close()
         if args_odk.odk_use_central == "True":
-            return odk_central
+            return odk_central, odk_summary
         else:
-            return odk_bc
+            return odk_bc, odk_summary
 
-    def run_openva(self, settings):
+    def run_openva(self):
         """Create & run script or run smartva.
 
         This method runs the through the suite of methods in the
         :class:`OpenVA <openva_pipeline.openVA.OpenVA>`.
         class.  The list of tasks performed (in order) are: (1) call the method
-        :meth:`OpenVA.copy_va() <openva_pipeline.openVA.OpenVA.copy_va>`
+        :meth:`OpenVA.prep_va_data() <openva_pipeline.openVA.OpenVA.prep_va_data>`
         to copy over CSV files with VA data (retrieved from ODK Aggregate);
         (2) use the method
         :meth:`OpenVA.r_script() <openva_pipeline.openVA.OpenVA.r_script>`
@@ -366,19 +375,23 @@ class Pipeline:
         """
 
         pipeline_openva = OpenVA(
-            settings=settings,
+            settings=self.settings,
             pipeline_run_date=self.pipeline_run_date,
         )
-        zero_records = pipeline_openva.copy_va()
-        r_out = {"zero_records": zero_records}
-        if not zero_records:
+        r_out = pipeline_openva.prep_va_data()
+        if r_out["n_to_openva"] > 0:
             pipeline_openva.r_script()
             completed = pipeline_openva.get_cod()
             # r_out["completed"] = completed
             r_out["return_code"] = completed.returncode
+            summary = pipeline_openva.get_summary()
+            r_out.update(summary)
+        else:
+            r_out["n_processed"] = 0
+            r_out["n_cod_missing"] = 0
         return r_out
 
-    def run_dhis(self, settings):
+    def run_dhis(self):
         """Connect to API and post events.
 
         This method first calls the method
@@ -397,8 +410,8 @@ class Pipeline:
         :rtype: dictionary
         """
 
-        args_dhis = settings['dhis']
-        args_pipeline = settings['pipeline']
+        args_dhis = self.settings['dhis']
+        args_pipeline = self.settings['pipeline']
         pipeline_dhis = DHIS(args_dhis, args_pipeline.working_directory)
         api_dhis = pipeline_dhis.connect()
         post_log = pipeline_dhis.post_va(api_dhis)
@@ -422,6 +435,20 @@ class Pipeline:
         )
         conn = xfer_db.connect_db()
         xfer_db.config_pipeline(conn)
+        if not self.use_dhis:
+            args_pipeline = self.settings["pipeline"]
+            working_directory = args_pipeline.working_directory
+            record_storage_path = os.path.join(
+                working_directory,
+                "OpenVAFiles/record_storage.csv")
+            new_storage_path = os.path.join(
+                working_directory,
+                "OpenVAFiles/new_storage.csv")
+            record_storage = read_csv(record_storage_path)
+            record_storage["pipelineOutcome"] = "Assigned a cause of death"
+            missing_cod = record_storage["cod"] == "MISSING"
+            record_storage.loc[missing_cod, "pipelineOutcome"] = "No cause assigned"
+            record_storage.to_csv(new_storage_path)
         xfer_db.store_va(conn)
         conn.close()
 
@@ -463,6 +490,7 @@ class Pipeline:
         xfer_db.config_pipeline(conn)
         xfer_db.clean_odk()
         xfer_db.clean_openva()
-        xfer_db.clean_dhis()
+        if self.use_dhis:
+            xfer_db.clean_dhis()
         xfer_db.update_odk_last_run(conn, self.pipeline_run_date)
         conn.close()

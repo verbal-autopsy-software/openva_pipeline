@@ -51,6 +51,7 @@ class ODK:
         self.export_dir = odk_path
         self.storage_dir = odk_path
         self.file_name = "odk_export_new.csv"
+        self.n_records = None
 
         try:
             if not os.path.isdir(odk_path):
@@ -211,10 +212,10 @@ class ODK:
                 "Error getting data from ODK Central: {0}".format(r.text))
 
         odk_text = r.text.splitlines()
-        n_records = len(odk_text) - 1
+        self.n_records = len(odk_text) - 1
         odk_reader = csv.reader(odk_text, delimiter=',', quotechar='"')
         odk_data = [row for row in odk_reader]
         with open(export_file_new, "w") as f:
             writer = csv.writer(f)
             writer.writerows(odk_data)
-        return "SUCCESS! Downloaded {} records".format(n_records)
+        return f"Downloaded {self.n_records} records."

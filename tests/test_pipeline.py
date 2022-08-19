@@ -816,6 +816,69 @@ class CheckPipelineDepositResults(unittest.TestCase):
         os.remove("Pipeline.db")
 
 
+class CheckPipelineOrgUnits(unittest.TestCase):
+    """Check run_dhis method with VAs sent to different DHIS2 organisation
+    units."""
+
+    @classmethod
+    def setUpClass(cls):
+
+        if os.path.isfile("ODKFiles/odk_export_new.csv"):
+            os.remove("ODKFiles/odk_export_new.csv")
+        if os.path.isfile("ODKFiles/odk_export_prev.csv"):
+            os.remove("ODKFiles/odk_export_prev.csv")
+        shutil.copy("ODKFiles/odk_export_org_unit_in_id10057.csv",
+                    "ODKFiles/odk_export_new.csv")
+        if os.path.isfile("org_units.db"):
+            os.remove("org_units.db")
+        create_transfer_db("org_units.db", ".", "enilepiP")
+
+        cls.pl = Pipeline(db_file_name="org_units.db",
+                          db_directory=".",
+                          db_key="enilepiP")
+        cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
+        settings = cls.pl.config()
+        cls.pl.run_openva(settings)
+        pipeline_dhis = cls.pl.run_dhis(settings)
+        post_log = cls.pipeline_dhis["post_log"]
+        # TODO: finish tests
+        # here you could do the calculation (number of rows in record
+        # storage minus number posted should be number in
+        # VA_Org_Unit_Not_Found table.
+
+    def test_check_ou_not_found(self):
+        """Check for records in VA_Org_Unit_Not_Found table."""
+        # store, dhis_org_unit, blob_eva, and VerbalAutopsyEvent
+        # store these as pickle.dumps in VA_Org_Unit_Not_Found
+        # also store dhis_org_unit
+        pass
+
+
+        check_log = "importSummaries" in post_log["response"].keys()
+        self.assertTrue(check_log)
+
+    def test_run_dhis_verify_post(self):
+        """Verify VA records got posted to DHIS2:"""
+
+        df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
+        n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
+        self.assertEqual(n_pushed, self.pipeline_dhis["n_posted_events"])
+
+    @classmethod
+    def tearDownClass(cls):
+
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
+            os.remove("OpenVAFiles/entity_attribute_value.csv")
+        if os.path.isfile("OpenVAFiles/record_storage.csv"):
+            os.remove("OpenVAFiles/record_storage.csv")
+        if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
+            os.remove("OpenVAFiles/entity_attribute_value.csv")
+        if os.path.isfile("OpenVAFiles/new_storage.csv"):
+            os.remove("OpenVAFiles/new_storage.csv")
+        os.remove("org_units.db")
+
+
 class CheckPipelineCleanPipeline(unittest.TestCase):
     """Update ODK_Conf ODKLastRun in Transfer DB and clean up files."""
 

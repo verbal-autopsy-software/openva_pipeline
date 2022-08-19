@@ -103,33 +103,50 @@ def run_pipeline(
                      "Error")
         sys.exit(1)
 
-    try:
-        settings = pl.config()
-    except PipelineConfigurationError as e:
-        pl.log_event(str(e), "Error")
-        sys.exit(1)
+    # try:
+    #     pl.config()
+    # except PipelineConfigurationError as e:
+    #     pl.log_event(str(e), "Error")
+    #     sys.exit(1)
 
     try:
-        pl.run_odk(settings)
-        pl.log_event("ODK Export completed successfully", "Event")
+        odk_out, stats = pl.run_odk()
+        pl.log_event("ODK export completed successfully.", "Event")
+        if stats["n_records"] == 0:
+            pl.log_event("No new records from ODK server.", "Event")
+            sys.exit(0)
+        odk_summary_msg = (
+            f"Downloaded {stats['n_records']} VA records from ODK server, "
+            f"found {stats['n_duplicates']} duplicate VA records, "
+            f"and sending {stats['n_unique']} VA records to openVA."
+        )
+        pl.log_event(odk_summary_msg, "Summary")
     except ODKError as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)
 
     try:
-        r_out = pl.run_openva(settings)
-        pl.log_event("OpenVA analysis completed successfully", "Event")
+        r_out = pl.run_openva()
+        if r_out["n_to_openva"] == 0:
+            pl.log_event("No new VA records from ODK (now exiting)", "Event")
+            sys.exit(0)
+        pl.log_event("OpenVA analysis completed successfully.", "Event")
+        openva_summary_msg = (
+            f"Received {r_out['n_export_new']} VA records, "
+            f"found {r_out['n_export_prev']} VA records from previous run "
+            "that need causes form openVA (checking for duplicates), and "
+            f"sent {r_out['n_to_openva']} unique VA records through openVA.  "
+            f"openVA processed {r_out['n_processed']} VA records, including "
+            f"{r_out['n_cod_missing']} with NO assigned a cause of death."
+        )
+        pl.log_event(openva_summary_msg, "Summary")
     except (OpenVAError, SmartVAError) as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)
 
-    if r_out["zero_records"]:
-        pl.log_event("No new VA records from ODK (now exiting)", "Event")
-        sys.exit(0)
-
     if export_to_dhis:
         try:
-            dhis_out = pl.run_dhis(settings)
+            dhis_out = pl.run_dhis()
             n = dhis_out["n_posted_events"]
             pl.log_event(f"Posted {n} events to DHIS2 successfully", "Event")
         except DHISError as e:
@@ -147,6 +164,7 @@ def run_pipeline(
     try:
         pl.close_pipeline()
         pl.log_event("Successfully completed run of pipeline", "Event")
+        sys.exit(0)
     except (DatabaseConnectionError, DatabaseConnectionError) as e:
         pl.log_event(str(e), "Error")
         sys.exit(1)
@@ -183,13 +201,14 @@ def download_smartva():
 
 
 def check_openva_install(working_directory: str) -> bool:
-    """Check that openVA R package is installed."""
+    """Check that openVA R package and dependencies are installed."""
 
     r_script = os.path.join(working_directory,
                             "test_openva_install.R")
 
     with open(r_script, "w", newline="") as f:
-        f.write("library(openVA)")
+        f.write("library(openVA); library(lubridate)")
+
     r_args = ["R", "CMD", "BATCH", "--no-save", "--no-restore",
               r_script]
     try:

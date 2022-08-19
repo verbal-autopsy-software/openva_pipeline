@@ -47,22 +47,22 @@ class CheckCopyVA(unittest.TestCase):
             ignore_errors=True
         )
         r_openva = OpenVA(settings, cls.static_run_date)
-        cls.zero_records = r_openva.copy_va()
+        cls.summary = r_openva.prep_va_data()
 
     def test_copy_va_zero_records_false(self):
-        """Check that copy_va() returns zero_records=False."""
+        """Check that prep_va_data() actually prepares VA records."""
 
-        self.assertFalse(self.zero_records)
+        self.assertTrue(all(v > 0 for v in self.summary.values()))
 
     def test_copy_va_isfile(self):
-        """Check that copy_va() brings in new file."""
+        """Check that prep_va_data() brings in new file."""
 
         self.assertTrue(
             os.path.isfile("OpenVAFiles/openva_input.csv")
         )
 
     def test_copy_va_merge(self):
-        """Check that copy_va() includes all records."""
+        """Check that prep_va_data() includes all records."""
 
         has_all = True
         with open("OpenVAFiles/pycrossva_input.csv") as f_combined:
@@ -123,15 +123,15 @@ class CheckZeroRecords(unittest.TestCase):
         )
 
         r_openva = OpenVA(settings, cls.static_run_date)
-        cls.zero_records = r_openva.copy_va()
+        cls.summary = r_openva.prep_va_data()
 
     def test_copy_va_zero_records_true(self):
-        """Check that copy_va() returns zero_records == True."""
+        """Check that prep_va_data() properly handles empty data files."""
 
-        self.assertTrue(self.zero_records)
+        self.assertTrue(all(v == 0 for v in self.summary.values()))
 
     def test_copy_va_zero_records_true_no_file(self):
-        """Check that copy_va() does not produce file if zero records."""
+        """Check that prep_va_data() does not produce file if zero records."""
 
         self.assertFalse(
             os.path.isfile("OpenVAFiles/openva_input.csv")
@@ -186,7 +186,7 @@ class CheckInSilicoVA(unittest.TestCase):
                                       "r_script_" + cls.static_run_date +
                                       ".Rout")
         r_openva = OpenVA(settings, cls.static_run_date)
-        zero_records = r_openva.copy_va()
+        r_openva.prep_va_data()
         r_openva.r_script()
         cls.completed = r_openva.get_cod()
 
@@ -287,7 +287,7 @@ class CheckInterVA(unittest.TestCase):
                                       ".Rout")
         r_openva = OpenVA(settings=settings,
                           pipeline_run_date=cls.static_run_date)
-        r_openva.copy_va()
+        r_openva.prep_va_data()
         r_openva.r_script()
         cls.completed = r_openva.get_cod()
 
@@ -359,7 +359,7 @@ class CheckInterVAOrgUnit(unittest.TestCase):
         settings = cls.pl.config()
         r_openva = OpenVA(settings=settings,
                           pipeline_run_date=cls.pl.pipeline_run_date)
-        r_openva.copy_va()
+        r_openva.prep_va_data()
         r_openva.r_script()
         r_openva.get_cod()
 
@@ -417,7 +417,7 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
         settings = cls.pl.config()
         r_openva = OpenVA(settings=settings,
                           pipeline_run_date=cls.pl.pipeline_run_date)
-        r_openva.copy_va()
+        r_openva.prep_va_data()
         r_openva.r_script()
         completed = r_openva.get_cod()
 
@@ -500,7 +500,7 @@ class CheckSmartVA(unittest.TestCase):
         )
         cli_smartva = OpenVA(settings=settings,
                              pipeline_run_date=cls.static_run_date)
-        cli_smartva.copy_va()
+        cli_smartva.prep_va_data()
         cls.completed = cli_smartva.get_cod()
         cls.svaOut = os.path.join(
             "OpenVAFiles",
@@ -590,7 +590,7 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
                     "openva": settings_algorithm}
         self.r_openva = OpenVA(settings=settings,
                                pipeline_run_date=static_run_date)
-        self.r_openva.copy_va()
+        self.r_openva.prep_va_data()
         self.r_openva.r_script()
         conn.rollback()
         conn.close()
@@ -665,7 +665,7 @@ class CheckExceptionsInterVA(unittest.TestCase):
 
         self.r_openva = OpenVA(settings=settings,
                                pipeline_run_date=static_run_date)
-        self.r_openva.copy_va()
+        self.r_openva.prep_va_data()
         self.r_openva.r_script()
         conn.rollback()
         conn.close()
@@ -754,7 +754,7 @@ class CheckExceptionsSmartVA(unittest.TestCase):
 
         self.r_openva = OpenVA(settings=settings,
                                pipeline_run_date=static_run_date)
-        self.r_openva.copy_va()
+        self.r_openva.prep_va_data()
         conn.rollback()
         conn.close()
 
