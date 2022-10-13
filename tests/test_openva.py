@@ -38,7 +38,6 @@ class CheckCopyVA(unittest.TestCase):
         pl = Pipeline(db_file_name="Pipeline.db",
                       db_directory=".",
                       db_key="enilepiP")
-        settings = pl.config()
         cls.static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
 
@@ -46,7 +45,7 @@ class CheckCopyVA(unittest.TestCase):
             os.path.join("OpenVAFiles", cls.static_run_date),
             ignore_errors=True
         )
-        r_openva = OpenVA(settings, cls.static_run_date)
+        r_openva = OpenVA(pl.settings, cls.static_run_date)
         cls.summary = r_openva.prep_va_data()
 
     def test_copy_va_zero_records_false(self):
@@ -113,7 +112,6 @@ class CheckZeroRecords(unittest.TestCase):
         pl = Pipeline(db_file_name="Pipeline.db",
                       db_directory=".",
                       db_key="enilepiP")
-        settings = pl.config()
         cls.static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
 
@@ -122,7 +120,7 @@ class CheckZeroRecords(unittest.TestCase):
             ignore_errors=True
         )
 
-        r_openva = OpenVA(settings, cls.static_run_date)
+        r_openva = OpenVA(pl.settings, cls.static_run_date)
         cls.summary = r_openva.prep_va_data()
 
     def test_copy_va_zero_records_true(self):
@@ -176,7 +174,7 @@ class CheckInSilicoVA(unittest.TestCase):
         pl._update_pipeline(fields, values)
         pl.pipeline_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
-        settings = pl.config()
+        pl._config()
         cls.static_run_date = \
             datetime(2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
  
@@ -185,7 +183,7 @@ class CheckInSilicoVA(unittest.TestCase):
         cls.r_out_file = os.path.join("OpenVAFiles", cls.static_run_date,
                                       "r_script_" + cls.static_run_date +
                                       ".Rout")
-        r_openva = OpenVA(settings, cls.static_run_date)
+        r_openva = OpenVA(pl.settings, cls.static_run_date)
         r_openva.prep_va_data()
         r_openva.r_script()
         cls.completed = r_openva.get_cod()
@@ -260,17 +258,15 @@ class CheckInterVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=pipeline_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        sql = ("UPDATE Pipeline_Conf SET algorithm = ?," 
-               " algorithmMetadataCode = ?")
-        par = ("InterVA",
-               "InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1")
-        c.execute(sql, par)
-        settings_pipeline = xfer_db.config_pipeline(conn)
-        settings_odk = xfer_db.config_odk(conn)
-        settings_interva = xfer_db.config_openva(conn, "InterVA")
-        conn.close()
+        par = ["InterVA",
+               "InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
+
+        settings_pipeline = xfer_db.config_pipeline()
+        settings_odk = xfer_db.config_odk()
+        settings_interva = xfer_db.config_openva("InterVA")
         settings = {"odk": settings_odk,
                     "pipeline": settings_pipeline,
                     "openva": settings_interva}
@@ -356,8 +352,7 @@ class CheckInterVAOrgUnit(unittest.TestCase):
                           db_directory=".",
                           db_key="enilepiP")
         cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
-        settings = cls.pl.config()
-        r_openva = OpenVA(settings=settings,
+        r_openva = OpenVA(settings=cls.pl.settings,
                           pipeline_run_date=cls.pl.pipeline_run_date)
         r_openva.prep_va_data()
         r_openva.r_script()
@@ -414,8 +409,7 @@ class CheckInSilicoVAOrgUnit(unittest.TestCase):
                           db_key="enilepiP")
         cls.pl._update_dhis(["dhisOrgUnit"], ["Id10057"])
         cls.pl._update_pipeline(["algorithm"], ["InSilicoVA"])
-        settings = cls.pl.config()
-        r_openva = OpenVA(settings=settings,
+        r_openva = OpenVA(settings=cls.pl.settings,
                           pipeline_run_date=cls.pl.pipeline_run_date)
         r_openva.prep_va_data()
         r_openva.r_script()
@@ -478,20 +472,16 @@ class CheckSmartVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=pipeline_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        sql = ("UPDATE Pipeline_Conf SET algorithm = ?,"
-               " algorithmMetadataCode = ?")
-        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1")
-        c.execute(sql, par)
-        settings_pipeline = xfer_db.config_pipeline(conn)
-        settings_odk = xfer_db.config_odk(conn)
-        settings_smartva = xfer_db.config_openva(conn, "SmartVA")
+        par = ["SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
+        settings_pipeline = xfer_db.config_pipeline()
+        settings_odk = xfer_db.config_odk()
+        settings_smartva = xfer_db.config_openva("SmartVA")
         settings = {"odk": settings_odk,
                     "pipeline": settings_pipeline,
                     "openva": settings_smartva}
-        conn.rollback()
-        conn.close()
         cls.static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
         shutil.rmtree(
@@ -504,7 +494,7 @@ class CheckSmartVA(unittest.TestCase):
         cls.completed = cli_smartva.get_cod()
         cls.svaOut = os.path.join(
             "OpenVAFiles",
-             cls.static_run_date,
+            cls.static_run_date,
             "1-individual-cause-of-death/individual-cause-of-death.csv"
         )
 
@@ -571,20 +561,15 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=static_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        algorithm = "InSilicoVA"
-        sql = ("UPDATE Pipeline_Conf SET algorithm = ?," 
-               "algorithmMetadataCode = ?")
-        par = ("InSilicoVA",
-               "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
-        c.execute(sql, par)
-        sql = "UPDATE InSilicoVA_Conf SET data_type = ?"
-        par = ("WHO2012",)
-        c.execute(sql, par)
-        settings_pipeline = xfer_db.config_pipeline(conn)
-        settings_odk = xfer_db.config_odk(conn)
-        settings_algorithm = xfer_db.config_openva(conn, algorithm)
+        par = ["InSilicoVA",
+               "InSilicoVA|1.1.4|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
+        xfer_db.update_table("InSilicoVA_Conf", "data_type", "WHO2012")
+        settings_pipeline = xfer_db.config_pipeline()
+        settings_odk = xfer_db.config_odk()
+        settings_algorithm = xfer_db.config_openva("InSilicoVA")
         settings = {"odk": settings_odk,
                     "pipeline": settings_pipeline,
                     "openva": settings_algorithm}
@@ -592,8 +577,6 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
                                pipeline_run_date=static_run_date)
         self.r_openva.prep_va_data()
         self.r_openva.r_script()
-        conn.rollback()
-        conn.close()
 
     def test_insilico_exception(self):
         """get_cod() raises exception with faulty R script for InSilicoVA."""
@@ -645,20 +628,15 @@ class CheckExceptionsInterVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=static_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        algorithm = "InterVA"
-        sql = ("UPDATE Pipeline_Conf SET algorithm = ?," 
-               " algorithmMetadataCode = ?")
-        par = ("InterVA",
-               "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1")
-        c.execute(sql, par)
-        sql = "UPDATE InterVA_Conf SET version = ?"
-        par = ("4",)
-        c.execute(sql, par)
-        settings_pipeline = xfer_db.config_pipeline(conn)
-        settings_algorithm = xfer_db.config_openva(conn, algorithm)
-        settings_odk = xfer_db.config_odk(conn)
+        par = ["InterVA",
+               "InterVA4|4.04|Custom|1|2016 WHO Verbal Autopsy Form|v1_4_1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
+        xfer_db.update_table("InterVA_Conf", "version", "4")
+        settings_pipeline = xfer_db.config_pipeline()
+        settings_algorithm = xfer_db.config_openva("InterVA")
+        settings_odk = xfer_db.config_odk()
         settings = {"odk": settings_odk,
                     "pipeline": settings_pipeline,
                     "openva": settings_algorithm}
@@ -667,8 +645,6 @@ class CheckExceptionsInterVA(unittest.TestCase):
                                pipeline_run_date=static_run_date)
         self.r_openva.prep_va_data()
         self.r_openva.r_script()
-        conn.rollback()
-        conn.close()
 
     def test_interva_exception(self):
         """get_cod() should raise an exception with problematic Interva R
@@ -724,13 +700,10 @@ class CheckExceptionsSmartVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=static_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        algorithm = "SmartVA"
-        sql = ("UPDATE Pipeline_Conf SET algorithm = ?, "
-               " algorithmMetadataCode = ?")
-        par = ("SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1")
-        c.execute(sql, par)
+        par = ["SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetaData"],
+                             par)
         nt_smartva = collections.namedtuple("nt_smartva",
                                             ["smartva_country",
                                              "smartva_hiv",
@@ -746,17 +719,14 @@ class CheckExceptionsSmartVA(unittest.TestCase):
                                         "Wrong",
                                         "Wrong",
                                         "Wrong")
-        settings_pipeline = xfer_db.config_pipeline(conn)
-        settings_odk = xfer_db.config_odk(conn)
+        settings_pipeline = xfer_db.config_pipeline()
+        settings_odk = xfer_db.config_odk()
         settings = {"odk": settings_odk,
                     "pipeline": settings_pipeline,
                     "openva": settings_algorithm}
-
         self.r_openva = OpenVA(settings=settings,
                                pipeline_run_date=static_run_date)
         self.r_openva.prep_va_data()
-        conn.rollback()
-        conn.close()
 
     def test_smartva_exception(self):
         """get_cod() should raise an exception with faulty args for

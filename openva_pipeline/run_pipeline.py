@@ -148,7 +148,11 @@ def run_pipeline(
         try:
             dhis_out = pl.run_dhis()
             n = dhis_out["n_posted_events"]
-            pl.log_event(f"Posted {n} events to DHIS2 successfully", "Event")
+            n_no_ou = dhis_out["n_no_valid_org_unit"]
+            msg = (f"Posted {n} events to DHIS2 successfully.  "
+                   f"Failed to post {n_no_ou} records due to invalid "
+                   "organisation unit for DHIS2.")
+            pl.log_event(msg, "Event")
         except DHISError as e:
             pl.log_event(str(e), "Error")
             sys.exit(1)

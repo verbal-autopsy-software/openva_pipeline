@@ -15,15 +15,18 @@ CREATE TABLE VA_Storage
   id          char(100) NOT NULL,
   outcome     char(100) NOT NULL,
   record      blob,
-  dateEntered date
+  dateEntered date,
+  teiID       char(20),
+  eventID     char(20),
+  dhisOrgUnit char(20)
 );
 
 CREATE TABLE VA_Org_Unit_Not_Found
 (
   id          char(100) NOT NULL,
-  outcome     char(100),
   eventBlob   blob,
   evaBlob     blob,
+  dataOrgUnit char(500),
   dhisOrgUnit char(500),
   dateEntered date,
   fixed       char(5)

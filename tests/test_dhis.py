@@ -17,7 +17,7 @@ import context
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
 
@@ -42,24 +42,29 @@ class CheckDHIS(unittest.TestCase):
                              db_directory=db_directory,
                              db_key=db_key,
                              pl_run_date=pipeline_run_date)
-        conn = xfer_db.connect_db()
-        xfer_db.update_dhis_conf(conn,
-                                 ["dhisURL",
-                                  "dhisUser",
-                                  "dhisPassword"],
-                                 ["http://localhost:8080",
-                                  "admin",
-                                  "district"])
-        settings_dhis = xfer_db.config_dhis(conn, "InSilicoVA")
+        xfer_db.update_table("DHIS_Conf",
+                             ["dhisURL",
+                              "dhisUser",
+                              "dhisPassword"],
+                             ["http://localhost:8080",
+                              "admin",
+                              "district"])
+        settings_dhis = xfer_db.config_dhis("InSilicoVA")
 
         cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
+        event_uids = cls.pipeline_dhis.api_dhis.get(
+            endpoint="events",
+            params={"program": f"{cls.pipeline_dhis.va_program_uid}",
+                    "fields": "event"}).get("events")
+        list_uids = [i["event"] for i in event_uids]
+        for uid in list_uids:
+            cls.pipeline_dhis.api_dhis._delete_event(uid)
 
-        api_dhis = cls.pipeline_dhis.connect()
-        cls.post_log = cls.pipeline_dhis.post_va(api_dhis)
+        cls.post_log = cls.pipeline_dhis.post_va(xfer_db)
         if cls.pipeline_dhis.post_to_tracker:
-            cls.pipeline_dhis.verify_tei_post(cls.post_log, api_dhis)
+            cls.pipeline_dhis.verify_tei_post(cls.post_log)
         else:
-            cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
+            cls.pipeline_dhis.verify_post(cls.post_log)
 
     def test_va_program_uid(self):
         """Verify VA program is installed."""
@@ -81,6 +86,27 @@ class CheckDHIS(unittest.TestCase):
         df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
         n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
         self.assertEqual(n_pushed, self.pipeline_dhis.n_posted_events)
+
+    def test_get_org_units_va_program(self):
+        """Check method for getting organisation units in VA Program."""
+        ou_dict = self.pipeline_dhis._get_org_units(va_program=True)
+        ou_server = {"Country": "wEVB21sQaHu",
+                     "DistrictA1": "SCVeBskgiK6",
+                     "FacilityA11": "CXmC6GyG6GI",
+                     "FacilityA12": "RoEPvkwiu7U",
+                     "RegionA": "Sd8e3Yi0vZA"}
+        self.assertDictEqual(ou_dict, ou_server)
+
+    def test_get_org_units_all(self):
+        """Check method for getting all organisation units."""
+        ou_dict = self.pipeline_dhis._get_org_units(va_program=False)
+        ou_server = {"Country": "wEVB21sQaHu",
+                     "DistrictA1": "SCVeBskgiK6",
+                     "FacilityA11": "CXmC6GyG6GI",
+                     "FacilityA12": "RoEPvkwiu7U",
+                     "RegionA": "Sd8e3Yi0vZA",
+                     "Not_VA": "wM2eziZ8zJ7"}
+        self.assertDictEqual(ou_dict, ou_server)
 
     @classmethod
     def tearDownClass(cls):
@@ -115,15 +141,13 @@ class CheckDHISTracker(unittest.TestCase):
                              db_directory=db_directory,
                              db_key=db_key,
                              pl_run_date=pipeline_run_date)
-        conn = xfer_db.connect_db()
-        settings_dhis = xfer_db.config_dhis(conn, "InSilicoVA")
+        settings_dhis = xfer_db.config_dhis("InSilicoVA")
         cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
-        api_dhis = cls.pipeline_dhis.connect()
-        cls.post_log = cls.pipeline_dhis.post_va(api_dhis)
+        cls.post_log = cls.pipeline_dhis.post_va(xfer_db)
         if cls.pipeline_dhis.post_to_tracker:
-            cls.pipeline_dhis.verify_tei_post(cls.post_log, api_dhis)
+            cls.pipeline_dhis.verify_tei_post(cls.post_log)
         else:
-            cls.pipeline_dhis.verify_post(cls.post_log, api_dhis)
+            cls.pipeline_dhis.verify_post(cls.post_log)
 
     def test_va_program_uid(self):
         """Verify VA program is installed."""
@@ -172,9 +196,8 @@ class CheckDHISGetCODCode(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date=pipeline_run_date)
-        conn = xfer_db.connect_db()
-        cls.cod_who = xfer_db.config_dhis(conn, "InSilicoVA")
-        cls.cod_tariff = xfer_db.config_dhis(conn, "SmartVA")
+        cls.cod_who = xfer_db.config_dhis("InSilicoVA")
+        cls.cod_tariff = xfer_db.config_dhis("SmartVA")
 
         with open("who_cod.R", "w", newline="") as f:
             f.write("data(causetextV5, package='InterVA5')\n")

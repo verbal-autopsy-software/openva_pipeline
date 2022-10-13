@@ -26,11 +26,10 @@ class CheckPipelineConfig(unittest.TestCase):
         if not os.path.isfile("Pipeline.db"):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
-        settings = pl.config()
-        cls.settings_pipeline = settings["pipeline"]
-        cls.settings_odk = settings["odk"]
-        cls.settings_openva = settings["openva"]
-        cls.settings_dhis = settings["dhis"]
+        cls.settings_pipeline = pl.settings["pipeline"]
+        cls.settings_odk = pl.settings["odk"]
+        cls.settings_openva = pl.settings["openva"]
+        cls.settings_dhis = pl.settings["dhis"]
 
     def test_config_pipeline_algorithm_metadata_code(self):
         """Test config method configuration of pipeline:
@@ -189,8 +188,7 @@ class CheckRunODKClean(unittest.TestCase):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
 
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
-        settings = pl.config()
-        cls.odk = pl.run_odk(settings)
+        cls.odk = pl.run_odk()
 
     def test_clean_run_odk_return_code(self):
         """Check return code with valid parameters:"""
@@ -245,8 +243,7 @@ class CheckRunODKWithExports(unittest.TestCase):
         self.use_dhis = True
         self.pl = Pipeline(self.db_file_name, self.db_directory,
                            self.db_key, self.use_dhis)
-        settings = self.pl.config()
-        self.odk = self.pl.run_odk(settings)
+        self.odk = self.pl.run_odk()
         self.new_mtime_prev = os.path.getmtime("ODKFiles/odk_export_prev.csv")
         self.new_mtime_new = os.path.getmtime("ODKFiles/odk_export_new.csv")
 
@@ -321,19 +318,18 @@ class CheckStoreResultsDB(unittest.TestCase):
         self.pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
         self.pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
                              ["http://localhost:8080", "admin", "district"])
-        self.settings = self.pl.config()
 
         self.xfer_db = TransferDB(db_file_name="Pipeline.db",
                                   db_directory=".",
                                   db_key="enilepiP",
                                   pl_run_date=True)
-        self.conn = self.xfer_db.connect_db()
+        self.conn = self.xfer_db._connect_db()
         self.c = self.conn.cursor()
         self.c.execute("DELETE FROM EventLog;")
         self.conn.commit()
         self.c.execute("DELETE FROM VA_Storage;")
         self.conn.commit()
-        self.odk = self.pl.run_odk(self.settings)
+        self.odk = self.pl.run_odk()
 
     @unittest.skip("Only to run locally with local single event DHIS2 server")
     def test_run_odk_check_duplicates(self):
@@ -341,13 +337,13 @@ class CheckStoreResultsDB(unittest.TestCase):
 
         va_records = read_csv("ODKFiles/odk_export_new.csv")
         n_va = va_records.shape[0]
-        r_out = self.pl.run_openva(self.settings)
-        pipelineDHIS = self.pl.run_dhis(self.settings)
+        r_out = self.pl.run_openva()
+        pipelineDHIS = self.pl.run_dhis()
         self.pl.store_results_db()
         os.remove("ODKFiles/odk_export_new.csv")
         os.remove("OpenVAFiles/pycrossva_input.csv")
         os.remove("OpenVAFiles/openva_input.csv")
-        odk2 = self.pl.run_odk(self.settings)
+        odk2 = self.pl.run_odk()
         self.c.execute("SELECT event_desc FROM EventLog;")
         query = self.c.fetchall()
         n_duplicates = [i[0] for i in query if "duplicate" in i[0]]
@@ -389,8 +385,7 @@ class CheckRunOpenVA(unittest.TestCase):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
 
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
-        settings = pl.config()
-        cls.r_out = pl.run_openva(settings)
+        cls.r_out = pl.run_openva()
 
     def test_creates_openva_input_csv(self):
         """Check that run_openva() brings in new file:"""
@@ -452,8 +447,7 @@ class CheckRunOpenVAZeroRecords(unittest.TestCase):
             os.remove("OpenVAFiles/openva_input.csv")
 
         pl_zero = Pipeline("copy_Pipeline.db", ".", "enilepiP", True)
-        settings = pl_zero.config()
-        cls.r_out = pl_zero.run_openva(settings)
+        cls.r_out = pl_zero.run_openva()
 
     def test_zero_records_true(self):
         """Check that run_openva() returns zero_records == True:"""
@@ -489,20 +483,13 @@ class CheckPipelineRunOpenVAInSilicoVA(unittest.TestCase):
         xfer_db = TransferDB(db_file_name="copy_Pipeline.db", 
                              db_directory=".",
                              db_key="enilepiP", 
-                             pl_run_date= pipeline_run_date)
-        conn = xfer_db.connect_db()
-
-        c = conn.cursor()
-        sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InSilicoVA", "InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1")
-        c.execute(sql, par)
-        sql = "UPDATE InSilicoVA_Conf SET data_type = ?"
-        par = ("WHO2016",)
-        c.execute(sql, par)
-        conn.commit()
-        conn.close()
+                             pl_run_date=pipeline_run_date)
+        par = ["InSilicoVA", "InSilicoVA|1.1.4|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
+        xfer_db.update_table("InSilicoVA_Conf", "data_type", "WHO2016")
         cls.pl = Pipeline("copy_Pipeline.db", ".", "enilepiP", True)
-        settings = cls.pl.config()
 
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
             os.remove("ODKFiles/odk_export_new.csv")
@@ -518,7 +505,7 @@ class CheckPipelineRunOpenVAInSilicoVA(unittest.TestCase):
         if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
 
-        cls.r_out = cls.pl.run_openva(settings)
+        cls.r_out = cls.pl.run_openva()
 
     def test_run_openva_insilico_r(self):
         """Check that run_openva() creates an R script for InSilicoVA:"""
@@ -569,15 +556,11 @@ class CheckPipelineRunOpenVAInterVA(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP", 
                              pl_run_date= pipeline_run_date)
-        conn = xfer_db.connect_db()
-        c = conn.cursor()
-        sql = "UPDATE Pipeline_Conf SET algorithm = ?, algorithmMetadataCode = ?"
-        par = ("InterVA", "InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1")
-        c.execute(sql, par)
-        conn.commit()
-        conn.close()
+        par = ["InterVA", "InterVA5|5|InterVA|5|2016 WHO Verbal Autopsy Form|v1_4_1"]
+        xfer_db.update_table("Pipeline_Conf",
+                             ["algorithm", "algorithmMetadataCode"],
+                             par)
         cls.pl = Pipeline("copy_Pipeline.db", ".", "enilepiP", True)
-        settings = cls.pl.config()
 
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
             os.remove("ODKFiles/odk_export_new.csv")
@@ -593,7 +576,7 @@ class CheckPipelineRunOpenVAInterVA(unittest.TestCase):
         if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
 
-        cls.r_out = cls.pl.run_openva(settings)
+        cls.r_out = cls.pl.run_openva()
 
     def test_run_openva_interva_r(self):
         """Check that run_openva() creates an R script for InterVA:"""
@@ -653,9 +636,8 @@ class CheckRunOpenVASmartVA(unittest.TestCase):
 
         now_date = datetime.datetime.now()
         cls.pl = Pipeline("copy_smartVA_Pipeline.db", ".", "enilepiP", True)
-        settings = cls.pl.config()
 
-        cls.r_out = cls.pl.run_openva(settings)
+        cls.r_out = cls.pl.run_openva()
         cls.sva_out = os.path.join(
             "OpenVAFiles",
             cls.pl.pipeline_run_date,
@@ -724,8 +706,7 @@ class CheckPipelineRunDHIS(unittest.TestCase):
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
         pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
                         ["http://localhost:8080", "admin", "district"])
-        settings = pl.config()
-        cls.pipeline_dhis = pl.run_dhis(settings)
+        cls.pipeline_dhis = pl.run_dhis()
 
     def test_run_dhis_va_program_uid(self):
         """Verify VA program is installed:"""
@@ -778,21 +759,20 @@ class CheckPipelineDepositResults(unittest.TestCase):
         xfer_db = TransferDB(db_file_name="Pipeline.db",
                              db_directory=".",
                              db_key="enilepiP",
-                             pl_run_date= pipeline_run_date)
-        conn = xfer_db.connect_db()
+                             pl_run_date=pipeline_run_date)
+        conn = xfer_db._connect_db()
         c = conn.cursor()
         c.execute("DELETE FROM VA_Storage;")
         conn.commit()
-        conn.close()
+        #conn.close()
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
-        settings = pl.config()
         pl.store_results_db()
 
-        xfer_db = TransferDB(db_file_name="Pipeline.db",
-                             db_directory=".",
-                             db_key="enilepiP",
-                             pl_run_date= pipeline_run_date)
-        conn = xfer_db.connect_db()
+        # xfer_db = TransferDB(db_file_name="Pipeline.db",
+        #                      db_directory=".",
+        #                      db_key="enilepiP",
+        #                      pl_run_date=pipeline_run_date)
+        conn = xfer_db._connect_db()
         c = conn.cursor()
         sql = "SELECT id FROM VA_Storage"
         c.execute(sql)
@@ -816,6 +796,87 @@ class CheckPipelineDepositResults(unittest.TestCase):
         os.remove("Pipeline.db")
 
 
+class CheckPipelineOrgUnitsTEI(unittest.TestCase):
+    """Check run_dhis method with VAs sent to different DHIS2 organisation
+    units for tracker version."""
+
+    @classmethod
+    def setUpClass(cls):
+
+        if os.path.isfile("ODKFiles/odk_export_new.csv"):
+            os.remove("ODKFiles/odk_export_new.csv")
+        if os.path.isfile("ODKFiles/odk_export_prev.csv"):
+            os.remove("ODKFiles/odk_export_prev.csv")
+        shutil.copy("ODKFiles/odk_export_org_unit_in_id10057_tei.csv",
+                    "ODKFiles/odk_export_new.csv")
+        if os.path.isfile("org_units.db"):
+            os.remove("org_units.db")
+        create_transfer_db("org_units.db", ".", "enilepiP")
+
+        cls.pl = Pipeline(db_file_name="org_units.db",
+                          db_directory=".",
+                          db_key="enilepiP")
+        cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
+        cls.pl.run_openva()
+        cls.pipeline_dhis = cls.pl.run_dhis()
+        cls.post_log = cls.pipeline_dhis["post_log"]
+        odk_data = read_csv("ODKFiles/odk_export_new.csv")
+        # Note: on server the only valid org unit is "DistrictA1"
+        cls.n_no_org_unit = odk_data[
+            odk_data.filter(like="10057").iloc[:, 0] != "DistrictA1"].shape[0]
+        cls.pre_fix_va_storage_ids = cls.pl.xfer_db._get_va_storage_ids()
+        cls.no_ou_vas = cls.pl.get_no_org_unit()
+        cls.fix_va_id = next(iter(cls.no_ou_vas))
+        cls.log = cls.pl.fix_no_org_unit(va_id=cls.fix_va_id,
+                                         org_unit="DistrictA1")
+        # TODO: finish tests (with test for 0 records to post b/c no org unit)
+
+    def test_check_ou_not_found(self):
+        """Check for records in VA_Org_Unit_Not_Found table."""
+        assert(len(self.no_ou_vas) == self.n_no_org_unit)
+
+    def test_check_instance_attribute_ou_not_found(self):
+        """Check for DHIS instance attribute for number of records with
+        invalid org units."""
+        assert(self.pipeline_dhis["n_no_valid_org_unit"] == self.n_no_org_unit)
+
+    def test_check_fix_out(self):
+        """Check that events with fixed org unit codes get posted to DHIS.
+        """
+        self.assertTrue(self.log["event_status"] == "SUCCESS")
+
+    def test_check_fixed_ou_not_found(self):
+        """Check that events with fixed org unit codes are removed from the
+        VA_Org_Unit_Not_Found table.
+        """
+        new_no_ou_vas = self.pl.get_no_org_unit()
+        self.assertFalse(self.fix_va_id in new_no_ou_vas.keys())
+
+    def test_pre_store_single_va(self):
+        """Check that VA record is NOT stored in VA_Storage before fix."""
+        self.assertFalse(self.fix_va_id in self.pre_fix_va_storage_ids)
+
+    def test_post_store_single_va(self):
+        """Check that VA record IS stored in VA_Storage after fix."""
+        post_fix_va_storage_ids = self.pl.xfer_db._get_va_storage_ids()
+        self.assertTrue(self.fix_va_id in post_fix_va_storage_ids)
+
+    @classmethod
+    def tearDownClass(cls):
+
+        shutil.rmtree("DHIS/blobs/", ignore_errors=True)
+        if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
+            os.remove("OpenVAFiles/entity_attribute_value.csv")
+        if os.path.isfile("OpenVAFiles/record_storage.csv"):
+            os.remove("OpenVAFiles/record_storage.csv")
+        if os.path.isfile("OpenVAFiles/entity_attribute_value.csv"):
+            os.remove("OpenVAFiles/entity_attribute_value.csv")
+        if os.path.isfile("OpenVAFiles/new_storage.csv"):
+            os.remove("OpenVAFiles/new_storage.csv")
+        os.remove("org_units.db")
+
+
+@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckPipelineOrgUnits(unittest.TestCase):
     """Check run_dhis method with VAs sent to different DHIS2 organisation
     units."""
@@ -836,33 +897,51 @@ class CheckPipelineOrgUnits(unittest.TestCase):
         cls.pl = Pipeline(db_file_name="org_units.db",
                           db_directory=".",
                           db_key="enilepiP")
+        cls.pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
+                            ["http://localhost:8080", "admin", "district"])
         cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
-        settings = cls.pl.config()
-        cls.pl.run_openva(settings)
-        pipeline_dhis = cls.pl.run_dhis(settings)
-        post_log = cls.pipeline_dhis["post_log"]
-        # TODO: finish tests
-        # here you could do the calculation (number of rows in record
-        # storage minus number posted should be number in
-        # VA_Org_Unit_Not_Found table.
+        cls.pl.run_openva()
+        cls.pipeline_dhis = cls.pl.run_dhis()
+        cls.post_log = cls.pipeline_dhis["post_log"]
+        odk_data = read_csv("ODKFiles/odk_export_new.csv")
+        ou_cond = odk_data.filter(like="10057").iloc[:, 0].fillna("FacilityA13")
+        cls.n_no_org_unit = odk_data[ou_cond == "FacilityA13"].shape[0]
+        cls.pre_fix_va_storage_ids = cls.pl.xfer_db._get_va_storage_ids()
+        cls.no_ou_vas = cls.pl.get_no_org_unit()
+        cls.fix_va_id = next(iter(cls.no_ou_vas))
+        cls.log = cls.pl.fix_no_org_unit(va_id=cls.fix_va_id,
+                                         org_unit="DistrictA1")
+        # TODO: finish tests (with test for 0 records to post b/c no org unit)
 
     def test_check_ou_not_found(self):
         """Check for records in VA_Org_Unit_Not_Found table."""
-        # store, dhis_org_unit, blob_eva, and VerbalAutopsyEvent
-        # store these as pickle.dumps in VA_Org_Unit_Not_Found
-        # also store dhis_org_unit
-        pass
+        assert(len(self.no_ou_vas) == self.n_no_org_unit)
 
+    def test_check_instance_attribute_ou_not_found(self):
+        """Check for DHIS instance attribute for number of records with
+        invalid org units."""
+        assert(self.pipeline_dhis["n_no_valid_org_unit"] == self.n_no_org_unit)
 
-        check_log = "importSummaries" in post_log["response"].keys()
-        self.assertTrue(check_log)
+    def test_check_fix_out(self):
+        """Check that events with fixed org unit codes get posted to DHIS.
+        """
+        self.assertTrue(self.log["event_status"] == "SUCCESS")
 
-    def test_run_dhis_verify_post(self):
-        """Verify VA records got posted to DHIS2:"""
+    def test_check_fixed_ou_not_found(self):
+        """Check that events with fixed org unit codes are removed from the
+        VA_Org_Unit_Not_Found table.
+        """
+        new_no_ou_vas = self.pl.get_no_org_unit()
+        self.assertFalse(self.fix_va_id in new_no_ou_vas.keys())
 
-        df_new_storage = read_csv("OpenVAFiles/new_storage.csv")
-        n_pushed = sum(df_new_storage["pipelineOutcome"] == "Pushed to DHIS2")
-        self.assertEqual(n_pushed, self.pipeline_dhis["n_posted_events"])
+    def test_pre_store_single_va(self):
+        """Check that VA record is NOT stored in VA_Storage before fix."""
+        self.assertFalse(self.fix_va_id in self.pre_fix_va_storage_ids)
+
+    def test_post_store_single_va(self):
+        """Check that VA record IS stored in VA_Storage after fix."""
+        post_fix_va_storage_ids = self.pl.xfer_db._get_va_storage_ids()
+        self.assertTrue(self.fix_va_id in post_fix_va_storage_ids)
 
     @classmethod
     def tearDownClass(cls):

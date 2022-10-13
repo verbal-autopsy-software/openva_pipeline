@@ -6,13 +6,15 @@ This module handles interactions with the Transfer database.
 """
 
 import os
-from typing import Union
+from typing import Union, NamedTuple, List, Tuple, Dict
 from shutil import rmtree
 from collections import namedtuple
 from datetime import datetime, timedelta
 import sqlite3
 from pickle import dumps
-from pandas import read_csv
+import json
+
+from pandas import read_csv, DataFrame
 from pysqlcipher3 import dbapi2 as sqlcipher
 
 from .exceptions import PipelineConfigurationError
@@ -41,14 +43,14 @@ class TransferDB:
     :type db_key: str
     :param pl_run_date: Date when pipeline started latest
       run (YYYY-MM-DD_hh:mm:ss).
-    :type pl_run_date: datetime
+    :type pl_run_date: str
     """
 
     def __init__(self,
                  db_file_name: str,
                  db_directory: str,
                  db_key: str,
-                 pl_run_date: datetime):
+                 pl_run_date: str):
 
         self.db_file_name = db_file_name
         self.db_directory = db_directory
@@ -57,7 +59,7 @@ class TransferDB:
         self.working_directory = None
         self.pl_run_date = pl_run_date
 
-    def connect_db(self):
+    def _connect_db(self) -> sqlcipher.connect:
         """Connect to Transfer database.
 
         Uses parameters supplied to the parent class, TransferDB, to connect to
@@ -85,7 +87,7 @@ class TransferDB:
                                           str(e))
         return conn
 
-    def config_pipeline(self, conn):
+    def config_pipeline(self) -> NamedTuple:
         """Grabs Pipeline configuration settings.
 
         This method queries the Pipeline_Conf table in Transfer database and
@@ -101,6 +103,7 @@ class TransferDB:
         :raises: PipelineConfigurationError
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         try:
             sql_pipeline = (
@@ -108,11 +111,12 @@ class TransferDB:
                 "workingDirectory FROM Pipeline_Conf;"
             )
             query_pipeline = c.execute(sql_pipeline).fetchall()
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table Pipeline_Conf..." + str(e)
             )
-
         algorithm_metadata_code = query_pipeline[0][0]
         # if algorithm_metadata_code not in
         # [j for i in metadataQuery for j in i]:
@@ -145,8 +149,7 @@ class TransferDB:
         self.working_directory = working_directory
         return settings_pipeline
 
-    @staticmethod
-    def config_odk(conn):
+    def config_odk(self) -> NamedTuple:
         """Query ODK configuration settings from database.
 
         This method is intended to be used in conjunction with (1)
@@ -159,15 +162,13 @@ class TransferDB:
         TransferDB.config_odk() is a valid argument for
         :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :returns: Contains all parameters for
           :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
         :rtype: (named) tuple
         :raises: ODKConfigurationError
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         sql_odk = (
             "SELECT odkID, odkURL, odkUser, odkPassword, odkFormID, "
@@ -175,7 +176,9 @@ class TransferDB:
         )
         try:
             query_odk = c.execute(sql_odk).fetchall()
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise ODKConfigurationError(
                 "Problem in database table ODK_Conf..." + str(e)
             )
@@ -236,188 +239,143 @@ class TransferDB:
 
         return settings_odk
 
-    @staticmethod
-    def update_odk_last_run(conn, pl_run_date):
+    def update_odk_last_run(self) -> None:
         """Update Transfer Database table ODK_Conf.odk_last_run
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
-        :param pl_run_date: Date when pipeline started latest run
-        :type pl_run_date: date (YYYY-MM-DD_hh:mm:ss)
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         sql = "UPDATE ODK_Conf SET odkLastRun = ?"
-        par = (pl_run_date,)
+        par = (self.pl_run_date,)
         c.execute(sql, par)
         conn.commit()
+        conn.close()
 
-    @staticmethod
-    def update_odk_conf(conn: sqlcipher.connect,
-                        field: Union[str, list],
-                        value: Union[str, list]) -> None:
-        """Update value(s) into Transfer Database ODK_Conf.field(s)
+    def insert_event_log(self,
+                         values: Tuple[str, str, str]) -> None:
+        """Insert new row in Transfer Database table EventLog
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
-        :param field: field name(s) in table ODK_Conf
-        :param value: list of new values used to update in ODK_Conf.fields
+        :param values: Event description, event type (e.g., Event, Error,
+        Warning, Summary), and date and time of entry
+        :type values: Tuple of 3 strings
         """
 
+        conn = self._connect_db()
+        c = conn.cursor()
+        sql = ("INSERT INTO EventLog (eventDesc, eventType, eventTime)"
+               "VALUES (?, ?, ?)")
+        c.execute(sql, values)
+        conn.commit()
+        conn.close()
+
+    def update_table(self,
+                     table_name: str,
+                     field: Union[str, list],
+                     value: Union[str, list]) -> None:
+        """Update value(s) into Transfer Database table_name.field(s)
+
+        :param table_name: name of table in Transfer Database
+        :type table_name: str
+        :param field: field name(s) in table_name
+        :type field: str or list of str
+        :param value: new values to update in table_name.fields
+        :type value: str or list of str
+        """
+
+        conn = self._connect_db()
         c = conn.cursor()
         if isinstance(field, str):
             field = [field]
         if isinstance(value, str):
             value = [value]
-        sql = "UPDATE ODK_Conf SET {}=?"
-        for par in zip(field, value):
-            c.execute(sql.format(par[0]), (par[1],))
-        conn.commit()
+        valid_table_names = (
+            "Pipeline_Conf", "ODK_Conf", "InterVA_Conf",
+            "Advanced_InterVA_Conf", "InSilicoVA_Conf",
+            "Advanced_InSilicoVA_Conf", "SmartVA_Conf", "SmartVA_Country",
+            "DHIS_Conf")
+        if table_name not in valid_table_names:
+            raise ValueError(f"Unable to access {table_name}")
+        else:
+            sql_table = f"UPDATE {table_name} "
+            sql = sql_table + "SET {}=?"
+            for par in zip(field, value):
+                c.execute(sql.format(par[0]), (par[1],))
+            conn.commit()
+            conn.close()
 
-    @staticmethod
-    def update_dhis_conf(conn: sqlcipher.connect,
-                         field: Union[str, list],
-                         value: Union[str, list]) -> None:
-        """Update value(s) into Transfer Database DHIS_Conf.field(s)
-
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :param field: field name(s) in table DHIS_Conf
-        :param value: new values to update in DHIS_Conf.fields
-        """
-
-        c = conn.cursor()
-        if isinstance(field, str):
-            field = [field]
-        if isinstance(value, str):
-            value = [value]
-        sql = "UPDATE DHIS_Conf SET {}=?"
-        for par in zip(field, value):
-            c.execute(sql.format(par[0]), (par[1],))
-        conn.commit()
-
-    @staticmethod
-    def update_pipeline_conf(conn: sqlcipher.connect,
-                             field: Union[str, list],
-                             value: Union[str, list]) -> None:
-        """Update value(s) into Transfer Database Pipeline_Conf.field(s)
-
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :param field: field name(s) in table Pipeline_Conf
-        :param value: list of new values to update in Pipeline_Conf.fields
-        """
-
-        c = conn.cursor()
-        if isinstance(field, str):
-            field = [field]
-        if isinstance(value, str):
-            value = [value]
-        sql = "UPDATE Pipeline_Conf SET {}=?"
-        for par in zip(field, value):
-            c.execute(sql.format(par[0]), (par[1],))
-        conn.commit()
-
-    @staticmethod
-    def get_odk_conf(conn):
+    def get_table_conf(self, table_name: str) -> list:
         """Get values in ODK_Conf table from Transfer Database
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
+        :param table_name: name of table in Transfer Database
+        :type table_name: str
         :rtype: list
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
-        sql_odk = "SELECT * FROM ODK_Conf"
-        odk_values = c.execute(sql_odk).fetchall()
-        return odk_values
+        valid_table_names = (
+            "Pipeline_Conf", "ODK_Conf", "InterVA_Conf",
+            "Advanced_InterVA_Conf", "InSilicoVA_Conf",
+            "Advanced_InSilicoVA_Conf", "SmartVA_Conf", "SmartVA_Country",
+            "DHIS_Conf")
+        if table_name not in valid_table_names:
+            conn.close()
+            raise ValueError(f"Unable to access {table_name}")
+        else:
+            sql = "SELECT * FROM {}"
+            table_values = c.execute(sql.format(table_name)).fetchall()
+            conn.close()
+        return table_values
 
-    @staticmethod
-    def get_dhis_conf(conn):
-        """Get values in DHIS_Conf table from Transfer Database
-
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
-        :rtype: list
-        """
-
-        c = conn.cursor()
-        sql_dhis = "SELECT * FROM DHIS_Conf"
-        dhis_values = c.execute(sql_dhis).fetchall()
-        return dhis_values
-
-    @staticmethod
-    def get_pipeline_conf(conn):
-        """Get values in Pipeline_Conf table from Transfer Database
-
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
-        :rtype: list
-        """
-
-        c = conn.cursor()
-        sql_pipeline = "SELECT * FROM Pipeline_Conf"
-        pipeline_values = c.execute(sql_pipeline).fetchall()
-        return pipeline_values
-
-    @staticmethod
-    def get_tables(conn):
+    def get_tables(self) -> list:
         """Get table names from Transfer Database
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :rtype: list
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         sql_tables = "SELECT name FROM sqlite_master WHERE type='table'"
         query_tables = c.execute(sql_tables).fetchall()
         table_names = [i[0] for i in query_tables]
+        conn.close()
         return table_names
 
-    @staticmethod
-    def get_fields(conn, table):
+    def get_fields(self,
+                   table: List[str]) -> List[Tuple[str, str]]:
         """Get field names from table in Transfer Database
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param table: Name of table
         :type table: str
         :rtype: list of (field name, data type)
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         sql_fields = f"PRAGMA table_info({table})"
         field_names = c.execute(sql_fields).fetchall()
         field_names = [(i[1], i[2]) for i in field_names]
+        conn.close()
         return field_names
 
-    @staticmethod
-    def get_schema(conn, table):
+    def get_schema(self, table: str) -> list:
         """Get schema from table in Transfer Database
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param table: Name of table
         :type table: str
         :rtype: list
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
         sql_schema = ("SELECT sql FROM sqlite_master " +
                       f"WHERE type='table' and name='{table}'")
         schema = c.execute(sql_schema).fetchall()
+        conn.close()
         return schema
 
-    def check_duplicates(self, conn):
+    def check_duplicates(self) -> dict:
         """Search for duplicate VA records.
 
         This method searches for duplicate VA records in ODK Briefcase export
@@ -425,9 +383,6 @@ class TransferDB:
         is logged to the EventLog table in the Transfer database and the
         duplicate records are removed from the ODK Briefcase export file.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :raises: DatabaseConnectionError, PipelineError
         :return: Number of duplicates found and number of VA records sending to
         openVA.
@@ -447,14 +402,13 @@ class TransferDB:
         results["n_records"] = df_odk.shape[0]
         results["n_unique"] = df_odk.shape[0]
 
-        c = conn.cursor()
-        sql = "SELECT id FROM VA_Storage"
-        c.execute(sql)
-        va_ids = c.fetchall()
-        va_ids_list = [j for i in va_ids for j in i]
+        va_ids_list = self._get_va_storage_ids()
         va_duplicates = set(df_odk_id).intersection(set(va_ids_list))
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         results["n_duplicates"] = len(va_duplicates)
+
+        conn = self._connect_db()
+        c = conn.cursor()
         if results["n_duplicates"] > 0:
             sql_xfer_db = (
                 "INSERT INTO EventLog "
@@ -477,15 +431,42 @@ class TransferDB:
             results["n_unique"] = df_no_duplicates.shape[0]
             try:
                 df_no_duplicates.to_csv(odk_export_path, index=False)
+                conn.close()
             except (PermissionError, OSError) as exc:
+                conn.close()
                 raise PipelineError(
                     "Error trying to create new CSV file after " +
                     "removing duplicate records in ODK Export"
                 ) from exc
         return results
 
+    def _get_va_storage_ids(self) -> List:
+        """Get VA IDs from Transfer database table VA_Storage.
 
-    def config_openva(self, conn, algorithm):
+        :raises: DatabaseConnectionError
+        :rtype: list
+        """
+
+        if self.working_directory is None:
+            raise PipelineError("Need to run config_pipeline.")
+
+        try:
+            conn = self._connect_db()
+            c = conn.cursor()
+            sql = "SELECT id FROM VA_Storage"
+            c.execute(sql)
+            va_ids = c.fetchall()
+            va_ids_list = [j for i in va_ids for j in i]
+            conn.close()
+        except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
+            conn.close()
+            raise DatabaseConnectionError(
+                "Problem accessing id table VA_Storage..." + str(e)
+            )
+        return va_ids_list
+
+    def config_openva(self,
+                      algorithm: str) -> NamedTuple:
         """Query OpenVA configuration settings from database.
 
         This method is intended to receive its input (a Connection object)
@@ -500,9 +481,6 @@ class TransferDB:
         This is a wrapper function that calls :meth:`_config_interva`,
         :meth:`_config_insilicova`, and :meth:`_config_smartva` to actually
           pull configuration settings from the database.
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param algorithm: VA algorithm used by R package openVA
         :type algorithm: str
         :returns: Contains all parameters needed for
@@ -512,41 +490,38 @@ class TransferDB:
         """
 
         if algorithm == "InterVA":
-            settings_interva = self._config_interva(conn)
+            settings_interva = self._config_interva()
             return settings_interva
         elif algorithm == "InSilicoVA":
-            settings_insilicova = self._config_insilicova(conn)
+            settings_insilicova = self._config_insilicova()
             return settings_insilicova
         elif algorithm == "SmartVA":
-            settings_smartva = self._config_smartva(conn)
+            settings_smartva = self._config_smartva()
             return settings_smartva
         else:
             raise PipelineConfigurationError(
                 "Not an acceptable parameter for 'algorithm'."
             )
 
-    @staticmethod
-    def _config_interva(conn):
+    def _config_interva(self) -> NamedTuple:
         """Query OpenVA configuration settings from database.
 
         This method is called by config_openva when the VA algorithm is either
         InterVA4 or InterVA5.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
         :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
-
         try:
             sql_interva = "SELECT version, HIV, Malaria FROM InterVA_Conf;"
             query_interva = c.execute(sql_interva).fetchall()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table InterVA_Conf..." + str(e)
             )
@@ -554,18 +529,21 @@ class TransferDB:
         # Database Table: InterVA_Conf
         interva_version = query_interva[0][0]
         if interva_version not in ("4", "5"):
+            conn.close()
             raise OpenVAConfigurationError(
                 "Problem in database: InterVA_Conf.version "
                 "(valid options: '4' or '5')."
             )
         interva_hiv = query_interva[0][1]
         if interva_hiv not in ("v", "l", "h"):
+            conn.close()
             raise OpenVAConfigurationError(
                 "Problem in database: InterVA_Conf.HIV "
                 "(valid options: 'v', 'l', or 'h')."
             )
         interva_malaria = query_interva[0][2]
         if interva_malaria not in ("v", "l", "h"):
+            conn.close()
             raise OpenVAConfigurationError(
                 "Problem in database: InterVA_Conf.Malaria "
                 "(valid options: 'v', 'l', or 'h')."
@@ -579,7 +557,9 @@ class TransferDB:
                 "FROM Advanced_InterVA_Conf;"
             )
             query_advanced_interva = c.execute(sql_advanced_interva).fetchall()
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table Advanced_InterVA_Conf..." + str(e)
             )
@@ -642,22 +622,19 @@ class TransferDB:
         )
         return settings_interva
 
-    @staticmethod
-    def _config_insilicova(conn):
+    def _config_insilicova(self) -> NamedTuple:
         """Query OpenVA configuration settings from database.
 
         This method is called by config_openva when the VA algorithm is
         InSilicoVA.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
         :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
 
         # Database Table: InSilicoVA_Conf
@@ -665,18 +642,21 @@ class TransferDB:
             sql_insilicova = "SELECT data_type, Nsim FROM InSilicoVA_Conf;"
             query_insilicova = c.execute(sql_insilicova).fetchall()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table InSilicoVA_Conf..." + str(e)
             )
 
         insilicova_data_type = query_insilicova[0][0]
         if insilicova_data_type not in ("WHO2012", "WHO2016"):
+            conn.close()
             raise OpenVAConfigurationError(
                 "Problem in database: InSilicoVA_Conf.data_type "
                 "(valid options: 'WHO2012' or 'WHO2016')."
             )
         insilicova_nsim = query_insilicova[0][1]
         if insilicova_nsim in ("", None):
+            conn.close()
             raise OpenVAConfigurationError(
                 "Problem in database: InSilicoVA_Conf.Nsim")
 
@@ -698,7 +678,9 @@ class TransferDB:
             )
             query_advanced_insilicova = c.execute(
                 sql_advanced_insilicova).fetchall()
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table Advanced_InSilicoVA_Conf..." +
                 str(e)
@@ -1044,22 +1026,19 @@ class TransferDB:
         )
         return settings_insilicova
 
-    @staticmethod
-    def _config_smartva(conn):
+    def _config_smartva(self) -> NamedTuple:
         """Query OpenVA configuration settings from database.
 
         This method is called by config_openva when the VA algorithm is
         SmartVA.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :returns: Contains all parameters needed for
           OpenVA.setAlgorithmParameters().
         :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
 
+        conn = self._connect_db()
         c = conn.cursor()
 
         try:
@@ -1069,6 +1048,7 @@ class TransferDB:
             )
             query_smartva = c.execute(sql_smartva).fetchall()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table SmartVA_Conf..." + str(e)
             )
@@ -1076,7 +1056,9 @@ class TransferDB:
         try:
             sql_country_list = "SELECT abbrev FROM SmartVA_Country;"
             query_country_list = c.execute(sql_country_list).fetchall()
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table SmartVA_Country..." + str(e)
             )
@@ -1133,8 +1115,8 @@ class TransferDB:
         )
         return settings_smartva
 
-    @staticmethod
-    def config_dhis(conn, algorithm):
+    def config_dhis(self,
+                    algorithm: str) -> List[Union[NamedTuple, Dict]]:
         """Query DHIS configuration settings from database.
 
         This method is intended to be used in conjunction with (1)
@@ -1147,9 +1129,6 @@ class TransferDB:
         TransferDB.config() is a valid argument for
         :meth:`DHIS.connect()<openva_pipeline.dhis.DHIS.connect>`
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
         :param algorithm: VA algorithm used by R package openVA
         :type algorithm: str
         :returns: First item contains all parameters for
@@ -1159,6 +1138,8 @@ class TransferDB:
         :rtype: list [named tuple, dict]
         :raises: DHISConfigurationError
         """
+
+        conn = self._connect_db()
         c = conn.cursor()
         try:
             sql_dhis = (
@@ -1168,6 +1149,7 @@ class TransferDB:
             )
             query_dhis = c.execute(sql_dhis).fetchall()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise PipelineConfigurationError(
                 "Problem in database table DHIS_Conf..." + str(e)
             )
@@ -1185,7 +1167,9 @@ class TransferDB:
         try:
             query_cod_codes = c.execute(sql_cod_codes).fetchall()
             dhis_cod_codes = dict(query_cod_codes)
+            conn.close()
         except sqlcipher.OperationalError as e:
+            conn.close()
             raise DHISConfigurationError(
                 "Problem in database table COD_Codes_DHIS..." + str(e)
             )
@@ -1222,21 +1206,21 @@ class TransferDB:
 
         return [settings_dhis, dhis_cod_codes]
 
-    def store_va(self, conn):
+    def store_va(self, dhis_tracker: bool = False) -> None:
         """Store VA records in Transfer database.
 
         This method is intended to be used in conjunction with the
         :class:`DHIS <openva_pipeline.dhis.DHIS>` class, which prepares the
         records into the proper format for storage in the Transfer database.
 
-        :param conn: A connection to the Transfer Database (e.g. the object
-          returned from :meth:`TransferDB.connect_db() <connect_db>`.)
-        :type conn: sqlite3 Connection object
+        :param dhis_tracker: Indicator of using DHIS2 VA tracker program
+        :type dhis_tracker: bool
         :raises: PipelineError, DatabaseConnectionError
         """
 
         if self.working_directory is None:
             raise PipelineError("Need to run Pipeline.config().")
+        conn = self._connect_db()
         c = conn.cursor()
         new_storage_path = os.path.join(
             self.working_directory, "OpenVAFiles", "new_storage.csv"
@@ -1245,29 +1229,213 @@ class TransferDB:
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         try:
             for row_dict in df_new_storage.to_dict(orient="records"):
-                xfer_db_id = row_dict["id"]
-                xfer_db_outcome = row_dict["pipelineOutcome"]
-                non_data_cols = ["sex", "dob", "dod", "age",
-                                 "cod", "metadataCode", "odkMetaInstanceID",
-                                 "pipelineOutcome"]
-                va_data = tuple(v for k, v in row_dict.items() if k not in non_data_cols)
+                # xfer_db_id = row_dict["id"]
+                # xfer_db_outcome = row_dict["pipelineOutcome"]
+                non_data_cols = [k for k in row_dict.keys()
+                                 if k.startswith("org_unit_col")]
+                non_data_cols.extend(["sex", "dob", "dod", "age",
+                                      "cod", "metadataCode",
+                                      "odkMetaInstanceID", "pipelineOutcome"])
+                va_data = tuple(
+                    v for k, v in row_dict.items() if k not in non_data_cols)
                 xfer_db_record = dumps(va_data)
-                sql_xfer_db = (
-                    "INSERT INTO VA_Storage "
-                    "(id, outcome, record, dateEntered) "
-                    "VALUES (?, ?, ?, ?)"
-                )
-                par = [xfer_db_id,
-                       xfer_db_outcome,
+                sql_list = ["INSERT INTO VA_Storage"]
+                if dhis_tracker:
+                    sql_add = (
+                        "(id, outcome, record, dateEntered, "
+                        "dhisOrgUnit, eventID, teiID) "
+                        "VALUES (?, ?, ?, ?, ?, ?, ?)")
+                else:
+                    sql_add = (
+                        "(id, outcome, record, dateEntered, "
+                        "dhisOrgUnit, eventID) "
+                        "VALUES (?, ?, ?, ?, ?, ?)")
+                sql_list.append(sql_add)
+                sql_xfer_db = " ".join(sql_list)
+                par = [row_dict["id"],
+                       row_dict["pipelineOutcome"],
                        sqlite3.Binary(xfer_db_record),
-                       time_fmt]
+                       time_fmt,
+                       row_dict["dhis_org_unit"],
+                       row_dict["event_id"]]
+                if dhis_tracker:
+                    par.append(row_dict["tei_id"])
                 c.execute(sql_xfer_db, par)
             conn.commit()
+            conn.close()
         except (sqlcipher.OperationalError, sqlcipher.IntegrityError) as e:
+            conn.close()
             raise DatabaseConnectionError(
                 "Problem storing VA record to Transfer DB..." + str(e))
 
-    def make_pipeline_dirs(self):
+    def store_single_va(self,
+                        va_dict: Dict,
+                        org_unit_id: str,
+                        log_summary: Dict,
+                        dhis_tracker: bool = False) -> None:
+        """Store a single VA record in Transfer database table VA_Storage.
+
+        This method is intended to be used in conjunction with the
+        :class:`DHIS <openva_pipeline.dhis.DHIS>` class, which prepares the
+        records into the proper format for storage in the Transfer database.
+
+        :param va_dict: VA record
+        :type va_dict: dict
+        :param org_unit_id: DHIS2 organisation unit ID
+        :type org_unit_id: str
+        :param log_summary: Parsed log from DHIS2 post
+        :type log_summary: dict
+        :param dhis_tracker: Indicator of using DHIS2 VA tracker program
+        :type dhis_tracker: bool
+        :raises: PipelineError, DatabaseConnectionError
+        """
+
+        conn = self._connect_db()
+        c = conn.cursor()
+
+        time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        try:
+            non_data_cols = [k for k in va_dict.keys()
+                             if k.startswith("org_unit_col")]
+            non_data_cols.extend(["sex", "dob", "dod", "age",
+                                  "cod", "metadataCode", "odkMetaInstanceID"])
+            va_data = tuple(
+                v for k, v in va_dict.items() if k not in non_data_cols)
+            xfer_db_record = dumps(va_data)
+            sql_list = ["INSERT INTO VA_Storage"]
+            if dhis_tracker:
+                sql_add = (
+                    "(id, outcome, record, dateEntered, "
+                    "dhisOrgUnit, eventID, teiID) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)")
+            else:
+                sql_add = (
+                    "(id, outcome, record, dateEntered, "
+                    "dhisOrgUnit, eventID) "
+                    "VALUES (?, ?, ?, ?, ?, ?)")
+            sql_list.append(sql_add)
+            sql_xfer_db = " ".join(sql_list)
+            par = [va_dict["id"],
+                   "Pushed to DHIS2",
+                   sqlite3.Binary(xfer_db_record),
+                   time_fmt,
+                   org_unit_id,
+                   log_summary["event_id"]
+                   ]
+            if dhis_tracker:
+                par.append(log_summary["tei_id"])
+            c.execute(sql_xfer_db, par)
+            conn.commit()
+            conn.close()
+        except (sqlcipher.OperationalError, sqlcipher.IntegrityError) as e:
+            conn.close()
+            raise DatabaseConnectionError(
+                "Problem storing VA record to Transfer DB..." + str(e))
+
+    def store_no_ou_va(self,
+                       va_record: dict,
+                       eav: DataFrame,
+                       data_ou: str) -> None:
+                       # dhis_ou: str) -> None:
+        """Store VA record without valid organisation unit (ou) in Transfer
+        database table VA_Org_Unit_Not_Found.
+
+        :param va_record: VA record processed by openVA along with cause and
+        metadata
+        :type: dict:
+        :param eav: VA record in EAV format (Entity, Attribute, Value)
+        prepared by openVA
+        :type: DataFrame
+        :param data_ou: Organisation unit (for DHIS2) found in data
+        :type: str
+        :param dhis_ou: Organisation unit the pipeline found and wanted to use
+        for posting to DHIS2
+        :type: str
+
+        :raises: PipelineError, DatabaseConnectionError
+        """
+
+        if self.working_directory is None:
+            raise PipelineError("Need to run Pipeline.config().")
+        conn = self._connect_db()
+        c = conn.cursor()
+
+        time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+        try:
+            va_id = va_record["id"]
+            # va_record_blob = dumps(va_record)
+            # eav_blob = dumps(eav)
+            va_json = json.dumps(va_record)
+            eav_flat = eav.pivot(index="ID",
+                                 columns="Attribute",
+                                 values="Value")
+            eav_dict = eav_flat.to_dict(orient="records")[0]
+            eav_json = json.dumps(eav_dict)
+            sql_xfer_db = (
+                "INSERT INTO VA_Org_Unit_Not_Found "
+                "(id, eventBlob, evaBlob, dataOrgUnit, dhisOrgUnit, "
+                "dateEntered, fixed) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)"
+            )
+            par = [va_id,
+                   sqlite3.Binary(va_json.encode("utf-8")),
+                   sqlite3.Binary(eav_json.encode("utf-8")),
+                   data_ou,
+                   #dhis_ou,
+                   "No Valid Org Unit Found",
+                   time_fmt,
+                   "False"]
+            c.execute(sql_xfer_db, par)
+            conn.commit()
+            conn.close()
+        except (sqlcipher.OperationalError, sqlcipher.IntegrityError) as e:
+            conn.close()
+            raise DatabaseConnectionError(
+                "Problem storing VA record to Transfer DB " +
+                "(VA_Org_Unit_Not_Found table)... "
+                + str(e))
+
+    def get_no_ou_va(self, va_id: str = None) -> Dict:
+        """Get the VA IDs and org unit data columns for records that do not
+        have a valid DHIS2 org unit assignment; or select the eventBlob and
+        evaBlob if the va_id is provided."""
+
+        conn = self._connect_db()
+        c = conn.cursor()
+        if va_id:
+            sql = ("SELECT eventBlob, evaBlob FROM VA_Org_Unit_Not_Found "
+                   "WHERE id = ?")
+            query = c.execute(sql, (va_id,)).fetchall()
+            va_dict = json.loads(query[0][0])
+            eav_dict = json.loads(query[0][1])
+            eav_df = DataFrame.from_dict(eav_dict,
+                                         orient="index")
+            eav_df.reset_index(inplace=True)
+            eav_df.insert(loc=0, column="ID", value=va_id)
+            eav_df.rename(columns={"index": "Attribute", 0: "Value"})
+            va_data = {"va_dict": va_dict,
+                       "eav_dataframe": eav_df}
+            conn.close()
+            return va_data
+        else:
+            sql = "SELECT id, dataOrgUnit FROM VA_Org_Unit_Not_Found"
+            table_values = c.execute(sql).fetchall()
+            id_ou_dict = {va_id: ou for va_id, ou in table_values}
+            conn.close()
+            return id_ou_dict
+
+    def remove_no_ou_va(self, va_id: str) -> None:
+        """Remove the VA record from Transfer database table
+        VA_Org_Unit_Not_Found."""
+
+        conn = self._connect_db()
+        c = conn.cursor()
+        sql = "DELETE FROM VA_Org_Unit_Not_Found WHERE id = ?"
+        c.execute(sql, (va_id,))
+        conn.commit()
+        conn.close()
+
+    def make_pipeline_dirs(self) -> None:
         """Create directories for storing files (if they don't exist).
 
         The method creates the following folders in the working directory (as
@@ -1304,7 +1472,7 @@ class TransferDB:
                 raise PipelineError("Unable to create directory " +
                                     dhis_path + str(e))
 
-    def clean_odk(self):
+    def clean_odk(self) -> None:
         """Remove ODK Briefcase Export files."""
 
         if self.working_directory is None:
@@ -1320,7 +1488,7 @@ class TransferDB:
         if os.path.isfile(odk_export_prev_path):
             os.remove(odk_export_prev_path)
 
-    def clean_openva(self):
+    def clean_openva(self) -> None:
         """Remove openVA files with COD results."""
 
         if self.working_directory is None:
@@ -1351,7 +1519,7 @@ class TransferDB:
         if os.path.isfile(eva_path):
             os.remove(eva_path)
 
-    def clean_dhis(self):
+    def clean_dhis(self) -> None:
         """Remove DHIS2 blob files."""
 
         if self.working_directory is None:

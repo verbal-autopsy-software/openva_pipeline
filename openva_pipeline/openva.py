@@ -180,6 +180,8 @@ class OpenVA:
             with open(file_name, "w", newline="") as f:
                 f.write("date() \n")
                 f.write("library(openVA) \n")
+                # TODO: add lubridate to handle different date formats across
+                # the rows
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
                 odk_id_for_r = self.odk_id.replace("-", ".")
@@ -322,6 +324,8 @@ class OpenVA:
             with open(file_name, "w", newline="") as f:
                 f.write("date() \n")
                 f.write("library(openVA) \n")
+                # TODO: add lubridate to handle different date formats across
+                # the rows
                 f.write("getwd() \n")
                 f.write("raw_data <- read.csv('" + raw_data_file + "') \n")
                 odk_id_for_r = self.odk_id.replace("-", ".")
