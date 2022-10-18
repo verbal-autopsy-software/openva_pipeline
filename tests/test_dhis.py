@@ -1,6 +1,7 @@
 from openva_pipeline import dhis
 from openva_pipeline.transfer_db import TransferDB
 from openva_pipeline.run_pipeline import create_transfer_db
+from openva_pipeline.exceptions import DHISError
 
 import datetime
 import subprocess
@@ -17,7 +18,7 @@ import context
 os.chdir(os.path.abspath(os.path.dirname(__file__)))
 
 
-#@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+@unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckDHIS(unittest.TestCase):
     """Check that everything works as it should."""
 
@@ -42,14 +43,18 @@ class CheckDHIS(unittest.TestCase):
                              db_directory=db_directory,
                              db_key=db_key,
                              pl_run_date=pipeline_run_date)
+        dhis_url = "http://localhost:8080"
+        if os.path.isfile("/.dockerenv"):
+            dhis_url = "http://host.docker.internal:8080"
         xfer_db.update_table("DHIS_Conf",
                              ["dhisURL",
                               "dhisUser",
                               "dhisPassword"],
-                             ["http://localhost:8080",
+                             [dhis_url,
                               "admin",
                               "district"])
         settings_dhis = xfer_db.config_dhis("InSilicoVA")
+        settings_pipeline = xfer_db.config_pipeline()
 
         cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
         event_uids = cls.pipeline_dhis.api_dhis.get(
@@ -142,6 +147,7 @@ class CheckDHISTracker(unittest.TestCase):
                              db_key=db_key,
                              pl_run_date=pipeline_run_date)
         settings_dhis = xfer_db.config_dhis("InSilicoVA")
+        settings_pipeline = xfer_db.config_pipeline()
         cls.pipeline_dhis = dhis.DHIS(settings_dhis, ".")
         cls.post_log = cls.pipeline_dhis.post_va(xfer_db)
         if cls.pipeline_dhis.post_to_tracker:
@@ -304,8 +310,7 @@ class CheckDHISExceptions(unittest.TestCase):
         mock_cod = {"cause1": "code1", "cause2": "code2"}
         bad_input = [bad_settings, mock_cod]
 
-        pipeline_dhis = dhis.DHIS(bad_input, ".")
-        self.assertRaises(dhis.DHISError, pipeline_dhis.connect)
+        self.assertRaises(DHISError, dhis.DHIS, bad_input, ".")
 
     @classmethod
     def tearDownClass(cls):

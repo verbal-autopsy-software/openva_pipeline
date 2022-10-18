@@ -1,4 +1,5 @@
 from openva_pipeline.transfer_db import TransferDB
+from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.run_pipeline import create_transfer_db
 from openva_pipeline.exceptions import DatabaseConnectionError
 from openva_pipeline.exceptions import PipelineConfigurationError
@@ -1360,6 +1361,11 @@ class CheckDHISStoreVA(unittest.TestCase):
                                  pl_run_date=pipeline_run_date)
         cls.xfer_db.config_pipeline()
         cls.conn = cls.xfer_db._connect_db()
+        pl = Pipeline(db_file_name,
+                      db_directory,
+                      db_key,
+                      True)
+        pl.run_dhis()
 
     def test_dhis_store_va(self):
         """Check that VA records get stored in Transfer DB."""

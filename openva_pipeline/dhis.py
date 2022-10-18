@@ -654,8 +654,8 @@ class DHIS:
                             # not have permission to post to root), then
                             # top_org_unit_id == None
                             dhis_org_unit = top_org_unit_id
-                    algorithm_metadata_code = row_dict['metadataCode']
-                    odk_id = row_dict['odkMetaInstanceID']
+                    algorithm_metadata_code = row_dict["metadataCode"]
+                    odk_id = row_dict["odkMetaInstanceID"]
 
                     e = VerbalAutopsyEvent(
                         va_id,
@@ -712,7 +712,7 @@ class DHIS:
         if self.post_to_tracker:
             tei_event_status = self._parse_tei_post_log(log)
             event_success = [k for k, v in tei_event_status.items()
-                             if v.get("event") == "SUCCESS"]
+                             if v.get("event_status") == "SUCCESS"]
             self.n_posted_events = len(event_success)
             # delete TEIs if event -> ERROR? (may not have permission)
             # package = {"trackedEntityInstances": [{
@@ -885,8 +885,8 @@ class DHIS:
             )
         try:
             for va_reference in va_references:
-                posted_data_values = self.api_dhis.get(
-                    "events/{}".format(va_reference)).get("dataValues")
+                post = self.api_dhis.get("events/{}".format(va_reference))
+                posted_data_values = post["dataValues"]
                 posted_va_id_index = next(
                     (
                         index
@@ -900,9 +900,10 @@ class DHIS:
                                 "dhisVerbalAutopsyID"] == posted_va_id
                 df_new_storage.loc[row_va_id,
                                    "pipelineOutcome"] = "Pushed to DHIS2"
-                # TODO: check that va_reference is event_id & add org_unit
                 df_new_storage.loc[row_va_id,
                                    "event_id"] = va_reference
+                df_new_storage.loc[row_va_id,
+                                   "dhis_org_unit"] = post["orgUnit"]
             df_new_storage.to_csv(self.dir_openva + "/new_storage.csv",
                                   index=False)
         except (requests.RequestException, ) as exc:

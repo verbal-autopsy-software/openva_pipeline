@@ -193,7 +193,7 @@ class CheckRunODKClean(unittest.TestCase):
     def test_clean_run_odk_return_code(self):
         """Check return code with valid parameters:"""
 
-        self.assertTrue("SUCCESS!" in self.odk)
+        self.assertTrue("Downloaded" in self.odk[0])
 
     def test_clean_run_odk_creates_odk_export_new(self):
         """Check for exported CSV file:"""
@@ -258,7 +258,7 @@ class CheckRunODKWithExports(unittest.TestCase):
     def test_run_odk_return_code_with_previous_exports(self):
         """Check return code with valid parameters:"""
 
-        self.assertTrue("SUCCESS!" in self.odk)
+        self.assertTrue("Downloaded" in self.odk[0])
 
     def test_run_odk_export_prev_with_previous_exports(self):
         """Check modification time on odk_export_prev with previous exports:"""
@@ -316,8 +316,11 @@ class CheckStoreResultsDB(unittest.TestCase):
         if not os.path.isfile("ODK-Briefcase-v1.18.0.jar"):
             download_briefcase()
         self.pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
+        dhis_url = "http://localhost:8080"
+        if os.path.isfile("/.dockerenv"):
+            dhis_url = "http://host.docker.internal:8080"
         self.pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
-                             ["http://localhost:8080", "admin", "district"])
+                             [dhis_url, "admin", "district"])
 
         self.xfer_db = TransferDB(db_file_name="Pipeline.db",
                                   db_directory=".",
@@ -344,7 +347,7 @@ class CheckStoreResultsDB(unittest.TestCase):
         os.remove("OpenVAFiles/pycrossva_input.csv")
         os.remove("OpenVAFiles/openva_input.csv")
         odk2 = self.pl.run_odk()
-        self.c.execute("SELECT event_desc FROM EventLog;")
+        self.c.execute("SELECT eventDesc FROM EventLog;")
         query = self.c.fetchall()
         n_duplicates = [i[0] for i in query if "duplicate" in i[0]]
         self.assertEqual(len(n_duplicates), n_va)
@@ -412,10 +415,10 @@ class CheckRunOpenVA(unittest.TestCase):
                 has_all = False
         self.assertTrue(has_all)
 
-    def test_zero_records_false(self):
-        """Check that run_openva() returns zero_records = FALSE"""
+    def test_n_processed_records(self):
+        """Check that run_openva() returns n_processed > 0"""
 
-        self.assertFalse(self.r_out["zero_records"])
+        self.assertTrue(self.r_out["n_processed"] > 0)
 
     @classmethod
     def tearDownClass(cls):
@@ -452,7 +455,7 @@ class CheckRunOpenVAZeroRecords(unittest.TestCase):
     def test_zero_records_true(self):
         """Check that run_openva() returns zero_records == True:"""
 
-        self.assertTrue(self.r_out["zero_records"])
+        self.assertTrue(self.r_out["n_processed"] == 0)
 
     def test_zero_records_no_input_csv(self):
         """Check that run_openva() doesn't create new file if zero_records:"""
@@ -704,8 +707,11 @@ class CheckPipelineRunDHIS(unittest.TestCase):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
 
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
+        dhis_url = "http://localhost:8080"
+        if os.path.isfile("/.dockerenv"):
+            dhis_url = "http://host.docker.internal:8080"
         pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
-                        ["http://localhost:8080", "admin", "district"])
+                        [dhis_url, "admin", "district"])
         cls.pipeline_dhis = pl.run_dhis()
 
     def test_run_dhis_va_program_uid(self):
@@ -752,7 +758,7 @@ class CheckPipelineDepositResults(unittest.TestCase):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
         if os.path.isfile("OpenVAFiles/new_storage.csv"):
             os.remove("OpenVAFiles/new_storage.csv")
-        shutil.copy("OpenVAFiles/sample_new_storage.csv",
+        shutil.copy("OpenVAFiles/sample_new_storage_verified.csv",
                     "OpenVAFiles/new_storage.csv")
         now_date = datetime.datetime.now()
         pipeline_run_date = now_date.strftime("%Y-%m-%d_%H:%M:%S")
@@ -766,6 +772,7 @@ class CheckPipelineDepositResults(unittest.TestCase):
         conn.commit()
         #conn.close()
         pl = Pipeline("Pipeline.db", ".", "enilepiP", True)
+        pl._connect_dhis()
         pl.store_results_db()
 
         # xfer_db = TransferDB(db_file_name="Pipeline.db",
@@ -897,8 +904,11 @@ class CheckPipelineOrgUnits(unittest.TestCase):
         cls.pl = Pipeline(db_file_name="org_units.db",
                           db_directory=".",
                           db_key="enilepiP")
+        dhis_url = "http://localhost:8080"
+        if os.path.isfile("/.dockerenv"):
+            dhis_url = "http://host.docker.internal:8080"
         cls.pl._update_dhis(["dhisURL", "dhisUser", "dhisPassword"],
-                            ["http://localhost:8080", "admin", "district"])
+                            [dhis_url, "admin", "district"])
         cls.pl._update_dhis(['dhisOrgUnit'], ['Id10057'])
         cls.pl.run_openva()
         cls.pipeline_dhis = cls.pl.run_dhis()
@@ -997,7 +1007,7 @@ class CheckPipelineCleanPipeline(unittest.TestCase):
                              db_directory=".",
                              db_key="enilepiP",
                              pl_run_date= pipeline_run_date)
-        cls.conn = xfer_db.connect_db()
+        cls.conn = xfer_db._connect_db()
         cls.c = cls.conn.cursor()
 
     def test_clean_pipeline_rm_files(self):

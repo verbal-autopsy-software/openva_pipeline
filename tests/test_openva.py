@@ -702,7 +702,7 @@ class CheckExceptionsSmartVA(unittest.TestCase):
                              pl_run_date=static_run_date)
         par = ["SmartVA", "SmartVA|2.0.0_a8|PHMRCShort|1|PHMRCShort|1"]
         xfer_db.update_table("Pipeline_Conf",
-                             ["algorithm", "algorithmMetaData"],
+                             ["algorithm", "algorithmMetadataCode"],
                              par)
         nt_smartva = collections.namedtuple("nt_smartva",
                                             ["smartva_country",

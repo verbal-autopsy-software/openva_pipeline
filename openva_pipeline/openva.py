@@ -484,7 +484,8 @@ class OpenVA:
                         right=df_data,
                         right_on="Generalmodule-sid",
                         how="right")
-        df_temp.dropna(subset=["cause34"])
+        # df_temp.dropna(subset=["cause34"])
+        df_temp["cause34"] = df_temp["cause34"].fillna("MISSING")
         df_temp.drop(columns="sid", inplace=True)
         df_temp.rename(columns={"meta-instanceID": "odkMetaInstanceID"},
                        inplace=True)
@@ -575,7 +576,12 @@ class OpenVA:
         data_path = os.path.join(self.dir_openva, "record_storage.csv")
         record_storage = read_csv(data_path)
         n_records = record_storage.shape[0]
-        n_missing = sum(record_storage["cod"] == "MISSING")
+        if self.pipeline_args.algorithm in ["InSilicoVA", "InterVA"]:
+            n_missing = sum(record_storage["cod"] == "MISSING")
+        else:
+            # TODO: when VAs are not processed by SmartVA, make sure their
+            # sid value is set to missing when merged with SmartVA results
+            n_missing = sum(record_storage["cause34"] == "MISSING")
         summary = {"n_processed": n_records,
                    "n_cod_missing": n_missing}
         return summary
