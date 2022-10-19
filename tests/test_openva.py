@@ -12,6 +12,7 @@ import collections
 from datetime import datetime
 from sys import path, platform
 from pandas import read_csv
+
 source_path = os.path.dirname(os.path.abspath(__file__))
 path.append(source_path)
 import context
@@ -63,19 +64,37 @@ class CheckCopyVA(unittest.TestCase):
     def test_copy_va_merge(self):
         """Check that prep_va_data() includes all records."""
 
-        has_all = True
-        with open("OpenVAFiles/pycrossva_input.csv") as f_combined:
-            f_combined_lines = f_combined.readlines()
-        with open("ODKFiles/previous_export.csv") as f_previous:
-            f_previous_lines = f_previous.readlines()
-        with open("ODKFiles/another_export.csv") as f_another:
-            f_another_lines = f_another.readlines()
-        for line in f_previous_lines:
-            if line not in f_combined_lines:
-                has_all = False
-        for line in f_another_lines:
-            if line not in f_combined_lines:
-                has_all = False
+        # has_all = True
+        # with open("OpenVAFiles/pycrossva_input.csv") as f_combined:
+        #     f_combined_lines = f_combined.readlines()
+        # with open("ODKFiles/previous_export.csv") as f_previous:
+        #     f_previous_lines = f_previous.readlines()
+        # with open("ODKFiles/another_export.csv") as f_another:
+        #     f_another_lines = f_another.readlines()
+        # for line in f_previous_lines:
+        #     if line not in f_combined_lines:
+        #         has_all = False
+        # for line in f_another_lines:
+        #     if line not in f_combined_lines:
+        #         has_all = False
+        # self.assertTrue(has_all)
+        combined = read_csv("OpenVAFiles/pycrossva_input.csv")
+        previous = read_csv("ODKFiles/previous_export.csv")
+        another = read_csv("ODKFiles/another_export.csv")
+        n_match_previous = 0
+        n_match_another = 0
+        for i in range(previous.shape[0]):
+            for j in range(combined.shape[0]):
+                if previous.iloc[i].equals(combined.iloc[j]):
+                    n_match_previous += 1
+                    break
+        for i in range(another.shape[0]):
+            for j in range(combined.shape[0]):
+                if another.iloc[i].equals(combined.iloc[j]):
+                    n_match_another += 1
+                    break
+        has_all = (n_match_another == another.shape[0] and
+                   n_match_previous == previous.shape[0])
         self.assertTrue(has_all)
 
     @classmethod
@@ -177,7 +196,7 @@ class CheckInSilicoVA(unittest.TestCase):
         pl._config()
         cls.static_run_date = \
             datetime(2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
- 
+
         cls.r_script = os.path.join("OpenVAFiles", cls.static_run_date,
                                     "r_script_" + cls.static_run_date + ".R")
         cls.r_out_file = os.path.join("OpenVAFiles", cls.static_run_date,
@@ -554,7 +573,7 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
                     "ODKFiles/odk_export_new.csv")
 
     def setUp(self):
-        
+
         static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
         xfer_db = TransferDB(db_file_name="copy_Pipeline.db",
@@ -580,7 +599,7 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
 
     def test_insilico_exception(self):
         """get_cod() raises exception with faulty R script for InSilicoVA."""
-        
+
         self.assertRaises(OpenVAError, self.r_openva.get_cod)
 
     def tearDown(self):
@@ -593,7 +612,7 @@ class CheckExceptionsInSilicoVA(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-    
+
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
             os.remove("ODKFiles/odk_export_new.csv")
         if os.path.isfile("ODKFiles/odk_export_prev.csv"):
@@ -621,7 +640,7 @@ class CheckExceptionsInterVA(unittest.TestCase):
                     "ODKFiles/odk_export_new.csv")
 
     def setUp(self):
-        
+
         static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
         xfer_db = TransferDB(db_file_name="copy_Pipeline.db",
@@ -662,7 +681,7 @@ class CheckExceptionsInterVA(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-    
+
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
             os.remove("ODKFiles/odk_export_new.csv")
         if os.path.isfile("ODKFiles/odk_export_prev.csv"):
@@ -691,9 +710,9 @@ class CheckExceptionsSmartVA(unittest.TestCase):
                     "ODKFiles/odk_export_new.csv")
         if not os.path.isfile("smartva"):
             download_smartva()
-       
+
     def setUp(self):
-        
+
         static_run_date = datetime(
             2018, 9, 1, 9, 0, 0).strftime("%Y_%m_%d_%H:%M:%S")
         xfer_db = TransferDB(db_file_name="copy_Pipeline.db",
@@ -744,7 +763,7 @@ class CheckExceptionsSmartVA(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-    
+
         if os.path.isfile("ODKFiles/odk_export_new.csv"):
             os.remove("ODKFiles/odk_export_new.csv")
         if os.path.isfile("ODKFiles/odk_export_prev.csv"):

@@ -9,7 +9,7 @@ pandas = ">=1.2.4"
 requests = ">=2.25.1"
 urllib3 = ">=1.26.5"
 numpy = ">=1.22"
-pycrossva = ">=0.8"
+pycrossva = ">=0.90"
 pipfile = "*"
 
 [dev-packages]

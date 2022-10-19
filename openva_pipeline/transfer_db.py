@@ -326,6 +326,8 @@ class TransferDB:
             sql = "SELECT * FROM {}"
             table_values = c.execute(sql.format(table_name)).fetchall()
             conn.close()
+        # TODO: make the return object a dict where the keys are the field
+        # names and the values are the query results
         return table_values
 
     def get_tables(self) -> list:

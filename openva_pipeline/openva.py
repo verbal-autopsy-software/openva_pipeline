@@ -98,12 +98,19 @@ class OpenVA:
             pycva_instrument_version = "2016WHOv151"
 
         if is_export_file_new and not is_export_file_prev:
-            with open(export_file_new, "r", newline="") as f_new:
-                f_new_lines = f_new.readlines()
+            # with open(export_file_new, "r", newline="") as f_new:
+            #     f_new_lines = f_new.readlines()
+            # summary["n_export_prev"] = 0
+            # summary["n_export_new"] = len(f_new_lines) - 1
+            # summary["n_to_openva"] = len(f_new_lines) - 1
+            # if len(f_new_lines) == 1:
+            #     return summary
+            export_df_new = read_csv(export_file_new)
+            export_n_rows = export_df_new.shape[0]
             summary["n_export_prev"] = 0
-            summary["n_export_new"] = len(f_new_lines) - 1
-            summary["n_to_openva"] = len(f_new_lines) - 1
-            if len(f_new_lines) == 1:
+            summary["n_export_new"] = export_n_rows
+            summary["n_to_openva"] = export_n_rows
+            if export_n_rows == 0:
                 return summary
             shutil.copy(export_file_new, pycva_input)
             if self.pipeline_args.algorithm == "SmartVA":
@@ -118,23 +125,36 @@ class OpenVA:
                 return summary
         # if is_export_file_new and is_export_file_prev:
         else:
-            with open(export_file_new, "r", newline="") as f_new:
-                f_new_lines = f_new.readlines()
-            with open(export_file_prev, "r", newline="") as f_prev:
-                f_prev_lines = f_prev.readlines()
-            summary["n_export_prev"] = len(f_prev_lines) - 1
-            summary["n_export_new"] = len(f_new_lines) - 1
-            if len(f_new_lines) == 1 and len(f_prev_lines) == 1:
+            # with open(export_file_new, "r", newline="") as f_new:
+            #     f_new_lines = f_new.readlines()
+            # with open(export_file_prev, "r", newline="") as f_prev:
+            #     f_prev_lines = f_prev.readlines()
+            # summary["n_export_prev"] = len(f_prev_lines) - 1
+            # summary["n_export_new"] = len(f_new_lines) - 1
+            # if len(f_new_lines) == 1 and len(f_prev_lines) == 1:
+            #     summary["n_to_openva"] = 0
+            #     return summary
+            # shutil.copy(export_file_new, pycva_input)
+            # n_to_openva = len(f_new_lines) - 1
+            # with open(pycva_input, "a", newline="") as f_combined:
+            #     for line in f_prev_lines:
+            #         if line not in f_new_lines:
+            #             f_combined.write(line)
+            #             n_to_openva += 1
+            export_df_new = read_csv(export_file_new)
+            export_new_n_rows = export_df_new.shape[0]
+            export_df_prev = read_csv(export_file_prev)
+            export_prev_n_rows = export_df_prev.shape[0]
+            summary["n_export_prev"] = export_prev_n_rows
+            summary["n_export_new"] = export_new_n_rows
+            if export_prev_n_rows == 0 and export_new_n_rows == 0:
                 summary["n_to_openva"] = 0
                 return summary
-            shutil.copy(export_file_new, pycva_input)
-            n_to_openva = len(f_new_lines) - 1
-            with open(pycva_input, "a", newline="") as f_combined:
-                for line in f_prev_lines:
-                    if line not in f_new_lines:
-                        f_combined.write(line)
-                        n_to_openva += 1
-            summary["n_to_openva"] = n_to_openva
+            exports_combined = concat([export_df_new, export_df_prev])
+            exports_combined.drop_duplicates(inplace=True)
+            exports_combined.to_csv(pycva_input, index=False)
+            summary["n_to_openva"] = exports_combined.shape[0]
+
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
@@ -351,7 +371,7 @@ class OpenVA:
                 f.write("\t groupcode = " + self.va_args.interva_groupcode + ", \n")
                 f.write("\t write = TRUE, \n")
                 f.write("\t directory = '" + os.path.join(self.dir_openva, self.run_date) + "', \n")
-                f.write("\t filename = 'warnings_" + self.run_date + "') \n")
+                f.write("\t filename = 'interva5_results_" + self.run_date + "') \n")
                 if self.va_args.interva_version == "4":
                     f.write("sex <- ifelse(tolower(records_sorted$MALE)=='y', 'Male', 'Female') \n")
                 if self.va_args.interva_version == "5":
