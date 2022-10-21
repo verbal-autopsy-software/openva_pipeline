@@ -237,7 +237,7 @@ class VerbalAutopsyEvent(object):
         data_values = [
             {"dataElement": "htm6PixLJNy", "value": self.va_id},
             {"dataElement": "hi7qRC4SMMk", "value": self.sex},
-            {"dataElement": "mwSaVq64k7j", "value": self.dob},
+            # {"dataElement": "mwSaVq64k7j", "value": self.dob},
             {"dataElement": "F4XGdOBvWww", "value": self.cod_code},
             {"dataElement": "wiJviUqN1io", "value": self.algorithm_metadata},
             {"dataElement": "LwXZ2dZmJb0", "value": self.odk_id},
@@ -246,15 +246,20 @@ class VerbalAutopsyEvent(object):
         if self.age != "MISSING":
             data_values.append({"dataElement": "oPAg4MA0880",
                                 "value": self.age})
-        formatted_event_date = self.event_date.strftime("%Y-%m-%d")
+        if self.age != "9999-09-09":
+            data_values.append({"dataElement": "mwSaVq64k7j",
+                                "value": self.dob})
         event = {
             "program": self.program,
             "orgUnit": dhis_org_unit,
-            "eventDate": formatted_event_date,
+            # "eventDate": formatted_event_date,
             "status": "COMPLETED",
             "storedBy": dhis_user,
             "dataValues": data_values,
         }
+        if self.event_date != datetime.date(9999, 9, 9):
+            formatted_event_date = self.event_date.strftime("%Y-%m-%d")
+            event["eventDate"] = formatted_event_date
         return event
 
     def format_tea_to_dhis2(self, dhis_user, dhis_org_unit, tei_id=None):
@@ -281,19 +286,24 @@ class VerbalAutopsyEvent(object):
                                 "value": self.age})
         attributes = [
             {"attribute": "XSFOyybvYJ9", "value": self.sex},
-            {"attribute": "P1xsdeFzhCb", "value": self.dob}
+            # {"attribute": "P1xsdeFzhCb", "value": self.dob}
         ]
-        formatted_event_date = datetime.datetime.strftime(self.event_date,
-                                                          "%Y-%m-%d")
+        if self.dob != "9999-09-09":
+            attributes.append({"attribute": "P1xsdeFzhCb",
+                               "value": self.dob})
         events = [{
             "program": self.program,
             "orgUnit": dhis_org_unit,
-            "eventDate": formatted_event_date,
+            # "eventDate": formatted_event_date,
             "status": "COMPLETED",
             "programStage": "OiZFUyH5KnN",
             "storedBy": dhis_user,
             "dataValues": data_values,
         }]
+        if self.event_date != datetime.date(9999, 9, 9):
+            formatted_event_date = datetime.datetime.strftime(self.event_date,
+                                                              "%Y-%m-%d")
+            events[0]["eventDate"] = formatted_event_date
         enrollments = [{
             "orgUnit": dhis_org_unit,
             "program": self.program,
@@ -415,7 +425,7 @@ class DHIS:
 
     :param dhis_args: Contains parameter values for connected to DHIS2, as
       returned by transferDB.config_dhis().
-    :type dhis_args: (named) tuple
+    :type dhis_args: list of namedtuple and dictionary with COD codes
     :param working_directory: Working directory for the openVA Pipeline
     :type working_directory: string
     :raises: DHISError
