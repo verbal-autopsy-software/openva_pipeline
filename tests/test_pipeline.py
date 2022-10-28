@@ -381,9 +381,9 @@ class CheckRunOpenVA(unittest.TestCase):
         if os.path.isfile("ODKFiles/odk_export_prev.csv"):
             os.remove("ODKFiles/odk_export_prev.csv")
         shutil.copy("ODKFiles/odk_export_prev_who_v151.csv",
-            "ODKFiles/odk_export_prev.csv")
+                    "ODKFiles/odk_export_prev.csv")
         shutil.copy("ODKFiles/odk_export_new_who_v151.csv",
-            "ODKFiles/odk_export_new.csv")
+                    "ODKFiles/odk_export_new.csv")
         if not os.path.isfile("Pipeline.db"):
             create_transfer_db("Pipeline.db", ".", "enilepiP")
 
@@ -401,17 +401,30 @@ class CheckRunOpenVA(unittest.TestCase):
         """Check that run_openva() includes all records:"""
 
         has_all = True
-        with open("OpenVAFiles/pycrossva_input.csv") as f_combined:
-            f_combined_lines = f_combined.readlines()
-        with open("ODKFiles/odk_export_prev_who_v151.csv") as f_previous:
-            f_previous_lines = f_previous.readlines()
-        with open("ODKFiles/odk_export_new_who_v151.csv") as f_another:
-            f_another_lines = f_another.readlines()
-        for line in f_previous_lines:
-            if line not in f_combined_lines:
+        # with open("OpenVAFiles/pycrossva_input.csv") as f_combined:
+        #     f_combined_lines = f_combined.readlines()
+        # with open("ODKFiles/odk_export_prev_who_v151.csv") as f_previous:
+        #     f_previous_lines = f_previous.readlines()
+        # with open("ODKFiles/odk_export_new_who_v151.csv") as f_another:
+        #     f_another_lines = f_another.readlines()
+        # for line in f_previous_lines:
+        #     if line not in f_combined_lines:
+        #         has_all = False
+        # for line in f_another_lines:
+        #     if line not in f_combined_lines:
+        #         has_all = False
+        combined = read_csv("OpenVAFiles/pycrossva_input.csv")
+        combined_id = combined["meta-instanceID"].tolist()
+        prev = read_csv("ODKFiles/odk_export_prev.csv")
+        prev_id = prev["meta-instanceID"]
+        new = read_csv("ODKFiles/odk_export_new.csv")
+        new_id = prev["meta-instanceID"]
+
+        for id in prev_id:
+            if id not in combined_id:
                 has_all = False
-        for line in f_another_lines:
-            if line not in f_combined_lines:
+        for id in new_id:
+            if id not in combined_id:
                 has_all = False
         self.assertTrue(has_all)
 

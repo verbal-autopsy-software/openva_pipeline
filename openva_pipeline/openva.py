@@ -151,7 +151,14 @@ class OpenVA:
                 summary["n_to_openva"] = 0
                 return summary
             exports_combined = concat([export_df_new, export_df_prev])
-            exports_combined.drop_duplicates(inplace=True)
+            cols = list(exports_combined.columns)
+            match_instanceid = [x for x in cols if "instanceid" in x.lower()]
+            if len(match_instanceid) == 0:
+                match_col = None
+            else:
+                match_col = match_instanceid[0]
+            exports_combined.drop_duplicates(subset=match_col,
+                                             inplace=True)
             exports_combined.to_csv(pycva_input, index=False)
             summary["n_to_openva"] = exports_combined.shape[0]
 
