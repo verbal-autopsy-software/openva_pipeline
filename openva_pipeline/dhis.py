@@ -134,7 +134,7 @@ class API(object):
             r = requests.put(url=url, json=data, auth=self.auth)
             if r.status_code not in range(200, 206):
                 raise DHISError(
-                    "Problem with API.post..."
+                    "Problem with API.put..."
                     + "HTTP Code: {}...".format(r.status_code)
                     + str(r.text)
                 )
@@ -157,7 +157,7 @@ class API(object):
                     + str(r.text)
                 )
         except requests.RequestException as exc:
-            raise DHISError("Problem with API.put..." +
+            raise DHISError("Problem with API.delete..." +
                             str(exc))
 
 
