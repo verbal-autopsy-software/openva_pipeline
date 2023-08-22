@@ -2,10 +2,6 @@ image: ubuntu2004
 
 environment:
   matrix:
-  - TOXENV: py36
-    PYTHON: "3.6"
-  - TOXENV: py37
-    PYTHON: "3.7"
   - TOXENV: py38
     PYTHON: "3.8"
   - TOXENV: py39
@@ -18,7 +14,7 @@ install:
 - sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0x51716619e084dab9
 - sudo bash -c "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >> /etc/apt/sources.list"
 - sudo apt-get update
-- sudo apt-get install -y r-base sqlite3 libsqlite3-dev sqlcipher libsqlcipher-dev openjdk-11-jdk curl libcurl4-openssl-dev
+- sudo apt-get install -y r-base sqlcipher libsqlcipher-dev curl libcurl4-openssl-dev
 - sudo R CMD javareconf
 - cd /home/appveyor/projects
 - sudo echo "install.packages('openVA', repos='https://cloud.r-project.org/'); q('no')" > Rpackages.R

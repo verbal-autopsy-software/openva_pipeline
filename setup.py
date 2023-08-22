@@ -5,7 +5,10 @@ from setuptools import setup, find_packages
 here = os.path.abspath(os.path.dirname(__file__))
 
 about = {}
-with open(os.path.join(here, "openva_pipeline", "__version__.py"), "r", "utf-8") as f:
+with open(os.path.join(here,
+                       "openva_pipeline",
+                       "__version__.py"),
+          "r", "utf-8") as f:
     exec(f.read(), about)
 
 with open("README.md", "r", "utf-8") as f:
@@ -35,8 +38,6 @@ setup(
         ],
     classifiers=[
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",

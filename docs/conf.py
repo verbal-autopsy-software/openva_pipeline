@@ -51,6 +51,7 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.githubpages',
     'sphinx.ext.viewcode',
+    'sphinx_copybutton',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -186,3 +187,6 @@ epub_exclude_files = ['search.html']
 
 
 # -- Extension configuration -------------------------------------------------
+# sphinx_copybutton: strip and configure input prompts for code cells
+copybutton_prompt_text = r">>> |\$ |> |sqlite> "
+copybutton_prompt_is_regexp = True

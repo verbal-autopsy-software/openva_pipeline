@@ -1,4 +1,4 @@
-# Software Requirements & Installation Guide for Ubuntu Server 16.04
+# Software Requirements & Installation Guide for Ubuntu Server 20.04
 
 Note: To make the installation process easier, all of the required software can be installed by downloading and running the bash script [install_software.sh](https://raw.githubusercontent.com/D4H-CRVS/OpenVA_Pipeline/master/install_software.sh) located in the main folder of this repository.
 

@@ -13,6 +13,6 @@ pip install openva-pipeline
 
 #Write Rscript to install packages, then run the R script
 sudo R CMD javareconf
-echo "install.packages('openVA'); q('no')" > packages.r
+echo "install.packages(c('openVA', 'lubridate')); q('no')" > packages.r
 sudo Rscript packages.r
 rm packages.r
