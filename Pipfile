@@ -11,3 +11,6 @@ urllib3 = "*"
 numpy = "*"
 pycrossva = ">=0.96"
 pipfile = "*"
+
+[requires]
+python_version = "3.9"
