@@ -579,7 +579,9 @@ class DHIS:
             writer = csv.writer(csv_out)
 
             header = list(df_record_storage)
-            header.extend(["dhisVerbalAutopsyID", "pipelineOutcome"])
+            header.extend(["dhisVerbalAutopsyID",
+                           "pipelineOutcome",
+                           "dhis_org_unit"])
             writer.writerow(header)
 
             # this depends on openVA vs SmartVA
@@ -704,11 +706,13 @@ class DHIS:
                                 e.format_se_to_dhis2(self.dhis_user,
                                                      dhis_org_unit))
                         row_list = list(row_dict.values())
-                        row_list.extend([va_id, "Pushing to DHIS2"])
+                        row_list.extend([va_id,
+                                         "Pushing to DHIS2",
+                                         dhis_org_unit])
                         writer.writerow(row_list)
                 else:
                     row_list = list(row_dict.values())
-                    row_list.extend(["", "No CoD Assigned"])
+                    row_list.extend(["", "No CoD Assigned", dhis_org_unit])
                     writer.writerow(row_list)
         try:
             if self.post_to_tracker:
@@ -770,7 +774,7 @@ class DHIS:
         if self.post_to_tracker:
             tei_event_status = self._parse_tei_post_log(log)
             event_success = [k for k, v in tei_event_status.items()
-                             if v.get("event") == "SUCCESS"]
+                             if v.get("event_status") == "SUCCESS"]
             self.n_posted_events = len(event_success)
         else:
             self.n_posted_events = len(log["response"]["importSummaries"])
@@ -791,6 +795,13 @@ class DHIS:
         :type org_unit: str
         """
 
+        blob_path = os.path.join(self.dir_dhis, "blobs")
+        try:
+            if not os.path.isdir(blob_path):
+                os.makedirs(blob_path)
+        except OSError as exc:
+            raise DHISError(
+                "Unable to create directory for DHIS blobs.") from exc
         va_id = str(va_dict["id"])
         blob_file = "{}.db".format(os.path.join(self.dir_dhis,
                                                 "blobs",
@@ -1028,9 +1039,10 @@ class DHIS:
             tei_event_status = {}
             for summary in log_summaries:
                 tei_ref = summary.get("reference")
-                tei_event = summary["enrollments"]["importSummaries"][0]["events"]
-                event_status = tei_event.get("importSummaries")[0].get("status")
-                event_id = tei_event.get("importSummaries")[0].get("reference")
+                event_params = {"trackedEntityInstance": tei_ref}
+                event_data = self.api_dhis.get("events", params=event_params)
+                event_id = event_data["events"][0]["event"]
+                event_status = summary.get("status")
                 tei_event_status[tei_ref] = {"event_status": event_status,
                                              "tei_id": tei_ref,
                                              "event_id": event_id}

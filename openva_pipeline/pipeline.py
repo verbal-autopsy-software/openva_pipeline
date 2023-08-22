@@ -213,6 +213,12 @@ class Pipeline:
         schema = self.xfer_db.get_schema(table)
         return schema
 
+    def _get_log(self, n: int = 5, last: bool = True):
+        """Get n rows from in EventLog table in Transfer DB."""
+        log_messages = self.xfer_db.get_event_log(n_messages=n,
+                                                  recent=last)
+        return log_messages
+
     def run_odk(self):
         """Run check duplicates, copy file, and briefcase.
 
@@ -240,7 +246,7 @@ class Pipeline:
         else:
             odk_bc = pipeline_odk.briefcase()
         self.xfer_db.config_pipeline()
-        odk_summary = self.xfer_db.check_duplicates()
+        odk_summary = self.xfer_db.check_duplicates(self.use_dhis)
         if args_odk.odk_use_central == "True":
             return odk_central, odk_summary
         else:

@@ -137,7 +137,7 @@ def run_pipeline(
             "that need causes form openVA (checking for duplicates), and "
             f"sent {r_out['n_to_openva']} unique VA records through openVA.  "
             f"openVA processed {r_out['n_processed']} VA records, including "
-            f"{r_out['n_cod_missing']} with NO assigned a cause of death."
+            f"{r_out['n_cod_missing']} with NO assigned cause of death."
         )
         pl.log_event(openva_summary_msg, "Summary")
     except (OpenVAError, SmartVAError) as e:

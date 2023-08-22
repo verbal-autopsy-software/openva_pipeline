@@ -58,6 +58,7 @@ class OpenVA:
         if "dhis" in settings.keys():
             self.dhis_org_unit = str(settings["dhis"][0].dhis_org_unit)
             self.dhis_org_units = re.split(r"\s|,", self.dhis_org_unit)
+            self.dhis_org_units = [i for i in self.dhis_org_units if i != ""]
 
         self.successful_run = None
 

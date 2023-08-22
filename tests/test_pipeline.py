@@ -334,7 +334,7 @@ class CheckStoreResultsDB(unittest.TestCase):
         self.conn.commit()
         self.odk = self.pl.run_odk()
 
-    @unittest.skip("Only to run locally with local single event DHIS2 server")
+    # @unittest.skip("Only to run locally with local single event DHIS2 server")
     def test_run_odk_check_duplicates(self):
         """Check check_duplicates() method:"""
 
@@ -698,7 +698,7 @@ class CheckRunOpenVASmartVA(unittest.TestCase):
             os.remove("OpenVAFiles/entity_attribute_value.csv")
  
 
-@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+# @unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckPipelineRunDHIS(unittest.TestCase):
     """Check run_dhis method"""
 
@@ -896,7 +896,7 @@ class CheckPipelineOrgUnitsTEI(unittest.TestCase):
         os.remove("org_units.db")
 
 
-@unittest.skip("Only to run locally with local (single event) DHIS2 server")
+# @unittest.skip("Only to run locally with local (single event) DHIS2 server")
 class CheckPipelineOrgUnits(unittest.TestCase):
     """Check run_dhis method with VAs sent to different DHIS2 organisation
     units."""

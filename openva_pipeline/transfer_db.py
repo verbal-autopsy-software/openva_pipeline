@@ -377,14 +377,38 @@ class TransferDB:
         conn.close()
         return schema
 
-    def check_duplicates(self) -> dict:
+    def get_event_log(self, n_messages: int, recent: bool) -> list:
+        """Get rows from EventLog table in Transfer Database
+
+        :param n_messages: Number of messages to retrieve
+        :type n_messages: int
+        :param recent: Get messages starting from the most recent
+        :type: bool
+        :rtype: list
+        """
+
+        conn = self._connect_db()
+        c = conn.cursor()
+        sql_log = "SELECT * FROM EventLog ORDER BY eventTime"
+        logs_all = c.execute(sql_log).fetchall()
+        if recent:
+            logs = logs_all[-n_messages:]
+        else:
+            logs = logs_all[0:n_messages]
+        conn.close()
+        return logs
+
+    def check_duplicates(self, use_dhis: bool) -> dict:
         """Search for duplicate VA records.
 
-        This method searches for duplicate VA records in ODK Briefcase export
+        This method searches for duplicate VA records in ODK export
         file and the Transfer DB.  If duplicates are found, a warning message
         is logged to the EventLog table in the Transfer database and the
-        duplicate records are removed from the ODK Briefcase export file.
+        duplicate records are removed from the ODK export file.
 
+        :param use_dhis: Indicator for posting records to DHIS2.  If True, then
+        check VA_Org_Unit_Not_Found table for additional duplicate VA records.
+        :type use_dhis: bool
         :raises: DatabaseConnectionError, PipelineError
         :return: Number of duplicates found and number of VA records sending to
         openVA.
@@ -405,6 +429,9 @@ class TransferDB:
         results["n_unique"] = df_odk.shape[0]
 
         va_ids_list = self._get_va_storage_ids()
+        if use_dhis:
+            va_ids_no_org_unit = self._get_va_org_unit_not_found_ids()
+            va_ids_list.extend(va_ids_no_org_unit)
         va_duplicates = set(df_odk_id).intersection(set(va_ids_list))
         time_fmt = datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
         results["n_duplicates"] = len(va_duplicates)
@@ -417,7 +444,7 @@ class TransferDB:
                 "(eventDesc, eventType, eventTime) VALUES (?, ?, ?)"
             )
             event_desc_part1 = [
-                "Removing duplicate records from ODK Export with"
+                "Removing duplicate records from ODK Export with "
                 + "ODK Meta-Instance ID: "
             ] * results["n_duplicates"]
             event_desc_part2 = list(va_duplicates)
@@ -464,6 +491,31 @@ class TransferDB:
             conn.close()
             raise DatabaseConnectionError(
                 "Problem accessing id table VA_Storage..." + str(e)
+            )
+        return va_ids_list
+
+    def _get_va_org_unit_not_found_ids(self) -> List:
+        """Get VA IDs from Transfer database table VA_Org_Unit_Not_Found.
+
+        :raises: DatabaseConnectionError
+        :rtype: list
+        """
+
+        if self.working_directory is None:
+            raise PipelineError("Need to run config_pipeline.")
+
+        try:
+            conn = self._connect_db()
+            c = conn.cursor()
+            sql = "SELECT id FROM VA_Org_Unit_Not_Found"
+            c.execute(sql)
+            va_ids = c.fetchall()
+            va_ids_list = [j for i in va_ids for j in i]
+            conn.close()
+        except (sqlcipher.DatabaseError, sqlcipher.OperationalError) as e:
+            conn.close()
+            raise DatabaseConnectionError(
+                "Problem accessing id table VA_Org_Unit_Not_Found..." + str(e)
             )
         return va_ids_list
 
