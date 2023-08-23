@@ -15,7 +15,7 @@ from pickle import dumps
 import json
 
 from pandas import read_csv, DataFrame
-from pysqlcipher3 import dbapi2 as sqlcipher
+from sqlcipher3 import dbapi2 as sqlcipher
 
 from .exceptions import PipelineConfigurationError
 from .exceptions import ODKConfigurationError

@@ -20,7 +20,7 @@ import os
 import shutil
 import subprocess
 import requests
-from pysqlcipher3 import dbapi2 as sqlcipher
+from sqlcipher3 import dbapi2 as sqlcipher
 
 from openva_pipeline.pipeline import Pipeline
 from openva_pipeline.exceptions import PipelineError

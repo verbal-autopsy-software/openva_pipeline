@@ -4,13 +4,11 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pysqlcipher3 = "*"
+sqlcipher3 = "*"
 pandas = "*"
 requests = "*"
 urllib3 = "*"
 numpy = "*"
 pycrossva = ">=0.96"
 pipfile = "*"
-
-[requires]
-python_version = "3.9"
+certifi = ">=2023.7.22"
