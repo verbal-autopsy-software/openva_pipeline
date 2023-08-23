@@ -46,3 +46,4 @@ skip_commits:
   - LICENSE
   - MANIFEST.in
   - .gitignore
+  - .readthedocs.yaml
