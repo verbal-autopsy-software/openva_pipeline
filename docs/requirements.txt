@@ -1,4 +1,6 @@
 mock==5.1.0
-openva-pipeline
+pandas
+pycrossva
+requests
 sphinx==7.1.2
 sphinx-copybutton==0.5.2
