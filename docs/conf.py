@@ -16,6 +16,11 @@
 import mock
 import sys
 import os
+ 
+MOCK_MODULES = ['sqlcipher3', 'sqlcipher3.dbapi2']
+for mod_name in MOCK_MODULES:
+    sys.modules[mod_name] = mock.Mock()
+
 sys.path.insert(0, os.path.abspath('..'))
 import openva_pipeline
 
