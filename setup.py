@@ -1,6 +1,6 @@
 import os
 from codecs import open
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -25,11 +25,7 @@ setup(
     long_description_content_type="text/markdown",
     url=about["__url__"],
     license=about["__license__"],
-    packages=find_packages(),
-    include_package_data=True,
-    package_data={
-        "openva_pipeline": ["data/*"],
-    },
+    packages=find_namespace_packages(),
     install_requires=[
         "pandas",
         "sqlcipher3",

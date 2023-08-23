@@ -1,5 +1,4 @@
 include README.md
 include LICENSE
 include Pipfile
-include Pipfile.lock
 include openva_pipeline/sql/pipelineDB.sql
