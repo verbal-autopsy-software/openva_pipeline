@@ -1,4 +1,3 @@
-moc==5.1.0
-openva_pipeline
+mock==5.1.0
 sphinx==7.1.2
 sphinx-copybutton==0.5.2
