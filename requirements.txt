@@ -6,7 +6,7 @@ idna
 numpy~=1.22.0
 pandas
 pipfile
-pycrossva~=0.96
+pycrossva~=0.97
 python-dateutil
 pytz
 requests

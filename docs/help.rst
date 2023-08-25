@@ -13,8 +13,8 @@ The openva_pipeline package includes two convenience functions for
 
 #. running through all of the steps in the openVA Pipeline
 
-.. autofunction:: openva_pipeline.runPipeline.createTransferDB
-.. autofunction:: openva_pipeline.runPipeline.runPipeline
+.. autofunction:: openva_pipeline.run_pipeline.create_transfer_db
+.. autofunction:: openva_pipeline.run_pipeline.run_pipeline
 
 Main Interface
 --------------
@@ -26,7 +26,7 @@ The OpenVA Pipeline is run using the following function
 
 API for Transfer Database
 -------------------------
-.. autoclass:: openva_pipeline.transferDB.TransferDB
+.. autoclass:: openva_pipeline.transfer_db.TransferDB
    :inherited-members:
 
 API for ODK Briefcase
@@ -36,7 +36,7 @@ API for ODK Briefcase
 
 API for OpenVA
 --------------
-.. autoclass:: openva_pipeline.openVA.OpenVA
+.. autoclass:: openva_pipeline.openva.OpenVA
    :inherited-members:
 
 API for DHIS2

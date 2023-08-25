@@ -1,0 +1,37 @@
+[project]
+name = "openva_pipeline"
+description = "Automate the processing of verbal autopsy data"
+version = "0.96"
+readme = "Readme.md"
+requires-python = ">=3.8"
+dependencies = [
+    "pandas",
+    "sqlcipher3",
+    "requests",
+    "pycrossva >= 0.97",
+]
+authors = [
+  {name = "Jason Thomas"},
+  {name = "Samuel J. Clark"},
+  {name = "Martin W. Bratschi"},
+]
+maintainers = [
+  {name = "Jason Thomas", email = "jarathomas@gmail.com"},
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: POSIX :: Linux",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/verbal-autopsy-software/openva_pipeline"
+"Bug Tracker" = "https://github.com/verbal-autopsy-software/openva_pipeline/issues"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

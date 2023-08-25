@@ -35,9 +35,9 @@ from openva_pipeline.exceptions import DHISError
 def create_transfer_db(database_file_name, database_directory, database_key):
     """Create the (SQLite encrypted) Transfer Database.
 
-    :param database_file_name: File name for the Transfer Database.
-    :param database_directory: Path of the Transfer Database.
-    :param database_key: Encryption key for the Transfer Database
+    :parameter database_file_name: File name for the Transfer Database.
+    :parameter database_directory: Path of the Transfer Database.
+    :parameter database_key: Encryption key for the Transfer Database
     """
 
     db_path = os.path.join(database_directory, database_file_name)
@@ -77,10 +77,10 @@ def run_pipeline(
     VA data in the Transfer Database as well as a DHIS2 VA Program (if
     requested).
 
-    :param database_file_name: File name for the Transfer Database.
-    :param database_directory: Path of the Transfer Database.
-    :param database_key: Encryption key for the Transfer Database
-    :param export_to_dhis: Indicator for posting VA records to a DHIS2 server.
+    :parameter database_file_name: File name for the Transfer Database.
+    :parameter database_directory: Path of the Transfer Database.
+    :parameter database_key: Encryption key for the Transfer Database
+    :parameter export_to_dhis: Indicator for posting VA records to a DHIS2 server.
     :type export_to_dhis: (Boolean)
     """
 
@@ -189,7 +189,7 @@ def download_briefcase():
 
 
 def download_smartva():
-    """Download the smartva (linux) binary application file from Git Hub."""
+    """Download the smartva (linux) binary application file from GitHub."""
 
     smartva_url = (
         "https://github.com/ihmeuw/SmartVA-Analyze/releases/download/" +

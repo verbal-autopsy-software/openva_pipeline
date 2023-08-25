@@ -27,13 +27,13 @@ class OpenVA:
     ODK Briefcase exports, runs openVA to assign CODs, and creates outputs for
     depositing in the Transfers DB and to a DHIS server.
 
-    :param settings: Configuration settings for pipeline steps (which is
-    returned from :meth:`Pipeline.config() <config>`).
+    :parameter settings: Configuration settings for pipeline steps (which is
+     returned from :meth:`Pipeline.config() <config>`).
     :type settings: dictionary of named tuples
-    :param pipeline_run_date: Date and time when instance of
-    :class:`Pipeline <Pipeline>` was created (instance attribute).
+    :parameter pipeline_run_date: Date and time when instance of
+     :class:`Pipeline <Pipeline>` was created (instance attribute).
     :type pipeline_run_date: datetime.datetime.now() with formatting
-    strftime("%Y-%m-%d_%H:%M:%S")
+     strftime("%Y-%m-%d_%H:%M:%S")
     :raises: OpenVAError
     """
 
@@ -74,8 +74,8 @@ class OpenVA:
            with pycrossva.
 
         :returns: Summary of the number of VA records at each step -- previous
-        ODK export (0 if there isn't one), new ODK export, and number of VA
-        records sent to openVA.
+         ODK export (0 if there isn't one), new ODK export, and number of VA
+         records sent to openVA.
         :rtype: dict
         """
 
@@ -597,7 +597,7 @@ class OpenVA:
         Get summary of openVA step.
 
         :returns: Get the number of records passed to openVA and the number
-        of records without an assigned cause of death (CoD).
+         of records without an assigned cause of death (CoD).
         :rtype: dict
         """
 

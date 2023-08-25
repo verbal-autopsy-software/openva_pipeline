@@ -32,14 +32,14 @@ class Pipeline:
     storing the results locally as well as accessing the configuration
     settings.
 
-    :param db_file_name: File name of the Transfer database.
+    :parameter db_file_name: File name of the Transfer database.
     :type db_file_name: str
-    :param db_directory: Path of folder containing the Transfer database.
+    :parameter db_directory: Path of folder containing the Transfer database.
     :type db_directory: str
-    :param db_key: Encryption key for the Transfer database.
+    :parameter db_key: Encryption key for the Transfer database.
     :type db_key: str
-    :param use_dhis: Indicator for telling pipeline to post records/tracked
-    entity instances to DHIS
+    :parameter use_dhis: Indicator for telling pipeline to post records/tracked
+     entity instances to DHIS
     :type use_dhis: bool
     """
 
@@ -71,9 +71,9 @@ class Pipeline:
         """Commit event or error message into EventLog table of transfer
         database.
 
-        :param event_desc: Description of the event.
+        :parameter event_desc: Description of the event.
         :type event_desc: string
-        :param event_type: Type of event (error or information)
+        :parameter event_type: Type of event (error or information)
         :type event_type: string
         """
 
@@ -346,12 +346,12 @@ class Pipeline:
         for posting to DHIS2; or, if va_id is provided, get the eventBlob and
         evaBlob for that VA.
 
-        :param va_id: VA's ID for which the eventBlob and evaBlob will be
-        returned.
+        :parameter va_id: VA's ID for which the eventBlob and evaBlob will be
+         returned.
         :type va_id: str
 
         :return: VA record ID and data used to find DHIS2 org unit; or, if
-        va_id is provided, the eventBlob and evaBlob for that VA.
+         va_id is provided, the eventBlob and evaBlob for that VA.
         :rtype: dictionary
         """
 
@@ -366,10 +366,10 @@ class Pipeline:
         the Transfer database table VA_Org_Unit_Not_Found and added to the
         VA_Storage table.
 
-        :param va_id: ID for VA record to post
+        :parameter va_id: ID for VA record to post
         :type va_id: str
-        :param org_unit: New DHIS2 organisation unit (display name or ID) where
-        VA event will be posted.
+        :parameter org_unit: New DHIS2 organisation unit (display name or ID) where
+         VA event will be posted.
         :type org_unit: str
 
         :return: Message indicating successful or unsuccessful post.
@@ -406,9 +406,9 @@ class Pipeline:
         """Check that va_id is in the Transfer database table
         VA_Org_Unit_Not_Found and that the org_unit is valid.
 
-        :param va_id: ID for VA record to post
+        :parameter va_id: ID for VA record to post
         :type va_id: str
-        :param org_unit: New DHIS2 organisation unit (display name or ID) where
+        :parameter org_unit: New DHIS2 organisation unit (display name or ID) where
         VA event will be posted.
         :type org_unit: str
 
@@ -438,8 +438,8 @@ class Pipeline:
     def get_dhis_org_units(self, va_program: bool = True) -> Dict:
         """Get DHIS organisation unit IDs and display names.
 
-        :param va_program: Indicator for returning only organisation units
-        in the DHIS VA Program (as opposed to all organisation units).
+        :parameter va_program: Indicator for returning only organisation units
+         in the DHIS VA Program (as opposed to all organisation units).
         :type va_program: bool
         :returns: displayName: id of DHIS organisation units.
         :rtype: dict

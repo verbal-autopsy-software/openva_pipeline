@@ -23,8 +23,8 @@ class ODK:
     and updates them as needed.  Finally, it logs messages and errors to the
     pipeline database.
 
-    :param settings: Configuration settings for pipeline steps (which is
-    returned from :meth:`Pipeline.config() <config>`).
+    :parameter settings: Configuration settings for pipeline steps (which is
+     returned from :meth:`Pipeline.config() <config>`).
     :type settings: dictionary of named tuples
     """
 

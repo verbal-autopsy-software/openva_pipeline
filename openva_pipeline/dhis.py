@@ -29,11 +29,11 @@ class API(object):
     information from and post verbal autopsy records (and results) to a
     DHIS2 server that has the Verbal Autopsy program installed.
 
-    :param dhis_url: Web address for DHIS2 server (e.g. "play.dhis2.org/demo").
+    :parameter dhis_url: Web address for DHIS2 server (e.g. "play.dhis2.org/demo").
     :type dhis_url: string
-    :param dhis_user: Username for DHIS2 account.
+    :parameter dhis_user: Username for DHIS2 account.
     :type dhis_user: string
-    :param dhis_password: Password for DHIS2 account.
+    :parameter dhis_password: Password for DHIS2 account.
     :type dhis_password: string
     :raises: DHISError
     """
@@ -164,36 +164,36 @@ class API(object):
 class VerbalAutopsyEvent(object):
     """Create DHIS2 event + a BLOB file resource
 
-    :param va_id: UID for verbal autopsy record
+    :parameter va_id: UID for verbal autopsy record
       (used as a DHIS2 data element)
     :type va_id: string
-    :param program: UID of the DHIS2's Verbal Autopsy program
+    :parameter program: UID of the DHIS2's Verbal Autopsy program
     :type program: string
-    :param dhis_org_unit: UID for the DHIS2 Organization Unit where the
+    :parameter dhis_org_unit: UID for the DHIS2 Organization Unit where the
       event (death) should be registered.
     :type dhis_org_unit: string
-    :param event_date: Date of death with YYYY-MM-DD format
+    :parameter event_date: Date of death with YYYY-MM-DD format
     :type event_date: date
-    :param sex: Sex of the deceased (used as a DHIS2 data element).
+    :parameter sex: Sex of the deceased (used as a DHIS2 data element).
       Possible values must fit to an option in the VA Program's "Sex"
       optionSet: female, male, missing, unknown).  If SmartVA is used
       to assign cause of death, then sex is an integer with 1 = male
       and 2 = female).
     :type sex: string or integer
-    :param dob: Date of birth of the deceased with YYYY-MM-DD format
+    :parameter dob: Date of birth of the deceased with YYYY-MM-DD format
       (used as a DHIS2 data element)
     :type dob: date
-    :param age: Age (in years) at time of death
+    :parameter age: Age (in years) at time of death
     :type age: integer
-    :param cod_code: Coded cause of death (must fit to an option in the
+    :parameter cod_code: Coded cause of death (must fit to an option in the
       VA Program's "CoD codes" optionSet.
     :type cod_code: string
-    :param algorithm_metadata: Code for how the CoD was obtained (must
+    :parameter algorithm_metadata: Code for how the CoD was obtained (must
       fit in VA Program's "Algorithm Metadata" optionSet.
     :type algorithm_metadata: string
-    :param odk_id: UID for the VA record assigned by the ODK Aggregate server
+    :parameter odk_id: UID for the VA record assigned by the ODK Aggregate server
     :type odk_id: string
-    :param file_id: UID for the blob file (containing the VA data and
+    :parameter file_id: UID for the blob file (containing the VA data and
       results) posted to (and assigned by) DHIS2 server.
     :type file_id: string
     """
@@ -228,8 +228,8 @@ class VerbalAutopsyEvent(object):
         """
         Format object to DHIS2 (single event) compatible event for DHIS2 API
 
-        :param dhis_user: DHIS2 username for account posting the event
-        :param dhis_org_unit: code for DHIS2 organization unit where the death
+        :parameter dhis_user: DHIS2 username for account posting the event
+        :parameter dhis_org_unit: code for DHIS2 organization unit where the death
           will be posted
         :returns: DHIS2 event
         :rtype: dict
@@ -266,10 +266,10 @@ class VerbalAutopsyEvent(object):
         """
         Format object to DHIS2 (tracker) compatible event for DHIS2 API
 
-        :param dhis_user: DHIS2 username for account posting the event
-        :param dhis_org_unit: code for DHIS2 organization unit where the death
+        :parameter dhis_user: DHIS2 username for account posting the event
+        :parameter dhis_org_unit: code for DHIS2 organization unit where the death
           will be posted
-        :param tei_id: ID for the registered tracked entity instance (None if
+        :parameter tei_id: ID for the registered tracked entity instance (None if
           the tei has not been registered)
         :returns: DHIS2 event
         :rtype: dict
@@ -329,10 +329,10 @@ def create_db(file_name, eva_list):
     """
     Create a SQLite database with VA data + COD
 
-    :param file_name: Name (including path) of sqlite3 db file (blob) that
+    :parameter file_name: Name (including path) of sqlite3 db file (blob) that
       will be posted to DHIS2
     :type file_name: str
-    :param eva_list: Event-Value-Attribute data structure with verbal autopsy
+    :parameter eva_list: Event-Value-Attribute data structure with verbal autopsy
       data, cause of death result, and VA metadata.
     :type eva_list: list
     :rtype: None
@@ -351,9 +351,9 @@ def create_db(file_name, eva_list):
 def get_cod_code(my_dict, search_for):
     """Return COD label expected by (DHIS2) VA Program.
 
-    :param my_dict: Dictionary to search
+    :parameter my_dict: Dictionary to search
     :type my_dict: dict
-    :param search_for: Cause of Death label returned by openVA.
+    :parameter search_for: Cause of Death label returned by openVA.
     :type search_for: string
     :rtype: str
     """
@@ -379,8 +379,8 @@ def find_key_value(key, my_dict):
 def _find_org_unit(find_ou: list, all_ou: list) -> str:
     """Find matching DHIS org unit.
 
-    :param find_ou: Names of organisation units for death.
-    :param all_ou: Names of organisation units in DHIS2 hierarchy.
+    :parameter find_ou: Names of organisation units for death.
+    :parameter all_ou: Names of organisation units in DHIS2 hierarchy.
     :rtype: str
     """
 
@@ -423,10 +423,10 @@ class DHIS:
     with the Verbal Autopsy Program, and posting the results to the DHIS2
     server and/or the local Transfer database.
 
-    :param dhis_args: Contains parameter values for connected to DHIS2, as
+    :parameter dhis_args: Contains parameter values for connected to DHIS2, as
       returned by transferDB.config_dhis().
     :type dhis_args: list of namedtuple and dictionary with COD codes
-    :param working_directory: Working directory for the openVA Pipeline
+    :parameter working_directory: Working directory for the openVA Pipeline
     :type working_directory: string
     :raises: DHISError
     """
@@ -496,7 +496,7 @@ class DHIS:
                        level: Union[int, None] = None,
                        va_program: bool = True) -> dict:
         """Get DHIS organisation unit IDs and display names.
-        :param va_program: Indicator for returning only organisation units
+        :parameter va_program: Indicator for returning only organisation units
         in the DHIS VA Program (as opposed to all organisation units).
         :type va_program: bool
         :returns: display names and IDs of DHIS organisation units.
@@ -530,7 +530,7 @@ class DHIS:
         cause of death results (from openVA) then formats events and posts
         them to a VA Program (installed on DHIS2 server).
 
-        :param xfer_db: Transfer Database instance
+        :parameter xfer_db: Transfer Database instance
         :type xfer_db: openva_pipeline.transfer_db.TransferDB
         :returns: Log information received after posting events to the VA
           Program on a DHIS2 server (see :meth:`API.post <API.post>`).
@@ -745,12 +745,12 @@ class DHIS:
                        org_unit: str) -> Dict:
         """Post a single event to DHIS2
 
-        :param va_dict: VA record with cause of death and metadata
+        :parameter va_dict: VA record with cause of death and metadata
         :type va_dict: dict
-        :param eav: VA record in Entity-Attribute-Value format
+        :parameter eav: VA record in Entity-Attribute-Value format
         :type eav: DataFrame
-        :param org_unit: DHIS2 organisation unit where the event will be
-        posted
+        :parameter org_unit: DHIS2 organisation unit where the event will be
+         posted
         :type org_unit: str
         """
 
@@ -786,11 +786,11 @@ class DHIS:
                  org_unit: str) -> Dict:
         """Prepare VA data for posting to DHIS2
 
-        :param va_dict: VA record with cause of death and metadata
+        :parameter va_dict: VA record with cause of death and metadata
         :type va_dict: dict
-        :param eav: VA record in Entity-Value-Attribute format
+        :parameter eav: VA record in Entity-Value-Attribute format
         :type eav: DataFrame
-        :param org_unit: DHIS2 organisation unit where the event will be
+        :parameter org_unit: DHIS2 organisation unit where the event will be
         posted
         :type org_unit: str
         """
@@ -887,7 +887,7 @@ class DHIS:
     def verify_post(self, post_log):
         """Verify that VA records were posted to DHIS2 server.
 
-        :param post_log: Log information retrieved after posting events to
+        :parameter post_log: Log information retrieved after posting events to
           a VA Program on a DHIS2 server; this is the return object from
           :meth:`DHIS.post_va <post_va>`.
         :type post_log: dictionary
@@ -936,7 +936,7 @@ class DHIS:
         """Verify that VA tracked entity instances (tei) were posted to
         DHIS2 server.
 
-        :param post_log: Log information retrieved after posting events to
+        :parameter post_log: Log information retrieved after posting events to
           a VA Program on a DHIS2 server; this is the return object from
           :meth:`DHIS.post_va <post_va>`.
         :type post_log: dictionary
@@ -990,9 +990,9 @@ class DHIS:
         """Verify that VA tracked entity instance (tei) was posted to
         DHIS2 server.
 
-        :param va_id: Verbal Autopsy ID
+        :parameter va_id: Verbal Autopsy ID
         :type va_id: str
-        :param post_log: Log information retrieved after posting events to
+        :parameter post_log: Log information retrieved after posting events to
           a VA Program on a DHIS2 server; this is the return object from
           :meth:`DHIS.post_va <post_va>`.
         :type post_log: dictionary
@@ -1021,7 +1021,7 @@ class DHIS:
         """Return events status for each tracked entity instance (TEI) as
         indicated by the object (log) returned from a POST to DHIS2.
 
-        :param log: object returned from POST to DHIS2
+        :parameter log: object returned from POST to DHIS2
         :returns: Event status and description for each TEI
         :rtype: dict
         """
@@ -1052,7 +1052,7 @@ class DHIS:
         """Return events status for each VA event as indicated by the object
         (log) returned from a POST to DHIS2.
 
-        :param log: object returned from POST to DHIS2
+        :parameter log: object returned from POST to DHIS2
         :returns: ID and status for each VA event
         :rtype: dict
         """
@@ -1078,7 +1078,7 @@ class DHIS:
     def _assign_va_program_to_org_units(self,
                                         org_unit: str) -> bool:
         """Assign Verbal Autopsy (VA) program to organisation units
-        :param org_unit: UID for organisation unit that needs to be assigned
+        :parameter org_unit: UID for organisation unit that needs to be assigned
         the VA program
         :returns: Boolean for successful assignment
         :rtype: bool

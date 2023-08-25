@@ -31,9 +31,9 @@ copyright = '2018, Jason Thomas, Samuel J. Clark, and Martin W. Bratschi'
 author = 'Jason Thomas, Samuel J. Clark, and Martin W. Bratschi'
 
 # The short X.Y version
-version = '0.9.5'
+version = '0.9.6'
 # The full version, including alpha/beta/rc tags
-release = '0.9.5'
+release = '0.9.6'
 
 
 # -- General configuration ---------------------------------------------------
@@ -71,7 +71,7 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.

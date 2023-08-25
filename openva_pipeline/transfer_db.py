@@ -35,14 +35,14 @@ class TransferDB:
 
     Parameters
 
-    :param db_file_name: File name of the Transfer database.
+    :parameter db_file_name: File name of the Transfer database.
     :type db_file_name: str
-    :param db_directory: Path of folder containing the Transfer database.
+    :parameter db_directory: Path of folder containing the Transfer database.
     :type db_directory: str
-    :param db_key: Encryption key for the Transfer database.
+    :parameter db_key: Encryption key for the Transfer database.
     :type db_key: str
-    :param pl_run_date: Date when pipeline started latest
-      run (YYYY-MM-DD_hh:mm:ss).
+    :parameter pl_run_date: Date when pipeline started latest
+     run (YYYY-MM-DD_hh:mm:ss).
     :type pl_run_date: str
     """
 
@@ -163,7 +163,7 @@ class TransferDB:
         :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
 
         :returns: Contains all parameters for
-          :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
+         :meth:`ODK.briefcase()<openva_pipeline.odk.ODK.briefcase>`.
         :rtype: (named) tuple
         :raises: ODKConfigurationError
         """
@@ -256,8 +256,8 @@ class TransferDB:
                          values: Tuple[str, str, str]) -> None:
         """Insert new row in Transfer Database table EventLog
 
-        :param values: Event description, event type (e.g., Event, Error,
-        Warning, Summary), and date and time of entry
+        :parameter values: Event description, event type (e.g., Event, Error,
+         Warning, Summary), and date and time of entry
         :type values: Tuple of 3 strings
         """
 
@@ -275,11 +275,11 @@ class TransferDB:
                      value: Union[str, list]) -> None:
         """Update value(s) into Transfer Database table_name.field(s)
 
-        :param table_name: name of table in Transfer Database
+        :parameter table_name: name of table in Transfer Database
         :type table_name: str
-        :param field: field name(s) in table_name
+        :parameter field: field name(s) in table_name
         :type field: str or list of str
-        :param value: new values to update in table_name.fields
+        :parameter value: new values to update in table_name.fields
         :type value: str or list of str
         """
 
@@ -307,7 +307,7 @@ class TransferDB:
     def get_table_conf(self, table_name: str) -> list:
         """Get values in ODK_Conf table from Transfer Database
 
-        :param table_name: name of table in Transfer Database
+        :parameter table_name: name of table in Transfer Database
         :type table_name: str
         :rtype: list
         """
@@ -348,7 +348,7 @@ class TransferDB:
                    table: List[str]) -> List[Tuple[str, str]]:
         """Get field names from table in Transfer Database
 
-        :param table: Name of table
+        :parameter table: Name of table
         :type table: str
         :rtype: list of (field name, data type)
         """
@@ -364,7 +364,7 @@ class TransferDB:
     def get_schema(self, table: str) -> list:
         """Get schema from table in Transfer Database
 
-        :param table: Name of table
+        :parameter table: Name of table
         :type table: str
         :rtype: list
         """
@@ -380,9 +380,9 @@ class TransferDB:
     def get_event_log(self, n_messages: int, recent: bool) -> list:
         """Get rows from EventLog table in Transfer Database
 
-        :param n_messages: Number of messages to retrieve
+        :parameter n_messages: Number of messages to retrieve
         :type n_messages: int
-        :param recent: Get messages starting from the most recent
+        :parameter recent: Get messages starting from the most recent
         :type: bool
         :rtype: list
         """
@@ -406,12 +406,12 @@ class TransferDB:
         is logged to the EventLog table in the Transfer database and the
         duplicate records are removed from the ODK export file.
 
-        :param use_dhis: Indicator for posting records to DHIS2.  If True, then
-        check VA_Org_Unit_Not_Found table for additional duplicate VA records.
+        :parameter use_dhis: Indicator for posting records to DHIS2.  If True, then
+         check VA_Org_Unit_Not_Found table for additional duplicate VA records.
         :type use_dhis: bool
         :raises: DatabaseConnectionError, PipelineError
         :return: Number of duplicates found and number of VA records sending to
-        openVA.
+         openVA.
         :rtype: dict
         """
 
@@ -526,19 +526,19 @@ class TransferDB:
         This method is intended to receive its input (a Connection object)
         from :meth:`TransferDB.connect_db() <connect_db>`, which establishes a
         connection to a database with the Pipeline configuration settings.  It
-        sets up the configuration for all of the VA algorithms included in the
+        sets up the configuration for the VA algorithms included in the
         R package openVA.  The output from
         :meth:`config_openva() <config_openva>` serves as an input to the
         n method
-        :meth:`OpenVA.setAlgorithmParameters() 
-        <openva_pipeline.odk.ODK.setAlgorithmParameters>`.
+        :meth:`OpenVA.setAlgorithmParameters() <openva_pipeline.odk.ODK.setAlgorithmParameters>`.
         This is a wrapper function that calls :meth:`_config_interva`,
         :meth:`_config_insilicova`, and :meth:`_config_smartva` to actually
-          pull configuration settings from the database.
-        :param algorithm: VA algorithm used by R package openVA
+        pull configuration settings from the database.
+
+        :parameter algorithm: VA algorithm used by R package openVA
         :type algorithm: str
         :returns: Contains all parameters needed for
-          OpenVA.setAlgorithmParameters().
+         OpenVA.setAlgorithmParameters().
         :rtype: (named) tuple
         :raises: OpenVAConfigurationError
         """
@@ -1183,12 +1183,12 @@ class TransferDB:
         TransferDB.config() is a valid argument for
         :meth:`DHIS.connect()<openva_pipeline.dhis.DHIS.connect>`
 
-        :param algorithm: VA algorithm used by R package openVA
+        :parameter algorithm: VA algorithm used by R package openVA
         :type algorithm: str
         :returns: First item contains all parameters for
-          :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`,
-          and the second item contains the causes of death used by the
-          VA Program (in DHIS2)
+         :meth:`DHIS.connect() <openva_pipeline.dhis.DHIS.connect>`,
+         and the second item contains the causes of death used by the
+         VA Program (in DHIS2)
         :rtype: list [named tuple, dict]
         :raises: DHISConfigurationError
         """
@@ -1267,7 +1267,7 @@ class TransferDB:
         :class:`DHIS <openva_pipeline.dhis.DHIS>` class, which prepares the
         records into the proper format for storage in the Transfer database.
 
-        :param dhis_tracker: Indicator of using DHIS2 VA tracker program
+        :parameter dhis_tracker: Indicator of using DHIS2 VA tracker program
         :type dhis_tracker: bool
         :raises: PipelineError, DatabaseConnectionError
         """
@@ -1333,13 +1333,13 @@ class TransferDB:
         :class:`DHIS <openva_pipeline.dhis.DHIS>` class, which prepares the
         records into the proper format for storage in the Transfer database.
 
-        :param va_dict: VA record
+        :parameter va_dict: VA record
         :type va_dict: dict
-        :param org_unit_id: DHIS2 organisation unit ID
+        :parameter org_unit_id: DHIS2 organisation unit ID
         :type org_unit_id: str
-        :param log_summary: Parsed log from DHIS2 post
+        :parameter log_summary: Parsed log from DHIS2 post
         :type log_summary: dict
-        :param dhis_tracker: Indicator of using DHIS2 VA tracker program
+        :parameter dhis_tracker: Indicator of using DHIS2 VA tracker program
         :type dhis_tracker: bool
         :raises: PipelineError, DatabaseConnectionError
         """
@@ -1394,16 +1394,16 @@ class TransferDB:
         """Store VA record without valid organisation unit (ou) in Transfer
         database table VA_Org_Unit_Not_Found.
 
-        :param va_record: VA record processed by openVA along with cause and
-        metadata
+        :parameter va_record: VA record processed by openVA along with cause and
+         metadata
         :type: dict:
-        :param eav: VA record in EAV format (Entity, Attribute, Value)
-        prepared by openVA
+        :parameter eav: VA record in EAV format (Entity, Attribute, Value)
+         prepared by openVA
         :type: DataFrame
-        :param data_ou: Organisation unit (for DHIS2) found in data
+        :parameter data_ou: Organisation unit (for DHIS2) found in data
         :type: str
-        :param dhis_ou: Organisation unit the pipeline found and wanted to use
-        for posting to DHIS2
+        :parameter dhis_ou: Organisation unit the pipeline found and wanted to use
+         for posting to DHIS2
         :type: str
 
         :raises: PipelineError, DatabaseConnectionError
