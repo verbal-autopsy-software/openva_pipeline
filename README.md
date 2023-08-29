@@ -8,12 +8,11 @@ OpenVA_Pipeline
 
 Automates the processing of verbal autopsy (VA) data from an ODK Aggregate
 server, through the openVA Pipeline middleware, and ending with a DHIS2 server
-(with the [VA module](https://github.com/SwissTPH/dhis2_va_draft)). VA data are
+(with the [VA module](https://github.com/verbal-autopsy-software/DHIS2_VA_program)). VA data are
 analyzed using the [openVA
-package](https://github.com/verbal-autopsy-software/openVA) in **R**, which is
-demonstrated with code for an RShiny app in the [openVA_App](https://github.com/verbal-autopsy-software/openVA_App) and described in
-the video tutorials: [Installation Guide (Windows)](https://youtu.be/C2EPOpTzJTk) and [Analysis Guide](https://youtu.be/K1wkSbTwxkg).
-
+package](https://github.com/verbal-autopsy-software/openVA) in **R** (see
+[The openVA Toolkit article](https://journal.r-project.org/articles/RJ-2023-020/openVA-RJ-R1.pdf) for
+more details).
 
 The documentation for the openVA Pipeline can be found at:
 [http://openva-pipeline.readthedocs.io/](http://openva-pipeline.readthedocs.io/)
@@ -23,8 +22,8 @@ The documentation for the openVA Pipeline can be found at:
 The OpenVA Pipeline has been designed for (and tested on) Ubuntu LTS 20.04.
 The steps to install and configure the pipeline can be found in
 `docs/setup.md`. To make the installation easier, there is also a bash shell
-script `install_software_ubuntu20_04.sh` that installs all of the necessary software (the
-script requires the `sudo` password).
+script `ubuntu_installation.sh` that installs all necessary software (the
+script requires the `sudo` password).  The script also works for Ubuntu LTS 22.04.
 
 <!-- The documentation can also be found on [Read the Docs](https://openva-pipeline.readthedocs.io/en/latest/): -->
 
