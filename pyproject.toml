@@ -1,7 +1,7 @@
 [project]
 name = "openva_pipeline"
 description = "Automate the processing of verbal autopsy data"
-version = "0.98"
+version = "0.99"
 readme = "Readme.md"
 requires-python = ">=3.8"
 dependencies = [

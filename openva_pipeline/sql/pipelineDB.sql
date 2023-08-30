@@ -347,12 +347,12 @@ INSERT INTO SmartVA_Country
 
 CREATE TABLE DHIS_Conf
 (
-  dhisURL           char(50),
-  dhisUser          char(50),
-  dhisPassword      char(50),
-  dhisOrgUnit       char(500),
-  dhisPostRoot      char(5) NOT NULL CHECK (dhisPostRoot IN ('True', 'False')),
-  teiAttributeID    char(50)
+  dhisURL            char(50),
+  dhisUser           char(50),
+  dhisPassword       char(50),
+  dhisOrgUnit        char(500),
+  dhisPostRoot       char(5) NOT NULL CHECK (dhisPostRoot IN ('True', 'False')),
+  teiAttributeID     char(50)
 );
 
 INSERT INTO DHIS_Conf
@@ -443,9 +443,9 @@ INSERT INTO COD_Codes_DHIS
     ('WHO', '1.05', '01.05 Malaria', 'MSLASIFt6GZ'),
     ('WHO', '1.06', '01.06 Measles', 'Vel8Sqsh8A7'),
     ('WHO', '1.07', '01.07 Meningitis and encephalitis', 'OJIn63f2yB3'),
-    ('WHO', '01.08 10.05', '01.08 10.05 Tetanus', 'lgGwjvB6ml4'),
+    ('WHO', '1.08 10.05', '01.08 10.05 Tetanus', 'lgGwjvB6ml4'),
     ('WHO', '1.09', '01.09 Pulmonary tuberculosis', 'E0RMhOH45e3'),
-    ('WHO', '1.1', '01.10 Pertussis', 'V5QYzX7vCdG'),
+    ('WHO', '1.10', '01.10 Pertussis', 'V5QYzX7vCdG'),
     ('WHO', '1.11', '01.11 Haemorrhagic fever', 'JnSgGjOJSHm'),
     ('WHO', '1.11', '01.11 Haemorrhagic fever (non-dengue)', 'JnSgGjOJSHm'),
     ('WHO', '1.12', '01.12 Dengue fever', 'AnYJVOKi45z'),
@@ -455,15 +455,15 @@ INSERT INTO COD_Codes_DHIS
     ('WHO', '2.02', '02.02 Digestive neoplasms', 'z1uCgGCcSdi'),
     ('WHO', '2.03', '02.03 Respiratory neoplasms', 'smKSu5z9cUu'),
     ('WHO', '2.04', '02.04 Breast neoplasms', 'SPo6aQHfYCj'),
-    ('WHO', '02.05 02.06', '02.05 02.06 Reproductive neoplasms M, F', 'yB0qmB07G1A'),
-    ('WHO', '02.05 02.06', '02.05 02.06 Reproductive neoplasms MF', 'yB0qmB07G1A'),
+    ('WHO', '2.05 2.06', '02.05 02.06 Reproductive neoplasms M, F', 'yB0qmB07G1A'),
+    ('WHO', '2.05 2.06', '02.05 02.06 Reproductive neoplasms MF', 'yB0qmB07G1A'),
     ('WHO', '2.99', '02.99 Other and unspecified neoplasms', 'UYG5jp5ZgfL'),
     ('WHO', '3.01', '03.01 Severe anaemia', 'QtULEnwuqko'),
     ('WHO', '3.02', '03.02 Severe malnutrition', 'pHvz4D5OqIu'),
     ('WHO', '3.03', '03.03 Diabetes mellitus', 'TeX8TnatThp'),
     ('WHO', '4.01', '04.01 Acute cardiac disease', 'cDjYq34Rg9s'),
-    ('WHO', '4.03', '04.03 Sickle cell with crisis', 'f5kvs4Hm7Gr'),
     ('WHO', '4.02', '04.02 Stroke', 'HV604qvW8nE'),
+    ('WHO', '4.03', '04.03 Sickle cell with crisis', 'f5kvs4Hm7Gr'),
     ('WHO', '4.99', '04.99 Other and unspecified cardiac disease', 'sTSxkeYPAzY'),
     ('WHO', '4.99', '04.99 Other and unspecified cardiac dis', 'sTSxkeYPAzY'),
     ('WHO', '5.01', '05.01 Chronic obstructive pulmonary disease (COPD)', 'YiiaJJEPtXw'),

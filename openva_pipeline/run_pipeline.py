@@ -175,7 +175,7 @@ def run_pipeline(
 
 
 def download_briefcase():
-    """Download the ODK Briefcase (v1.18.0) jar file from Git Hub."""
+    """Download the ODK Briefcase (v1.18.0) jar file from GitHub."""
 
     bc_url = ("https://github.com/getodk/briefcase/releases/download/" +
               "v1.18.0/ODK-Briefcase-v1.18.0.jar")
@@ -214,7 +214,7 @@ def check_openva_install(working_directory: str) -> bool:
         f.write("library(openVA); library(lubridate)")
 
     r_args = ["R", "CMD", "BATCH", "--no-save", "--no-restore",
-              r_script]
+              r_script, r_script + "out"]
     try:
         # capture_output=True not available in Python 3.6
         completed = subprocess.run(args=r_args,

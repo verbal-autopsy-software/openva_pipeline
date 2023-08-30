@@ -31,9 +31,9 @@ copyright = '2018, Jason Thomas, Samuel J. Clark, and Martin W. Bratschi'
 author = 'Jason Thomas, Samuel J. Clark, and Martin W. Bratschi'
 
 # The short X.Y version
-version = '0.98'
+version = '0.99'
 # The full version, including alpha/beta/rc tags
-release = '0.98'
+release = '0.99'
 
 
 # -- General configuration ---------------------------------------------------
