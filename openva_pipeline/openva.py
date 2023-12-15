@@ -15,16 +15,18 @@ from pandas import concat
 from pandas import merge
 import numpy as np
 from pycrossva.transform import transform
+from interva.interva5 import InterVA5
+from insilicova.api import InSilicoVA
 
 from .exceptions import OpenVAError
 from .exceptions import SmartVAError
 
 
 class OpenVA:
-    """Assign cause of death (COD) to verbal autopsies (VA) R package openVA.
+    """Run algorithms to assign causes of death (COD) to verbal autopsies (VA)
 
-    This class creates and executes an R script that copies (and merges)
-    ODK Briefcase exports, runs openVA to assign CODs, and creates outputs for
+    This class reads in exports from ODK Central (and merges them if multiple
+    exports are found), runs openVA to assign CODs, and creates outputs for
     depositing in the Transfers DB and to a DHIS server.
 
     :parameter settings: Configuration settings for pipeline steps (which is
@@ -54,6 +56,9 @@ class OpenVA:
         self.dir_odk = dir_odk
         self.cli_smartva = os.path.join(self.pipeline_args.working_directory,
                                         "smartva")
+        self.pycrossva_data = None
+        self.results_interva = None
+        self.results_insilicova = None
         self.dhis_org_unit = None
         if "dhis" in settings.keys():
             self.dhis_org_unit = str(settings["dhis"][0].dhis_org_unit)
@@ -70,7 +75,7 @@ class OpenVA:
                               dir_openva) from exc
 
     def prep_va_data(self):
-        """Create data file for openVA by merging ODK export files & converting
+        """Create dataframe for openVA by merging ODK export files & converting
            with pycrossva.
 
         :returns: Summary of the number of VA records at each step -- previous
@@ -85,6 +90,8 @@ class OpenVA:
         export_file_prev = os.path.join(self.dir_odk, "odk_export_prev.csv")
         export_file_new = os.path.join(self.dir_odk, "odk_export_new.csv")
         pycva_input = os.path.join(self.dir_openva, "pycrossva_input.csv")
+        # TODO: openva_input_file is only for smartva now,
+        # make this more explicit
         openva_input_file = os.path.join(self.dir_openva, "openva_input.csv")
 
         is_export_file_prev = os.path.isfile(export_file_prev)
@@ -93,19 +100,17 @@ class OpenVA:
         algorithm_metadata = \
             self.pipeline_args.algorithm_metadata_code.split("|")
         who_instrument_version = algorithm_metadata[5]
+        # TODO: moved check of the instrument version here; need
+        # to make sure run_pipeline is catching this properly
+        if who_instrument_version not in ["v1_4_1", "v1_5_1", "v1_5_3"]:
+            raise OpenVAError("pyCrossVA not able to process WHO " +
+                              "instrument version: " + who_instrument_version)
         if who_instrument_version == "v1_4_1":
             pycva_instrument_version = "2016WHOv141"
         else:
             pycva_instrument_version = "2016WHOv151"
 
         if is_export_file_new and not is_export_file_prev:
-            # with open(export_file_new, "r", newline="") as f_new:
-            #     f_new_lines = f_new.readlines()
-            # summary["n_export_prev"] = 0
-            # summary["n_export_new"] = len(f_new_lines) - 1
-            # summary["n_to_openva"] = len(f_new_lines) - 1
-            # if len(f_new_lines) == 1:
-            #     return summary
             export_df_new = read_csv(export_file_new)
             export_n_rows = export_df_new.shape[0]
             summary["n_export_prev"] = 0
@@ -117,31 +122,13 @@ class OpenVA:
             if self.pipeline_args.algorithm == "SmartVA":
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                final_data = transform(mapping=(pycva_instrument_version,
+                self.pycrossva_data = transform(mapping=(pycva_instrument_version,
                                                 "InterVA5"),
-                                       raw_data=pycva_input,
-                                       raw_data_id=self.odk_id,
-                                       verbose=0)
-                final_data.to_csv(openva_input_file, index=False)
+                                                raw_data=pycva_input,
+                                                raw_data_id=self.odk_id,
+                                                verbose=0)
                 return summary
-        # if is_export_file_new and is_export_file_prev:
         else:
-            # with open(export_file_new, "r", newline="") as f_new:
-            #     f_new_lines = f_new.readlines()
-            # with open(export_file_prev, "r", newline="") as f_prev:
-            #     f_prev_lines = f_prev.readlines()
-            # summary["n_export_prev"] = len(f_prev_lines) - 1
-            # summary["n_export_new"] = len(f_new_lines) - 1
-            # if len(f_new_lines) == 1 and len(f_prev_lines) == 1:
-            #     summary["n_to_openva"] = 0
-            #     return summary
-            # shutil.copy(export_file_new, pycva_input)
-            # n_to_openva = len(f_new_lines) - 1
-            # with open(pycva_input, "a", newline="") as f_combined:
-            #     for line in f_prev_lines:
-            #         if line not in f_new_lines:
-            #             f_combined.write(line)
-            #             n_to_openva += 1
             export_df_new = read_csv(export_file_new)
             export_new_n_rows = export_df_new.shape[0]
             export_df_prev = read_csv(export_file_prev)
@@ -164,14 +151,15 @@ class OpenVA:
             summary["n_to_openva"] = exports_combined.shape[0]
 
             if self.pipeline_args.algorithm == "SmartVA":
+                # TODO: (again) openva_input_file is only for smartva now,
+                # make this more explicit
                 shutil.copy(pycva_input, openva_input_file)
             else:
-                final_data = transform(mapping=(pycva_instrument_version,
-                                                "InterVA5"),
-                                       raw_data=pycva_input,
-                                       raw_data_id=self.odk_id,
-                                       verbose=0)
-                final_data.to_csv(openva_input_file, index=False)
+                self.pycrossva_data = transform(
+                    mapping=(pycva_instrument_version, "InterVA5"),
+                    raw_data=pycva_input,
+                    raw_data_id=self.odk_id,
+                    verbose=0)
         return summary
 
     def r_script(self):
@@ -190,6 +178,26 @@ class OpenVA:
             self._r_script_insilicova()
         if self.pipeline_args.algorithm == "InterVA":
             self._r_script_interva()
+
+    def _run_interva5(self):
+        algorithm_metadata = \
+            self.pipeline_args.algorithm_metadata_code.split("|")
+        who_instrument_version = algorithm_metadata[5]
+        self.results_interva = InterVA5(
+            self.pycrossva_data,
+            hiv=self.va_args.interva_hiv,
+            malaria=self.va_args.interva_malaria,
+            write=False,
+            # TODO: is `output` even needed??
+            output=self.va_args.interva_output,
+            append=False,
+            return_checked_data=False)
+        # TODO: after running interva, need to merge with original data
+        # and get sex, dob, dod, age, metadata code, dhis org unit
+
+        # TODO: create evaBLOB
+
+        # TODO: create record_storage.csv
 
     def _r_script_insilicova(self):
 
@@ -462,7 +470,7 @@ class OpenVA:
 
     def smartva_to_csv(self):
         """
-        Write two CSV files: 
+        Write two CSV files:
         (1) Entity Value Attribute blob pushed to DHIS2
         (entity_attribute_value.csv)
         (2) table for transfer database (record_storage.csv)
