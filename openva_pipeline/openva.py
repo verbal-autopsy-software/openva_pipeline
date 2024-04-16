@@ -9,6 +9,7 @@ import subprocess
 import shutil
 import os
 import re
+import datetime
 from pandas import read_csv
 from pandas import DataFrame
 from pandas import concat
@@ -39,7 +40,7 @@ class OpenVA:
     :raises: OpenVAError
     """
 
-    def __init__(self, settings, pipeline_run_date):
+    def __init__(self, settings: dict, pipeline_run_date: datetime.datetime):
 
         self.va_args = settings["openva"]
         self.pipeline_args = settings["pipeline"]
@@ -99,9 +100,8 @@ class OpenVA:
 
         algorithm_metadata = \
             self.pipeline_args.algorithm_metadata_code.split("|")
+        # TODO: need better way to extract instrument version than the magic 5
         who_instrument_version = algorithm_metadata[5]
-        # TODO: moved check of the instrument version here; need
-        # to make sure run_pipeline is catching this properly
         if who_instrument_version not in ["v1_4_1", "v1_5_1", "v1_5_3"]:
             raise OpenVAError("pyCrossVA not able to process WHO " +
                               "instrument version: " + who_instrument_version)
@@ -110,6 +110,7 @@ class OpenVA:
         else:
             pycva_instrument_version = "2016WHOv151"
 
+        # TODO: write method to deal with merging (duplicating code)
         if is_export_file_new and not is_export_file_prev:
             export_df_new = read_csv(export_file_new)
             export_n_rows = export_df_new.shape[0]
