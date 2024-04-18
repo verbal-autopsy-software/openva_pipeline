@@ -75,13 +75,13 @@ class OpenVA:
             raise OpenVAError("Unable to create directory" +
                               dir_openva) from exc
 
-    def prep_va_data(self):
+    def prep_va_data(self) -> dict:
         """Create dataframe for openVA by merging ODK export files & converting
            with pycrossva.
 
-        :returns: Summary of the number of VA records at each step -- previous
-         ODK export (0 if there isn't one), new ODK export, and number of VA
-         records sent to openVA.
+        :returns: Summary that includes the number of VA records at each step
+         (1) previous ODK export, (2)new ODK export, and (3) number of VA
+         records sent to openVA.  If the files are not found, values are None.
         :rtype: dict
         """
 
@@ -92,76 +92,79 @@ class OpenVA:
         export_file_new = os.path.join(self.dir_odk, "odk_export_new.csv")
         pycva_input = os.path.join(self.dir_openva, "pycrossva_input.csv")
         # TODO: openva_input_file is only for smartva now,
-        # make this more explicit
+        #  make this more explicit
         openva_input_file = os.path.join(self.dir_openva, "openva_input.csv")
 
         is_export_file_prev = os.path.isfile(export_file_prev)
         is_export_file_new = os.path.isfile(export_file_new)
+        # nothing to do (all values are None)
+        if (not is_export_file_new) and (not is_export_file_prev):
+            return summary
 
+        n_export_new = 0
+        n_export_prev = 0
+        if is_export_file_new:
+            export_df_new = read_csv(export_file_new)
+            n_export_new = export_df_new.shape[0]
+            summary["n_export_new"] = n_export_new
+        if is_export_file_prev:
+            export_df_prev = read_csv(export_file_prev)
+            n_export_prev = export_df_prev.shape[0]
+        summary["n_to_openva"] = n_export_new + n_export_prev
+
+        if (n_export_new == 0) and (n_export_prev == 0):
+            # empty ODK exports, jump out now
+            return summary
+        elif (n_export_new > 0) and (n_export_prev == 0):
+            all_exports = export_df_new
+        elif (n_export_new == 0) and (n_export_prev > 0):
+            all_exports = export_df_prev
+        else:
+            #  combine and remove duplicates
+            all_exports = self._remove_df_duplicates(export_df_new,
+                                                     export_df_prev)
+            summary["n_to_openva"] = all_exports.shape[0]
+
+        all_exports.to_csv(pycva_input)
+        if self.pipeline_args.algorithm == "SmartVA":
+            shutil.copy(pycva_input, openva_input_file)
+        else:
+            pycva_mapping = self._pycva_mapping()
+            self.pycrossva_data = transform(mapping=pycva_mapping,
+                                            raw_data=pycva_input,
+                                            raw_data_id=self.odk_id,
+                                            verbose=0)
+        return summary
+
+    def _remove_df_duplicates(self, df1: DataFrame, df2: DataFrame) -> DataFrame:
+        """Combine two pandas DataFrames and remove duplicates."""
+        all_exports = concat([df1, df2])
+        cols = list(all_exports.columns)
+        match_instanceid = [x for x in cols if "instanceid" in x.lower()]
+        if len(match_instanceid) == 0:
+            match_col = None
+        else:
+            match_col = match_instanceid[0]
+        all_exports.drop_duplicates(subset=match_col, inplace=True)
+        return all_exports
+
+    def _pycva_mapping(self) -> tuple[str, str]:
+        """Create mapping for pyCrossVA"""
         algorithm_metadata = \
             self.pipeline_args.algorithm_metadata_code.split("|")
-        # TODO: need better way to extract instrument version than the magic 5
+        # TODO: need better way to extract instrument version (instead of magic 5)
         who_instrument_version = algorithm_metadata[5]
         if who_instrument_version not in ["v1_4_1", "v1_5_1", "v1_5_3"]:
             raise OpenVAError("pyCrossVA not able to process WHO " +
                               "instrument version: " + who_instrument_version)
         if who_instrument_version == "v1_4_1":
-            pycva_instrument_version = "2016WHOv141"
+            pycva_input = "2016WHOv141"
         else:
-            pycva_instrument_version = "2016WHOv151"
-
-        # TODO: write method to deal with merging (duplicating code)
-        if is_export_file_new and not is_export_file_prev:
-            export_df_new = read_csv(export_file_new)
-            export_n_rows = export_df_new.shape[0]
-            summary["n_export_prev"] = 0
-            summary["n_export_new"] = export_n_rows
-            summary["n_to_openva"] = export_n_rows
-            if export_n_rows == 0:
-                return summary
-            shutil.copy(export_file_new, pycva_input)
-            if self.pipeline_args.algorithm == "SmartVA":
-                shutil.copy(pycva_input, openva_input_file)
-            else:
-                self.pycrossva_data = transform(mapping=(pycva_instrument_version,
-                                                "InterVA5"),
-                                                raw_data=pycva_input,
-                                                raw_data_id=self.odk_id,
-                                                verbose=0)
-                return summary
-        else:
-            export_df_new = read_csv(export_file_new)
-            export_new_n_rows = export_df_new.shape[0]
-            export_df_prev = read_csv(export_file_prev)
-            export_prev_n_rows = export_df_prev.shape[0]
-            summary["n_export_prev"] = export_prev_n_rows
-            summary["n_export_new"] = export_new_n_rows
-            if export_prev_n_rows == 0 and export_new_n_rows == 0:
-                summary["n_to_openva"] = 0
-                return summary
-            exports_combined = concat([export_df_new, export_df_prev])
-            cols = list(exports_combined.columns)
-            match_instanceid = [x for x in cols if "instanceid" in x.lower()]
-            if len(match_instanceid) == 0:
-                match_col = None
-            else:
-                match_col = match_instanceid[0]
-            exports_combined.drop_duplicates(subset=match_col,
-                                             inplace=True)
-            exports_combined.to_csv(pycva_input, index=False)
-            summary["n_to_openva"] = exports_combined.shape[0]
-
-            if self.pipeline_args.algorithm == "SmartVA":
-                # TODO: (again) openva_input_file is only for smartva now,
-                # make this more explicit
-                shutil.copy(pycva_input, openva_input_file)
-            else:
-                self.pycrossva_data = transform(
-                    mapping=(pycva_instrument_version, "InterVA5"),
-                    raw_data=pycva_input,
-                    raw_data_id=self.odk_id,
-                    verbose=0)
-        return summary
+            pycva_input = "2016WHOv151"
+        pycva_output = "InterVA5"
+        if self.pipeline_args.algorithm == "InSilicoVA":
+            pycva_output = "InSilicoVA"
+        return pycva_input, pycva_output
 
     def r_script(self):
         """Create an R script for running openVA and assigning CODs."""

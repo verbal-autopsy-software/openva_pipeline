@@ -7,6 +7,9 @@ numpy~=1.22.0
 pandas
 pipfile
 pycrossva~=0.97
+interva~=0.0.7
+vacheck~=0.0.3
+insilicova~=0.1.1
 python-dateutil
 pytz
 requests
